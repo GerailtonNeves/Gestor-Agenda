@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, User, Phone, CheckCircle, Briefcase, Send, AlertCircle, FileText } from 'lucide-react';
+import { Calendar, Clock, User, Phone, CheckCircle, Briefcase, Send, AlertCircle, FileText, MessageSquare } from 'lucide-react';
 import { storageApi, safeFormatDate } from '../utils/storage';
 import { playNotificationSound } from '../utils/soundUtils';
+import { abrirWhatsapp, msgWhatsapp } from '../utils/whatsapp';
 
 export default function AgendamentoPublico() {
   const [empresa] = useState(() => storageApi.getEmpresa());
@@ -66,7 +67,6 @@ export default function AgendamentoPublico() {
     playNotificationSound();
 
     try {
-      // Notificação via BroadcastChannel (comunicação em tempo real entre abas do mesmo navegador)
       const channel = new BroadcastChannel('eb_agendamento_channel');
       channel.postMessage({ type: 'NOVO_AGENDAMENTO', agendamento: novoAgendamento });
       channel.close();
@@ -79,9 +79,7 @@ export default function AgendamentoPublico() {
   };
 
   if (confirmado) {
-    const linkWa = empresa.whatsapp 
-      ? `https://wa.me/${empresa.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Olá! Acabei de realizar o agendamento online de "${confirmado.titulo}" para o dia ${safeFormatDate(confirmado.data)} às ${confirmado.horario}.`)}`
-      : null;
+    const textoMsg = msgWhatsapp.confirmacaoNovoAgendamento(confirmado, empresa);
 
     return (
       <div style={{ minHeight: '100vh', background: 'var(--bg-app)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
@@ -91,10 +89,10 @@ export default function AgendamentoPublico() {
           </div>
 
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--blue-primary)', marginBottom: '8px' }}>
-            Agendamento Confirmado! 🎉
+            Seu agendamento foi realizado com sucesso! 🎉
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', marginBottom: '20px' }}>
-            Seu agendamento foi enviado com sucesso para a empresa <strong>{empresa.nomeFantasia || 'Escritório de Bolso'}</strong>.
+            Seus dados foram enviados com sucesso para a empresa <strong>{empresa.nomeFantasia || 'Escritório de Bolso'}</strong>.
           </p>
 
           <div style={{ background: 'var(--blue-ice-bg)', padding: '16px', borderRadius: '12px', border: '1.5px solid var(--blue-border)', textAlign: 'left', marginBottom: '24px', fontSize: '0.95rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -109,11 +107,14 @@ export default function AgendamentoPublico() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {linkWa && (
-              <a href={linkWa} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp" style={{ width: '100%', textDecoration: 'none' }}>
-                <Send size={18} /> Avisar no WhatsApp da Empresa
-              </a>
-            )}
+            <button 
+              className="btn btn-whatsapp" 
+              style={{ width: '100%', fontWeight: 800 }}
+              onClick={() => abrirWhatsapp(empresa.whatsapp || confirmado.clienteTelefone, textoMsg)}
+            >
+              <MessageSquare size={18} /> Enviar Mensagem de Confirmação no WhatsApp
+            </button>
+
             <button className="btn btn-secondary" onClick={() => setConfirmado(null)} style={{ width: '100%' }}>
               Fazer Outro Agendamento
             </button>
@@ -128,121 +129,129 @@ export default function AgendamentoPublico() {
       <div style={{ maxWidth: '620px', width: '100%' }}>
         {/* Cabeçalho da Empresa no Topo do Agendamento */}
         <div style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: '2px solid var(--blue-border)', boxShadow: 'var(--shadow-md)', marginBottom: '20px', textAlign: 'center' }}>
-          {empresa.logo ? (
-            <img src={empresa.logo} alt="Logo Empresa" style={{ maxHeight: '80px', maxWidth: '200px', objectFit: 'contain', marginBottom: '12px' }} />
-          ) : (
-            <div style={{ width: '60px', height: '60px', background: 'var(--blue-primary)', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px auto' }}>
-              <Briefcase size={32} />
-            </div>
-          )}
+          <div style={{ width: '70px', height: '70px', borderRadius: '14px', background: '#f8fafc', border: '1.5px solid var(--blue-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px auto', overflow: 'hidden', padding: '4px' }}>
+            {empresa.logo ? (
+              <img src={empresa.logo} alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+            ) : (
+              <Briefcase size={32} style={{ color: 'var(--blue-primary)' }} />
+            )}
+          </div>
 
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--blue-primary)', margin: 0 }}>
-            {empresa.nomeFantasia || 'Agendamento Online'}
+          <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--blue-primary)' }}>
+            {empresa.nomeFantasia || 'Escritório de Bolso'}
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
-            {empresa.endereco || 'Selecione o serviço, data e horário desejados para agendar a sua sessão'}
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+            {empresa.endereco ? `📍 ${empresa.endereco}` : 'Agendamento Online de Serviços'} {empresa.telefone ? `• 📞 ${empresa.telefone}` : ''}
           </p>
         </div>
 
-        {/* Formulário de Agendamento Público */}
-        <form onSubmit={handleConfirmarAgendamento} style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: '2px solid var(--orange-border)', boxShadow: 'var(--shadow-md)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--orange-primary)', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '2px solid var(--orange-border)', paddingBottom: '10px', margin: 0 }}>
-            <Calendar size={20} /> Preencha seus Dados para Agendar
-          </h3>
+        {/* Form de Agendamento */}
+        <div className="card card-blue" style={{ padding: '28px' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--blue-primary)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Calendar size={22} style={{ color: 'var(--orange-primary)' }} /> Agende seu Horário Conosco
+          </h2>
 
-          {/* Selecionar Serviço Cadastrado */}
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Selecione o Serviço Desejado *</label>
-            <select className="form-select" value={produtoId} onChange={handleSelectProduto} required>
-              <option value="">-- Escolha um Serviço / Produto --</option>
-              {produtos.map(p => (
-                <option key={p.id} value={p.id}>
-                  {p.nome} {p.precoVenda > 0 ? `- R$ ${Number(p.precoVenda).toFixed(2)}` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {!produtoId && (
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Ou Digite o Nome do Serviço *</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="Ex: Corte de Cabelo, Consultoria ou Manutenção"
-                value={tituloServico}
-                onChange={(e) => setTituloServico(e.target.value)}
-                required={!produtoId}
-              />
-            </div>
-          )}
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Data Preferida *</label>
-              <input
-                type="date"
-                className="form-input"
-                value={data}
-                onChange={(e) => setData(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
-                required
-              />
+          <form onSubmit={handleConfirmarAgendamento}>
+            {/* Escolher Produto / Serviço */}
+            <div className="form-group">
+              <label className="form-label">Selecione o Serviço Desejado *</label>
+              <select className="form-select" value={produtoId} onChange={handleSelectProduto} required>
+                <option value="">-- Selecionar Serviço ({produtos.length} disponíveis) --</option>
+                {produtos.map(p => (
+                  <option key={p.id} value={p.id}>
+                    {p.nome} {p.precoVenda > 0 ? `- R$ ${Number(p.precoVenda).toFixed(2)}` : ''}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Horário Desejado *</label>
-              <input
-                type="time"
-                className="form-input"
-                value={horario}
-                onChange={(e) => setHorario(e.target.value)}
-                required
+            {!produtoId && (
+              <div className="form-group">
+                <label className="form-label">Ou Digite o Nome do Serviço Desejado *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Ex: Corte de Cabelo, Consultoria ou Instalação"
+                  value={tituloServico}
+                  onChange={(e) => setTituloServico(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div className="form-group">
+                <label className="form-label">Seu Nome Completo *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Digite seu nome"
+                  value={clienteNome}
+                  onChange={(e) => setClienteNome(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Seu WhatsApp / Telefone *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="(00) 00000-0000"
+                  value={clienteTelefone}
+                  onChange={(e) => setClienteTelefone(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div className="form-group">
+                <label className="form-label">Data Preferida *</label>
+                <input
+                  type="date"
+                  className="form-input"
+                  value={data}
+                  onChange={(e) => setData(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Horário *</label>
+                <input
+                  type="time"
+                  className="form-input"
+                  value={horario}
+                  onChange={(e) => setHorario(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            {valorServico > 0 && (
+              <div style={{ background: '#ecfdf5', padding: '12px 16px', borderRadius: '10px', border: '1px solid #6ee7b7', marginBottom: '16px', color: '#047857', fontWeight: 800, fontSize: '0.95rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>Valor Estimado do Serviço:</span>
+                <span style={{ fontSize: '1.2rem' }}>R$ {Number(valorServico).toFixed(2)}</span>
+              </div>
+            )}
+
+            <div className="form-group">
+              <label className="form-label">Observações ou Preferências (Opcional)</label>
+              <textarea
+                className="form-textarea"
+                rows="3"
+                placeholder="Ex: Prefiro atendimento pela manhã, levar amostra..."
+                value={observacoes}
+                onChange={(e) => setObservacoes(e.target.value)}
               />
             </div>
-          </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Seu Nome Completo *</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="Digite seu nome"
-                value={clienteNome}
-                onChange={(e) => setClienteNome(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Seu WhatsApp com DDD *</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="(00) 00000-0000"
-                value={clienteTelefone}
-                onChange={(e) => setClienteTelefone(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Observações Adicionais (Opcional)</label>
-            <textarea
-              className="form-textarea"
-              rows="2"
-              placeholder="Ex: Preferência por atendimento no período da manhã."
-              value={observacoes}
-              onChange={(e) => setObservacoes(e.target.value)}
-            />
-          </div>
-
-          <button type="submit" className="btn btn-orange" style={{ fontWeight: 800, padding: '14px', fontSize: '1rem', marginTop: '8px' }}>
-            <CheckCircle size={20} /> Confirmar Meu Agendamento Online
-          </button>
-        </form>
+            <button type="submit" className="btn btn-orange" style={{ width: '100%', padding: '14px', fontSize: '1.05rem', fontWeight: 800 }}>
+              <CheckCircle size={20} /> Confirmar Agendamento Online
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

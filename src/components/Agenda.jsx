@@ -16,7 +16,9 @@ import {
   ChevronLeft,
   ChevronRight,
   List,
-  Grid
+  Grid,
+  ThumbsUp,
+  MessageSquare
 } from 'lucide-react';
 import { abrirWhatsapp, msgWhatsapp } from '../utils/whatsapp';
 import { safeFormatDate } from '../utils/storage';
@@ -42,7 +44,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMultiploOpen, setModalMultiploOpen] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [filtro, setFiltro] = useState('todos');
+  const [filtro, setFiltro] = useState('todos'); // 'todos', 'pendentes', 'concluidos', 'amanha'
   const [dataFiltro, setDataFiltro] = useState('');
   const [toastAlert, setToastAlert] = useState(null);
 
@@ -170,9 +172,13 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
     if (!titulo.trim()) return;
 
     let nomeClienteFinal = clienteNomeCustom;
+    let telCliente = '';
     if (clienteId) {
       const cliFound = clientes.find(c => String(c.id) === String(clienteId));
-      if (cliFound) nomeClienteFinal = cliFound.nome;
+      if (cliFound) {
+        nomeClienteFinal = cliFound.nome;
+        telCliente = cliFound.whatsapp || cliFound.telefone || '';
+      }
     }
 
     const valorNum = parseFloat(valor) || 0;
@@ -202,6 +208,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
         titulo,
         clienteId,
         clienteNome: nomeClienteFinal || 'Cliente Não Especificado',
+        clienteTelefone: telCliente,
         data,
         horario,
         valor: valorNum,
@@ -210,7 +217,13 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
         prioridade
       };
       onSaveAgenda([...agenda, novoAgendamento]);
-      playNotificationSound(); // TOCAR SOM DE NOTIFICAÇÃO AO CRIAR AGENDAMENTO
+      playNotificationSound();
+
+      // Opção de Enviar Mensagem Automática de Confirmação no WhatsApp do Cliente
+      if (window.confirm(`✨ Agendamento registrado com sucesso!\n\nDeseja enviar a mensagem de confirmação para o cliente no WhatsApp agora?`)) {
+        abrirWhatsapp(telCliente || empresa.whatsapp, msgWhatsapp.confirmacaoNovoAgendamento(novoAgendamento, empresa));
+      }
+
       triggerToast(`✨ Agendamento "${titulo}" adicionado para ${safeFormatDate(data)} às ${horario}!`);
     }
 
@@ -293,7 +306,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
     }));
 
     onSaveAgenda([...agenda, ...novosAgendamentos]);
-    playNotificationSound(); // TOCAR SOM DE NOTIFICAÇÃO AO CRIAR AGENDAMENTOS EM LOTE
+    playNotificationSound();
     triggerToast(`🎉 Sucesso! ${novosAgendamentos.length} agendamentos criados de uma só vez!`);
     setModalMultiploOpen(false);
   };
@@ -335,6 +348,11 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
   const nomeMes = dataMesAtual.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
   const anoAtual = dataMesAtual.getFullYear();
   const mesIndex = dataMesAtual.getMonth();
+
+  // Calcular Data de Amanhã para Filtro de Pre-Vencimento (1 Dia Antes)
+  const amanhaObj = new Date();
+  amanhaObj.setDate(amanhaObj.getDate() + 1);
+  const dataAmanhaStr = amanhaObj.toISOString().split('T')[0];
 
   const getDiasCalendario = () => {
     const primeiroDia = new Date(anoAtual, mesIndex, 1);
@@ -391,6 +409,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
   let agendaFiltrada = agenda.filter(a => {
     if (filtro === 'pendentes') return !a.concluido;
     if (filtro === 'concluidos') return a.concluido;
+    if (filtro === 'amanha') return a.data === dataAmanhaStr;
     return true;
   });
 
@@ -419,7 +438,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
-          zIndex: 2000,
+          zIndex: 3500,
           fontWeight: 700,
           animation: 'slideIn 0.3s ease'
         }}>
@@ -435,7 +454,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
             <CalendarIcon size={24} /> Agenda & Compromissos
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            Visualize seus compromissos no <strong>Calendário Interativo Mensal</strong> ou na Lista Completa!
+            Envie <strong>confirmações automáticas</strong> e <strong>lembretes 1 dia antes</strong> aos clientes no WhatsApp!
           </p>
         </div>
 
@@ -449,9 +468,9 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
         </div>
       </div>
 
-      {/* BARRA DE CONTROLE DE VISÃO (CALENDÁRIO vs LISTA) */}
+      {/* BARRA DE CONTROLE DE VISÃO & FILTROS INTELIGENTES */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', background: '#ffffff', padding: '12px 18px', borderRadius: '14px', border: '1.5px solid var(--blue-border)', boxShadow: 'var(--shadow-sm)' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button 
             className={`btn btn-sm ${modoVisao === 'calendario' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setModoVisao('calendario')}
@@ -484,10 +503,21 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
         )}
 
         {modoVisao === 'lista' && (
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
             <button className={`btn btn-sm ${filtro === 'todos' ? 'btn-orange' : 'btn-secondary'}`} onClick={() => setFiltro('todos')}>
               Todos
             </button>
+
+            {/* FILTRO ESPECIAL: LEMBRETE 1 DIA ANTES (AMANHÃ) */}
+            <button 
+              className={`btn btn-sm ${filtro === 'amanha' ? 'btn-whatsapp' : 'btn-secondary'}`} 
+              onClick={() => setFiltro('amanha')}
+              title="Filtrar compromissos de amanhã para enviar lembretes com pedido de joinha 👍"
+              style={{ fontWeight: 800 }}
+            >
+              <ThumbsUp size={14} /> ⏰ Amanhã ({agenda.filter(a => a.data === dataAmanhaStr).length})
+            </button>
+
             <button className={`btn btn-sm ${filtro === 'pendentes' ? 'btn-orange' : 'btn-secondary'}`} onClick={() => setFiltro('pendentes')}>
               Pendentes ({agenda.filter(a => !a.concluido).length})
             </button>
@@ -498,9 +528,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
         )}
       </div>
 
-      {/* ==========================================================================
-         VISÃO 1: CALENDÁRIO INTERATIVO MENSAL
-         ========================================================================== */}
+      {/* VISÃO 1: CALENDÁRIO INTERATIVO MENSAL */}
       {modoVisao === 'calendario' && (
         <div className="card" style={{ padding: '16px', border: '2px solid var(--blue-border)', background: '#ffffff' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px', textAlign: 'center', marginBottom: '8px' }}>
@@ -545,7 +573,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                     padding: '8px',
                     display: 'flex',
                     flexDirection: 'column',
-                    justifyContent: 'space-between',
+                    justify: 'space-between',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
                     opacity: celula.isCurrentMonth ? 1 : 0.4
@@ -564,7 +592,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                       borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justify: 'center'
                     }}>
                       {celula.diaNum}
                     </span>
@@ -628,9 +656,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
         </div>
       )}
 
-      {/* ==========================================================================
-         VISÃO 2: LISTA DE AGENDAMENTOS COMPLETA
-         ========================================================================== */}
+      {/* VISÃO 2: LISTA DE AGENDAMENTOS COMPLETA COM BOTÕES AUTOMÁTICOS DE WHATSAPP */}
       {modoVisao === 'lista' && (
         <>
           {agendaFiltrada.length === 0 ? (
@@ -656,7 +682,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                     opacity: ag.concluido ? 0.9 : 1
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: '280px' }}>
                     <button
                       className="btn"
                       onClick={() => handleConcluir(ag)}
@@ -678,13 +704,16 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                     </button>
 
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                         <h3 style={{ fontSize: '1.05rem', fontWeight: 800, textDecoration: ag.concluido ? 'line-through' : 'none', color: 'var(--text-main)' }}>
                           {ag.titulo}
                         </h3>
                         <span className={`badge ${ag.concluido ? 'badge-success' : 'badge-orange'}`}>
                           {ag.concluido ? 'Concluído & Lançado em Receitas' : ag.prioridade || 'Normal'}
                         </span>
+                        {ag.data === dataAmanhaStr && !ag.concluido && (
+                          <span className="badge badge-blue">🗓️ Amanhã</span>
+                        )}
                       </div>
 
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '4px', alignItems: 'center' }}>
@@ -706,13 +735,25 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {/* AÇÕES DE WHATSAPP AUTOMÁTICAS E EDIÇÃO */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    {/* Botão 1: Confirmar Agendamento */}
                     <button
                       className="btn btn-sm btn-whatsapp"
-                      onClick={() => abrirWhatsapp(empresa.whatsapp, msgWhatsapp.agendamento(ag, empresa))}
-                      title="Enviar Lembrete por WhatsApp"
+                      onClick={() => abrirWhatsapp(ag.clienteTelefone || empresa.whatsapp, msgWhatsapp.confirmacaoNovoAgendamento(ag, empresa))}
+                      title="Enviar Mensagem de Confirmação de Agendamento no WhatsApp"
                     >
-                      <Send size={14} /> WhatsApp
+                      <MessageSquare size={14} /> Confirmação
+                    </button>
+
+                    {/* Botão 2: Lembrete Pre-Vencimento (1 Dia Antes com Joinha 👍) */}
+                    <button
+                      className="btn btn-sm"
+                      onClick={() => abrirWhatsapp(ag.clienteTelefone || empresa.whatsapp, msgWhatsapp.lembretePreVencimentoAmanha(ag, empresa))}
+                      title="Enviar Lembrete de Amanhã no WhatsApp pedindo confirmação com Joinha 👍"
+                      style={{ background: '#0284c7', color: '#ffffff', fontWeight: 800 }}
+                    >
+                      <ThumbsUp size={14} /> Lembrete Amanhã 👍
                     </button>
 
                     <button
@@ -884,7 +925,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
         </div>
       )}
 
-      {/* MODAL 2: AGENDAMENTO MÚLTIPLO DE UMA SÓ VEZ (VÁRIAS DATAS) */}
+      {/* MODAL 2: AGENDAMENTO MÚLTIPLO */}
       {modalMultiploOpen && (
         <div className="modal-overlay" onClick={() => setModalMultiploOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '620px' }}>
