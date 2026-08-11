@@ -1,26 +1,26 @@
 import React, { useState } from 'react';
-import { Users, Plus, Phone, Mail, MapPin, Send, Trash2, Edit } from 'lucide-react';
+import { Users, Plus, Phone, MapPin, Send, Trash2, Edit, Building2, Globe } from 'lucide-react';
 import { abrirWhatsapp } from '../utils/whatsapp';
 
-export default function Clientes({ clientes, empresa, onSaveClientes, onDeleteCliente }) {
+export default function Clientes({ clientes = [], empresa = {}, onSaveClientes, onDeleteCliente }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [busca, setBusca] = useState('');
   const [editId, setEditId] = useState(null);
 
   // Form State
   const [nome, setNome] = useState('');
-  const [telefone, setTelefone] = useState('');
+  const [estabelecimento, setEstabelecimento] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
-  const [email, setEmail] = useState('');
+  const [cidadeUf, setCidadeUf] = useState('');
   const [endereco, setEndereco] = useState('');
   const [observacoes, setObservacoes] = useState('');
 
   const abrirModalNovo = () => {
     setEditId(null);
     setNome('');
-    setTelefone('');
+    setEstabelecimento('');
     setWhatsapp('');
-    setEmail('');
+    setCidadeUf('');
     setEndereco('');
     setObservacoes('');
     setModalOpen(true);
@@ -28,10 +28,10 @@ export default function Clientes({ clientes, empresa, onSaveClientes, onDeleteCl
 
   const abrirModalEditar = (cli) => {
     setEditId(cli.id);
-    setNome(cli.nome);
-    setTelefone(cli.telefone || '');
+    setNome(cli.nome || '');
+    setEstabelecimento(cli.estabelecimento || '');
     setWhatsapp(cli.whatsapp || cli.telefone || '');
-    setEmail(cli.email || '');
+    setCidadeUf(cli.cidadeUf || '');
     setEndereco(cli.endereco || '');
     setObservacoes(cli.observacoes || '');
     setModalOpen(true);
@@ -41,23 +41,22 @@ export default function Clientes({ clientes, empresa, onSaveClientes, onDeleteCl
     e.preventDefault();
     if (!nome.trim()) return;
 
+    const clienteData = {
+      nome: nome.trim(),
+      estabelecimento: estabelecimento.trim(),
+      whatsapp: whatsapp.trim(),
+      cidadeUf: cidadeUf.trim(),
+      endereco: endereco.trim(),
+      observacoes: observacoes.trim()
+    };
+
     if (editId) {
-      const atualizados = clientes.map(c => {
-        if (c.id === editId) {
-          return { ...c, nome, telefone, whatsapp: whatsapp || telefone, email, endereco, observacoes };
-        }
-        return c;
-      });
+      const atualizados = clientes.map(c => c.id === editId ? { ...c, ...clienteData } : c);
       onSaveClientes(atualizados);
     } else {
       const novoCliente = {
         id: 'cli_' + Date.now(),
-        nome,
-        telefone,
-        whatsapp: whatsapp || telefone,
-        email,
-        endereco,
-        observacoes
+        ...clienteData
       };
       onSaveClientes([...clientes, novoCliente]);
     }
@@ -66,9 +65,10 @@ export default function Clientes({ clientes, empresa, onSaveClientes, onDeleteCl
   };
 
   const clientesFiltrados = clientes.filter(c => 
-    c.nome.toLowerCase().includes(busca.toLowerCase()) || 
-    (c.email && c.email.toLowerCase().includes(busca.toLowerCase())) ||
-    (c.telefone && c.telefone.includes(busca))
+    (c.nome && c.nome.toLowerCase().includes(busca.toLowerCase())) || 
+    (c.estabelecimento && c.estabelecimento.toLowerCase().includes(busca.toLowerCase())) ||
+    (c.cidadeUf && c.cidadeUf.toLowerCase().includes(busca.toLowerCase())) ||
+    (c.whatsapp && c.whatsapp.includes(busca))
   );
 
   return (
@@ -76,11 +76,11 @@ export default function Clientes({ clientes, empresa, onSaveClientes, onDeleteCl
       {/* Top Header */}
       <div className="card card-blue" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--blue-bright)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--blue-primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Users size={24} /> Cadastro de Clientes
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            Cadastro simplificado de clientes (sem necessidade de CPF).
+            Cadastre seus clientes com <strong>Nome, Estabelecimento, WhatsApp e Cidade-Estado</strong>.
           </p>
         </div>
 
@@ -90,66 +90,80 @@ export default function Clientes({ clientes, empresa, onSaveClientes, onDeleteCl
       </div>
 
       {/* Busca de Clientes */}
-      <div className="form-group" style={{ maxWidth: '400px' }}>
+      <div className="form-group" style={{ maxWidth: '450px' }}>
         <input
           type="text"
           className="form-input"
-          placeholder="Buscar cliente por nome, telefone ou e-mail..."
+          placeholder="Buscar cliente por nome, estabelecimento, whatsapp ou cidade-estado..."
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
         />
       </div>
 
       {/* Grid de Clientes */}
-      <div className="grid-cards">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
         {clientesFiltrados.length === 0 ? (
           <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-            Nenhum cliente cadastrado ou encontrado na pesquisa.
+            <Users size={48} style={{ opacity: 0.3, marginBottom: '12px' }} />
+            <p>Nenhum cliente cadastrado ou encontrado na pesquisa.</p>
           </div>
         ) : (
           clientesFiltrados.map(cli => (
-            <div key={cli.id} className="card card-blue">
-              <div className="card-header">
-                <strong style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>{cli.nome}</strong>
-                <span className="badge badge-blue">Cliente</span>
-              </div>
+            <div key={cli.id} className="card card-blue" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '16px' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                  <strong style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>{cli.nome}</strong>
+                  <span className="badge badge-blue">Cliente</span>
+                </div>
 
-              <div style={{ fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '6px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                {cli.telefone && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Phone size={14} style={{ color: 'var(--orange-bright)' }} /> {cli.telefone}
-                  </div>
-                )}
-                {cli.email && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Mail size={14} style={{ color: 'var(--blue-bright)' }} /> {cli.email}
-                  </div>
-                )}
-                {cli.endereco && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <MapPin size={14} /> {cli.endereco}
-                  </div>
-                )}
-                {cli.observacoes && (
-                  <div style={{ fontSize: '0.8rem', fontStyle: 'italic', marginTop: '4px', color: '#94a3b8' }}>
-                    "{cli.observacoes}"
-                  </div>
-                )}
+                <div style={{ fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '6px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                  {cli.estabelecimento && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, color: 'var(--blue-primary)' }}>
+                      <Building2 size={16} /> {cli.estabelecimento}
+                    </div>
+                  )}
+
+                  {cli.whatsapp && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Phone size={15} style={{ color: '#16a34a' }} /> <strong>WhatsApp:</strong> {cli.whatsapp}
+                    </div>
+                  )}
+
+                  {cli.cidadeUf && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Globe size={15} style={{ color: 'var(--orange-primary)' }} /> <strong>Cidade - Estado:</strong> {cli.cidadeUf}
+                    </div>
+                  )}
+
+                  {cli.endereco && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <MapPin size={15} /> <strong>Endereço:</strong> {cli.endereco}
+                    </div>
+                  )}
+
+                  {cli.observacoes && (
+                    <div style={{ fontSize: '0.8rem', fontStyle: 'italic', marginTop: '4px', color: 'var(--text-muted)' }}>
+                      "{cli.observacoes}"
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
                 <button
                   className="btn btn-sm btn-whatsapp"
                   style={{ flex: 1 }}
-                  onClick={() => abrirWhatsapp(cli.whatsapp || cli.telefone, `Olá ${cli.nome}, tudo bem? Entro em contato através do ${empresa.nomeFantasia}.`)}
+                  onClick={() => abrirWhatsapp(cli.whatsapp, `Olá ${cli.nome}, tudo bem? Entro em contato através da ${empresa.razaoSocial || empresa.nomeFantasia || 'nossa empresa'}.`)}
                 >
                   <Send size={14} /> WhatsApp
                 </button>
-                <button className="btn btn-sm btn-secondary" onClick={() => abrirModalEditar(cli)} title="Editar">
+
+                <button className="btn btn-sm btn-primary" onClick={() => abrirModalEditar(cli)} title="Editar Cliente">
                   <Edit size={14} />
                 </button>
-                <button className="btn btn-sm btn-secondary" onClick={() => onDeleteCliente(cli.id)} title="Excluir">
-                  <Trash2 size={14} style={{ color: '#f87171' }} />
+
+                <button className="btn btn-sm btn-secondary" onClick={() => onDeleteCliente(cli.id)} title="Excluir Cliente">
+                  <Trash2 size={14} style={{ color: '#ef4444' }} />
                 </button>
               </div>
             </div>
@@ -160,58 +174,59 @@ export default function Clientes({ clientes, empresa, onSaveClientes, onDeleteCl
       {/* Modal de Cadastro / Edição */}
       {modalOpen && (
         <div className="modal-overlay" onClick={() => setModalOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '540px' }}>
             <div className="modal-header">
               <h3 className="modal-title">{editId ? 'Editar Cliente' : 'Novo Cliente'}</h3>
-              <button className="btn-icon" onClick={() => setModalOpen(false)}>✕</button>
+              <button className="action-btn-circle" onClick={() => setModalOpen(false)}>✕</button>
             </div>
 
             <form onSubmit={handleSalvar}>
               <div className="form-group">
-                <label className="form-label">Nome Completo / Razão Social *</label>
+                <label className="form-label">Nome Completo do Cliente *</label>
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Nome do cliente"
+                  placeholder="Ex: João da Silva"
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   required
                 />
               </div>
 
+              <div className="form-group">
+                <label className="form-label">Nome do Estabelecimento / Empresa</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Ex: Mercearia do João ou Studio Hair"
+                  value={estabelecimento}
+                  onChange={(e) => setEstabelecimento(e.target.value)}
+                />
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div className="form-group">
-                  <label className="form-label">Telefone de Contato</label>
+                  <label className="form-label">WhatsApp do Cliente *</label>
                   <input
                     type="text"
                     className="form-input"
                     placeholder="(00) 00000-0000"
-                    value={telefone}
-                    onChange={(e) => setTelefone(e.target.value)}
+                    value={whatsapp}
+                    onChange={(e) => setWhatsapp(e.target.value)}
+                    required
                   />
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">WhatsApp para Envio</label>
+                  <label className="form-label">Cidade - Estado</label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="DDDNÚMERO"
-                    value={whatsapp}
-                    onChange={(e) => setWhatsapp(e.target.value)}
+                    placeholder="Ex: São Paulo - SP"
+                    value={cidadeUf}
+                    onChange={(e) => setCidadeUf(e.target.value)}
                   />
                 </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">E-mail</label>
-                <input
-                  type="email"
-                  className="form-input"
-                  placeholder="cliente@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
               </div>
 
               <div className="form-group">
@@ -219,7 +234,7 @@ export default function Clientes({ clientes, empresa, onSaveClientes, onDeleteCl
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Rua, número, bairro, cidade"
+                  placeholder="Rua, número, bairro..."
                   value={endereco}
                   onChange={(e) => setEndereco(e.target.value)}
                 />
@@ -238,7 +253,7 @@ export default function Clientes({ clientes, empresa, onSaveClientes, onDeleteCl
 
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '16px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setModalOpen(false)}>Cancelar</button>
-                <button type="submit" className="btn btn-orange">Salvar Cliente</button>
+                <button type="submit" className="btn btn-orange">{editId ? 'Salvar Alterações' : 'Cadastrar Cliente'}</button>
               </div>
             </form>
           </div>
