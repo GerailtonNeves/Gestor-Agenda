@@ -620,3 +620,23 @@ body {
     border: none !important;
   }
 }
+
+/* Utilitários para Otimização de Header Mobile */
+@media (max-width: 768px) {
+  .desktop-only-clock {
+    display: none !important;
+  }
+  .desktop-only-search {
+    display: none !important;
+  }
+  .mobile-only-btn {
+    display: flex !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-only-btn {
+    display: none !important;
+  }
+}
+

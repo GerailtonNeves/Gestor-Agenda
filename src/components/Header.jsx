@@ -1,5 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Search, Calculator, Bell, Building, Briefcase, Link as LinkIcon, Key, Copy, Check, Smartphone } from 'lucide-react';
+import { 
+  Clock, 
+  Search, 
+  Calculator, 
+  Bell, 
+  Building, 
+  Briefcase, 
+  Link as LinkIcon, 
+  Key, 
+  Check, 
+  Smartphone, 
+  Menu as MenuIcon, 
+  X,
+  Sparkles,
+  ChevronRight
+} from 'lucide-react';
 import { licenseApi } from '../utils/licenseUtils';
 
 export default function Header({ 
@@ -14,6 +29,7 @@ export default function Header({
 }) {
   const [horaAtual, setHoraAtual] = useState(new Date());
   const [copiado, setCopiado] = useState(false);
+  const [menuRapidoOpen, setMenuRapidoOpen] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => setHoraAtual(new Date()), 1000);
@@ -40,8 +56,8 @@ export default function Header({
   };
 
   return (
-    <header className="topbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+    <>
+      <header className="topbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', gap: '12px' }}>
         {/* Marca & Logo Elegante da Empresa */}
         <div 
           onClick={onOpenEmpresa} 
@@ -49,18 +65,19 @@ export default function Header({
           style={{ 
             display: 'flex', 
             alignItems: 'center', 
-            gap: '12px', 
+            gap: '10px', 
             cursor: 'pointer',
             background: 'rgba(255, 255, 255, 0.15)',
-            padding: '6px 12px 6px 6px',
+            padding: '4px 10px 4px 4px',
             borderRadius: '12px',
             border: '1px solid rgba(255, 255, 255, 0.25)',
-            transition: 'all 0.2s ease'
+            transition: 'all 0.2s ease',
+            maxWidth: '65%'
           }}
         >
           <div style={{ 
-            width: '46px', 
-            height: '46px', 
+            width: '40px', 
+            height: '40px', 
             borderRadius: '10px', 
             background: '#ffffff', 
             display: 'flex', 
@@ -79,153 +96,306 @@ export default function Header({
                 style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} 
               />
             ) : (
-              <Briefcase size={22} style={{ color: 'var(--blue-primary)' }} />
+              <Briefcase size={20} style={{ color: 'var(--blue-primary)' }} />
             )}
           </div>
 
-          <div>
-            <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ffffff', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px' }}>
+          <div style={{ overflow: 'hidden' }}>
+            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               <span>{empresa.nomeFantasia || 'Escritório de Bolso'}</span>
             </div>
-            <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#ffedd5', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#ffedd5', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
               <span>Gestão Empresarial</span>
             </div>
           </div>
         </div>
 
-        {/* Relógio Digital */}
+        {/* Relógio Digital Visible (Apenas em telas de computador maiores) */}
         <div 
+          className="desktop-only-clock"
           title="Relógio Digital Sincronizado"
           style={{ 
             display: 'flex', 
             alignItems: 'center', 
             gap: '8px', 
             background: 'rgba(255, 255, 255, 0.12)', 
-            padding: '8px 14px', 
+            padding: '6px 12px', 
             borderRadius: '10px', 
             border: '1px solid rgba(255, 255, 255, 0.2)' 
           }}
         >
-          <Clock size={18} style={{ color: '#ffedd5' }} />
-          <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#ffffff', fontFamily: 'monospace' }}>{formatHora(horaAtual)}</span>
-          <span style={{ fontSize: '0.78rem', color: '#e0f2fe', textTransform: 'capitalize' }}>({formatData(horaAtual)})</span>
+          <Clock size={16} style={{ color: '#ffedd5' }} />
+          <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#ffffff', fontFamily: 'monospace' }}>{formatHora(horaAtual)}</span>
         </div>
 
-        {/* BOTÃO DE INSTALAÇÃO NATIVA DO APLICATIVO (PWA) */}
-        {onInstallPWA && (
-          <button
-            type="button"
-            onClick={onInstallPWA}
-            title="Instalar Aplicativo na Tela Inicial do Celular ou Computador"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
+        {/* Pesquisa Global Trigger */}
+        <div 
+          className="desktop-only-search"
+          onClick={onOpenSearch} 
+          title="Pesquisar Qualquer Coisa no Sistema"
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            background: 'rgba(255, 255, 255, 0.18)', 
+            padding: '6px 14px', 
+            borderRadius: '20px', 
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            cursor: 'pointer',
+            color: '#ffffff',
+            fontSize: '0.85rem'
+          }}
+        >
+          <Search size={16} style={{ color: '#ffedd5' }} />
+          <span>Pesquisar...</span>
+        </div>
+
+        {/* Botões de Ação Direta no Topo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Lupa em Celular */}
+          <button 
+            type="button" 
+            className="action-btn-circle mobile-only-btn" 
+            onClick={onOpenSearch} 
+            title="Pesquisar"
+          >
+            <Search size={18} />
+          </button>
+
+          {/* Alertas & Notificações */}
+          <button 
+            type="button" 
+            className="action-btn-circle" 
+            onClick={onOpenNotifications} 
+            title="Alertas & Notificações"
+          >
+            <Bell size={18} />
+            {notificationCount > 0 && (
+              <span className="badge-count">
+                {notificationCount}
+              </span>
+            )}
+          </button>
+
+          {/* BOTÃO PRINCIPAL DE MENU RÁPIDO COM TODAS AS OPÇÕES DENTRO */}
+          <button 
+            type="button" 
+            className="btn btn-orange" 
+            onClick={() => setMenuRapidoOpen(true)}
+            style={{ 
+              padding: '6px 12px', 
+              fontSize: '0.85rem', 
+              fontWeight: 800, 
+              display: 'flex', 
+              alignItems: 'center', 
               gap: '6px',
-              background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-              color: '#ffffff',
-              border: 'none',
-              padding: '8px 14px',
               borderRadius: '10px',
-              fontWeight: 800,
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
+              boxShadow: 'var(--shadow-orange-btn)'
+            }}
+            title="Abrir Menu com Instalar App, Link Público, Licença e Mais"
+          >
+            <MenuIcon size={18} />
+            <span style={{ display: 'inline' }}>Opções ⚙️</span>
+          </button>
+        </div>
+      </header>
+
+      {/* MODAL / MENU DROPDOWN DE OPÇÕES ESCONDIDAS */}
+      {menuRapidoOpen && (
+        <div className="modal-overlay" onClick={() => setMenuRapidoOpen(false)} style={{ zIndex: 3500 }}>
+          <div 
+            className="modal-content" 
+            onClick={(e) => e.stopPropagation()} 
+            style={{ 
+              maxWidth: '480px', 
+              padding: '20px', 
+              borderRadius: '20px', 
+              boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+              background: '#ffffff'
             }}
           >
-            <Smartphone size={16} />
-            <span>📱 Instalar App</span>
-          </button>
-        )}
+            <div className="modal-header" style={{ marginBottom: '16px' }}>
+              <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--blue-primary)', fontSize: '1.15rem' }}>
+                <Sparkles size={22} style={{ color: 'var(--orange-primary)' }} /> Opções Rápidas do Sistema
+              </h3>
+              <button className="action-btn-circle" onClick={() => setMenuRapidoOpen(false)}>
+                <X size={16} />
+              </button>
+            </div>
 
-        {/* BOTÃO COPIAR LINK DE AGENDAMENTO PÚBLICO */}
-        <button
-          type="button"
-          onClick={handleCopiarLinkPublico}
-          title="Copiar Link Público de Agendamento Online para enviar aos clientes"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: copiado ? '#059669' : 'var(--orange-gradient)',
-            color: '#ffffff',
-            border: 'none',
-            padding: '8px 14px',
-            borderRadius: '10px',
-            fontWeight: 800,
-            fontSize: '0.85rem',
-            cursor: 'pointer',
-            boxShadow: 'var(--shadow-orange-btn)',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          {copiado ? <Check size={16} /> : <LinkIcon size={16} />}
-          <span>{copiado ? 'Link Copiado! 📋' : '🔗 Link Agendamento Público'}</span>
-        </button>
+            {/* Lista de Opções Organizadas em Botões Elegantes */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {/* 1. INSTALAR APPLICATIVO NO CELULAR OU PC */}
+              {onInstallPWA && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuRapidoOpen(false);
+                    onInstallPWA();
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justify: 'space-between',
+                    background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '14px 16px',
+                    borderRadius: '12px',
+                    fontWeight: 800,
+                    fontSize: '0.95rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Smartphone size={20} />
+                    <span>📱 Instalar Aplicativo no Celular / PC</span>
+                  </div>
+                  <ChevronRight size={18} />
+                </button>
+              )}
 
-        {/* BADGE DE LICENÇA DO SISTEMA */}
-        <button
-          type="button"
-          onClick={onOpenLicense}
-          title="Clique para Gerenciar / Ativar Licença do Sistema"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: 'rgba(255, 255, 255, 0.2)',
-            color: '#ffffff',
-            border: '1px solid rgba(255, 255, 255, 0.35)',
-            padding: '8px 12px',
-            borderRadius: '10px',
-            fontWeight: 800,
-            fontSize: '0.82rem',
-            cursor: 'pointer'
-          }}
-        >
-          <Key size={16} style={{ color: '#ffedd5' }} />
-          <span>Licença: {lic.diasValidade >= 9000 ? 'Vitalícia ⭐' : `${diasRestantes}d`}</span>
-        </button>
-      </div>
+              {/* 2. LINK DE AGENDAMENTO PÚBLICO */}
+              <button
+                type="button"
+                onClick={() => {
+                  handleCopiarLinkPublico();
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justify: 'space-between',
+                  background: copiado ? '#059669' : 'var(--orange-gradient)',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '14px 16px',
+                  borderRadius: '12px',
+                  fontWeight: 800,
+                  fontSize: '0.95rem',
+                  cursor: 'pointer',
+                  boxShadow: 'var(--shadow-orange-btn)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  {copiado ? <Check size={20} /> : <LinkIcon size={20} />}
+                  <span>{copiado ? 'Link Copiado para a Área de Transferência! 📋' : '🔗 Copiar Link de Agendamento Público'}</span>
+                </div>
+                <ChevronRight size={18} />
+              </button>
 
-      {/* Trigger de Pesquisa Global */}
-      <div 
-        onClick={onOpenSearch} 
-        title="Pesquisar Qualquer Coisa no Sistema"
-        style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '10px', 
-          background: 'rgba(255, 255, 255, 0.18)', 
-          padding: '8px 16px', 
-          borderRadius: '20px', 
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          cursor: 'pointer',
-          color: '#ffffff',
-          minWidth: '200px'
-        }}
-      >
-        <Search size={18} style={{ color: '#ffedd5' }} />
-        <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>Pesquisar no sistema...</span>
-      </div>
+              {/* 3. GERENCIADOR DE LICENÇA */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuRapidoOpen(false);
+                  onOpenLicense();
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justify: 'space-between',
+                  background: 'var(--blue-ice-bg)',
+                  color: 'var(--blue-primary)',
+                  border: '1.5px solid var(--blue-border)',
+                  padding: '14px 16px',
+                  borderRadius: '12px',
+                  fontWeight: 800,
+                  fontSize: '0.92rem',
+                  cursor: 'pointer'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Key size={20} style={{ color: 'var(--orange-primary)' }} />
+                  <span>Chave de Licença: <strong>{lic.diasValidade >= 9000 ? 'Vitalícia ⭐' : `${diasRestantes} dias restantes`}</strong></span>
+                </div>
+                <ChevronRight size={18} />
+              </button>
 
-      {/* Botões de Ação no Topo */}
-      <div className="topbar-actions">
-        <button type="button" className="action-btn-circle" onClick={onOpenCalc} title="Calculadora Comercial">
-          <Calculator size={20} />
-        </button>
+              {/* 4. RELÓGIO DIGITAL & DATA */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  background: '#f8fafc',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  border: '1px solid #e2e8f0',
+                  color: 'var(--text-main)',
+                  fontSize: '0.9rem'
+                }}
+              >
+                <Clock size={20} style={{ color: 'var(--blue-primary)' }} />
+                <div>
+                  <div style={{ fontWeight: 800, fontFamily: 'monospace', fontSize: '1rem', color: 'var(--blue-primary)' }}>
+                    {formatHora(horaAtual)}
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
+                    {formatData(horaAtual)}
+                  </div>
+                </div>
+              </div>
 
-        <button type="button" className="action-btn-circle" onClick={onOpenNotifications} title="Alertas & Notificações">
-          <Bell size={20} />
-          {notificationCount > 0 && (
-            <span className="badge-count">
-              {notificationCount}
-            </span>
-          )}
-        </button>
+              {/* 5. CALCULADORA COMERCIAL */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuRapidoOpen(false);
+                  onOpenCalc();
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justify: 'space-between',
+                  background: '#ffffff',
+                  color: 'var(--text-main)',
+                  border: '1.5px solid #cbd5e1',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  cursor: 'pointer'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Calculator size={18} style={{ color: 'var(--orange-primary)' }} />
+                  <span>Calculadora Comercial</span>
+                </div>
+                <ChevronRight size={18} />
+              </button>
 
-        <button type="button" className="action-btn-circle" onClick={onOpenEmpresa} title="Dados da Minha Empresa">
-          <Building size={20} />
-        </button>
-      </div>
-    </header>
+              {/* 6. DADOS DA MINHA EMPRESA */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuRapidoOpen(false);
+                  onOpenEmpresa();
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justify: 'space-between',
+                  background: '#ffffff',
+                  color: 'var(--text-main)',
+                  border: '1.5px solid #cbd5e1',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  cursor: 'pointer'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Building size={18} style={{ color: 'var(--blue-primary)' }} />
+                  <span>Minha Empresa (Logo, CNPJ & Chave PIX)</span>
+                </div>
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
