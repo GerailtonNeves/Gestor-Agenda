@@ -1,0 +1,622 @@
+/* ==========================================================================
+   SISTEMA ESCRITÓRIO DE BOLSO - AZUL CLARO ELEGANTE & LARANJA SUNSET
+   DESIGN PREMIUM, CRISTALINO, MODERNO E EXTREMAMENTE ELEGANTE
+   ========================================================================== */
+
+:root {
+  /* Cores Principais - Azul Claro Elegante (Sky / Azure) & Laranja Sunset */
+  --blue-primary: #0284c7;        /* Sky 600 - Azul Claro Elegante Principal */
+  --blue-brand: #38bdf8;          /* Sky 400 - Azul Celeste Vibrante */
+  --blue-dark: #0369a1;           /* Sky 700 - Azul de Apoio Nítido */
+  --blue-light-bg: #e0f2fe;       /* Sky 100 - Fundo Azul Claro Suave */
+  --blue-ice-bg: #f0f9ff;         /* Sky 50 - Fundo Azul Gelo Iluminado */
+  --blue-border: #bae6fd;         /* Borda Azul Claro Fina Elegante */
+  --blue-gradient: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  --blue-active-gradient: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+
+  --orange-primary: #f97316;      /* Orange 500 - Laranja Sunset Vibrante */
+  --orange-secondary: #ea580c;    /* Orange 600 - Laranja Intenso */
+  --orange-light-bg: #fff7ed;     /* Fundo Suave Laranja */
+  --orange-border: #fed7aa;       /* Borda Suave Laranja */
+  --orange-gradient: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+
+  /* Fundo da Aplicação e Superfícies Cristalinas */
+  --bg-app: #f0f9ff;              /* Fundo Azul Gelo Limpo */
+  --card-bg: #ffffff;             /* Superfície Branca Puríssima */
+  --text-main: #0f172a;           /* Texto Principal Nítido Escuro */
+  --text-muted: #475569;          /* Texto Secundário Legível */
+  --border-color: #cbd5e1;        /* Linhas Divisórias */
+  --success: #059669;             /* Verde Esmeralda Ricos */
+  --success-bg: #ecfdf5;          /* Fundo Verde Claro */
+  --warning: #f59e0b;             /* Amarelo Ouro */
+  --danger: #ef4444;              /* Vermelho Vivo */
+
+  /* Sombras Ricas & Raios */
+  --shadow-sm: 0 2px 5px rgba(2, 132, 199, 0.05);
+  --shadow-md: 0 6px 18px rgba(2, 132, 199, 0.1);
+  --shadow-lg: 0 12px 30px rgba(2, 132, 199, 0.15);
+  --shadow-orange-btn: 0 4px 14px rgba(249, 115, 22, 0.35);
+  --shadow-blue-btn: 0 4px 14px rgba(2, 132, 199, 0.35);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}
+
+/* Reset Global */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Scrollbar Bonita em Azul Claro */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--blue-ice-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--blue-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--blue-primary);
+}
+
+/* App Layout */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-layout {
+  display: flex;
+  flex: 1;
+  width: 100%;
+}
+
+.main-content {
+  flex: 1;
+  padding: 26px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 100px;
+}
+
+@media (min-width: 900px) {
+  .main-content {
+    padding-bottom: 40px;
+  }
+}
+
+/* ==========================================================================
+   TOPBAR HEADER (AZUL CLARO ELEGANTE)
+   ========================================================================== */
+.topbar {
+  background: var(--blue-gradient);
+  color: #ffffff;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 18px rgba(2, 132, 199, 0.2);
+  border-bottom: 3px solid var(--orange-primary);
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.topbar-logo {
+  height: 42px;
+  width: auto;
+  max-width: 150px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 4px;
+}
+
+.topbar-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+}
+
+.topbar-subtitle {
+  font-size: 0.75rem;
+  color: #ffedd5;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.action-btn-circle {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.action-btn-circle:hover {
+  background: var(--orange-gradient);
+  border-color: var(--orange-primary);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-orange-btn);
+}
+
+.badge-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--orange-primary);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+}
+
+/* ==========================================================================
+   SIDEBAR LATERAL (MENU AZUL CLARO ELEGANTE)
+   ========================================================================== */
+.sidebar {
+  width: 290px;
+  background: #ffffff;
+  border-right: 2px solid var(--blue-border);
+  padding: 24px 16px;
+  display: none;
+  flex-direction: column;
+  gap: 22px;
+  box-shadow: 4px 0 15px rgba(2, 132, 199, 0.04);
+}
+
+@media (min-width: 900px) {
+  .sidebar {
+    display: flex;
+  }
+}
+
+.nav-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nav-section-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--orange-primary);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  padding: 0 12px 6px 12px;
+  border-bottom: 2px solid var(--orange-border);
+  margin-bottom: 4px;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 0.94rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1.5px solid transparent;
+  background: var(--blue-ice-bg);
+  width: 100%;
+  text-align: left;
+}
+
+.nav-btn:hover {
+  background: var(--blue-light-bg);
+  color: var(--blue-primary);
+  border-color: var(--blue-border);
+  transform: translateX(4px);
+}
+
+.nav-btn.active-blue {
+  background: var(--blue-gradient);
+  color: #ffffff;
+  font-weight: 800;
+  border-color: var(--blue-primary);
+  box-shadow: var(--shadow-blue-btn);
+}
+
+.nav-btn.active-orange {
+  background: var(--orange-gradient);
+  color: #ffffff;
+  font-weight: 800;
+  border-color: var(--orange-secondary);
+  box-shadow: var(--shadow-orange-btn);
+}
+
+/* ==========================================================================
+   MENU INFERIOR CELULAR E TABLET (AZUL CLARO & LARANJA)
+   ========================================================================== */
+.mobile-nav, .mobile-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-top: 3px solid var(--orange-primary);
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 4px;
+  z-index: 2000;
+  box-shadow: 0 -4px 20px rgba(2, 132, 199, 0.12);
+}
+
+@media (min-width: 900px) {
+  .mobile-nav, .mobile-bottom-bar {
+    display: none;
+  }
+}
+
+.mobile-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.mobile-nav-btn.active {
+  color: #ffffff;
+  background: var(--orange-gradient);
+  box-shadow: var(--shadow-orange-btn);
+}
+
+/* ==========================================================================
+   CARTÕES & SUPERFÍCIES
+   ========================================================================== */
+.card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--blue-border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--blue-primary);
+}
+
+.card-blue {
+  background: var(--blue-ice-bg);
+  border: 2px solid var(--blue-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.card-orange {
+  background: var(--orange-light-bg);
+  border: 2px solid var(--orange-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.card-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--blue-primary);
+}
+
+/* ==========================================================================
+   BOTÕES ELEGANTES DE ALTO CONSTRASTE
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: var(--radius-md);
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  outline: none;
+  touch-action: manipulation;
+  min-height: 44px;
+}
+
+.btn-primary {
+  background: var(--blue-gradient);
+  color: #ffffff;
+  box-shadow: var(--shadow-blue-btn);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+.btn-orange {
+  background: var(--orange-gradient);
+  color: #ffffff;
+  box-shadow: var(--shadow-orange-btn);
+}
+.btn-orange:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+.btn-secondary {
+  background: var(--blue-light-bg);
+  color: var(--blue-primary);
+  border: 1.5px solid var(--blue-border);
+}
+.btn-secondary:hover {
+  background: #bae6fd;
+  border-color: var(--blue-primary);
+}
+
+.btn-whatsapp {
+  background: #16a34a;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+}
+.btn-whatsapp:hover {
+  background: #15803d;
+  transform: translateY(-2px);
+}
+
+.btn-sm {
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  min-height: 36px;
+}
+
+/* ==========================================================================
+   FORMULÁRIOS & ENTRADAS
+   ========================================================================== */
+.form-group {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--blue-primary);
+}
+
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 11px 16px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--blue-border);
+  background: #ffffff;
+  color: var(--text-main);
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  outline: none;
+  min-height: 46px;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--orange-primary);
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.2);
+}
+
+/* ==========================================================================
+   TABELAS E BADGES
+   ========================================================================== */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--blue-border);
+  box-shadow: var(--shadow-sm);
+  -webkit-overflow-scrolling: touch;
+}
+
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  min-width: 650px;
+}
+
+.custom-table th {
+  background: var(--blue-light-bg);
+  color: var(--blue-primary);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 14px 18px;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--blue-border);
+}
+
+.custom-table td {
+  padding: 14px 18px;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.custom-table tbody tr:hover {
+  background: var(--blue-ice-bg);
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.badge-blue {
+  background: var(--blue-light-bg);
+  color: var(--blue-primary);
+  border: 1.5px solid var(--blue-border);
+}
+
+.badge-orange {
+  background: var(--orange-light-bg);
+  color: var(--orange-primary);
+  border: 1.5px solid var(--orange-border);
+}
+
+.badge-success {
+  background: var(--success-bg);
+  color: #047857;
+  border: 1.5px solid #6ee7b7;
+}
+
+.badge-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1.5px solid #fca5a5;
+}
+
+/* Modais Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(2, 132, 199, 0.4);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2500;
+  padding: 16px;
+}
+
+.modal-content {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 26px;
+  width: 100%;
+  max-width: 580px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px rgba(2, 132, 199, 0.2);
+  animation: modalScale 0.2s ease;
+  border: 2px solid var(--blue-border);
+}
+
+@keyframes modalScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--blue-border);
+  padding-bottom: 12px;
+}
+
+.modal-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--blue-primary);
+}
+
+/* IMPRESSÃO PERFEITA DE PDF PARA ORÇAMENTOS E RECIBOS */
+@media print {
+  html, body {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .no-print, .topbar, .sidebar, .mobile-nav, .modal-overlay {
+    display: none !important;
+  }
+
+  #documento-impressao, #documento-impressao *,
+  .print-document, .print-document *,
+  #cupom-impressao, #cupom-impressao * {
+    visibility: visible !important;
+  }
+
+  #documento-impressao, .print-document {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "Escritório de Bolso - Gestão Empresarial",
+  "short_name": "Escritório de Bolso",
+  "description": "Sistema Completo de Agendamentos, Financeiro, Clientes, Orçamentos, Recibos e Estoque",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#0284c7",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

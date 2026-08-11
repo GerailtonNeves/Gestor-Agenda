@@ -1,0 +1,1139 @@
+import React, { useState } from 'react';
+import { 
+  Calendar as CalendarIcon, 
+  Plus, 
+  CheckCircle, 
+  Clock, 
+  Send, 
+  Trash2, 
+  Filter, 
+  AlertCircle, 
+  Edit, 
+  DollarSign, 
+  Layers, 
+  PlusCircle, 
+  X,
+  ChevronLeft,
+  ChevronRight,
+  List,
+  Grid
+} from 'lucide-react';
+import { abrirWhatsapp, msgWhatsapp } from '../utils/whatsapp';
+import { safeFormatDate } from '../utils/storage';
+import { playNotificationSound } from '../utils/soundUtils';
+
+const parseVal = (val) => {
+  if (typeof val === 'number') return isNaN(val) ? 0 : val;
+  if (!val) return 0;
+  let str = String(val).replace(/[^0-9.,]/g, '');
+  if (str.includes(',') && str.includes('.')) {
+    str = str.replace(/\./g, '').replace(',', '.');
+  } else if (str.includes(',')) {
+    str = str.replace(',', '.');
+  }
+  const parsed = parseFloat(str);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
+export default function Agenda({ agenda = [], clientes = [], produtos = [], empresa = {}, onSaveAgenda, onDeleteAgenda, onToggleConcluidoAgenda }) {
+  const [modoVisao, setModoVisao] = useState('calendario'); // 'calendario' ou 'lista'
+  const [dataMesAtual, setDataMesAtual] = useState(new Date());
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMultiploOpen, setModalMultiploOpen] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [filtro, setFiltro] = useState('todos');
+  const [dataFiltro, setDataFiltro] = useState('');
+  const [toastAlert, setToastAlert] = useState(null);
+
+  // Form State Simples
+  const [titulo, setTitulo] = useState('');
+  const [clienteId, setClienteId] = useState('');
+  const [clienteNomeCustom, setClienteNomeCustom] = useState('');
+  const [data, setData] = useState(new Date().toISOString().split('T')[0]);
+  const [horario, setHorario] = useState('09:00');
+  const [valor, setValor] = useState('');
+  const [descricao, setDescricao] = useState('');
+  const [prioridade, setPrioridade] = useState('Normal');
+
+  // Form State Agendamento Múltiplo
+  const [multiTitulo, setMultiTitulo] = useState('');
+  const [multiClienteId, setMultiClienteId] = useState('');
+  const [multiClienteNomeCustom, setMultiClienteNomeCustom] = useState('');
+  const [multiHorario, setMultiHorario] = useState('09:00');
+  const [multiValor, setMultiValor] = useState('');
+  const [multiDescricao, setMultiDescricao] = useState('');
+  const [multiPrioridade, setMultiPrioridade] = useState('Normal');
+  
+  const [tipoSelecaoDias, setTipoSelecaoDias] = useState('manual');
+  const [dataInputAdicionar, setDataInputAdicionar] = useState(new Date().toISOString().split('T')[0]);
+  const [listaDatasEscolhidas, setListaDatasEscolhidas] = useState([]);
+
+  const [dataInicioRec, setDataInicioRec] = useState(new Date().toISOString().split('T')[0]);
+  const [dataFimRec, setDataFimRec] = useState(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 1);
+    return d.toISOString().split('T')[0];
+  });
+  const [diasSemana, setDiasSemana] = useState({
+    1: false,
+    2: false,
+    3: false,
+    4: false,
+    5: false,
+    6: false,
+    0: false
+  });
+
+  const triggerToast = (msg) => {
+    setToastAlert(msg);
+    setTimeout(() => setToastAlert(null), 4000);
+  };
+
+  // EXCLUIR COMPROMISSO COM CONFIRMAÇÃO SEGURA
+  const handleExcluirCompromisso = (id, tituloCompromisso = '') => {
+    if (window.confirm(`Tem certeza que deseja excluir o compromisso "${tituloCompromisso || 'selecionado'}"?`)) {
+      onDeleteAgenda(id);
+      if (modalOpen) setModalOpen(false);
+      triggerToast(`🗑️ Compromisso "${tituloCompromisso || 'Removido'}" excluído da agenda!`);
+    }
+  };
+
+  // SELEÇÃO DE SERVIÇO / PRODUTO CADASTRADO PARA AGENDAMENTO ÚNICO
+  const selecionarServicoParaAgenda = (e) => {
+    const prodId = e.target.value;
+    if (!prodId) return;
+    const prod = produtos.find(p => String(p.id) === String(prodId));
+    if (prod) {
+      setTitulo(prod.nome || '');
+      const valNum = parseVal(prod.precoVenda ?? prod.preco ?? prod.valorUnitario ?? 0);
+      if (valNum > 0) setValor(String(valNum));
+    }
+  };
+
+  // SELEÇÃO DE SERVIÇO / PRODUTO CADASTRADO PARA AGENDAMENTO MÚLTIPLO
+  const selecionarServicoParaMultiAgenda = (e) => {
+    const prodId = e.target.value;
+    if (!prodId) return;
+    const prod = produtos.find(p => String(p.id) === String(prodId));
+    if (prod) {
+      setMultiTitulo(prod.nome || '');
+      const valNum = parseVal(prod.precoVenda ?? prod.preco ?? prod.valorUnitario ?? 0);
+      if (valNum > 0) setMultiValor(String(valNum));
+    }
+  };
+
+  const abrirModalNovoParaData = (dataTarget) => {
+    setEditId(null);
+    setTitulo('');
+    setClienteId('');
+    setClienteNomeCustom('');
+    setData(dataTarget || new Date().toISOString().split('T')[0]);
+    setHorario('09:00');
+    setValor('');
+    setDescricao('');
+    setPrioridade('Normal');
+    setModalOpen(true);
+  };
+
+  const abrirModalNovo = () => abrirModalNovoParaData(new Date().toISOString().split('T')[0]);
+
+  const abrirModalMultiplo = () => {
+    setMultiTitulo('');
+    setMultiClienteId('');
+    setMultiClienteNomeCustom('');
+    setMultiHorario('09:00');
+    setMultiValor('');
+    setMultiDescricao('');
+    setMultiPrioridade('Normal');
+    setTipoSelecaoDias('manual');
+    setDataInputAdicionar(new Date().toISOString().split('T')[0]);
+    setListaDatasEscolhidas([new Date().toISOString().split('T')[0]]);
+    setModalMultiploOpen(true);
+  };
+
+  const abrirModalEditar = (ag) => {
+    setEditId(ag.id);
+    setTitulo(ag.titulo || '');
+    setClienteId(ag.clienteId || '');
+    setClienteNomeCustom(ag.clienteNome || '');
+    setData(ag.data || new Date().toISOString().split('T')[0]);
+    setHorario(ag.horario || '09:00');
+    setValor(ag.valor ? String(ag.valor) : '');
+    setDescricao(ag.descricao || '');
+    setPrioridade(ag.prioridade || 'Normal');
+    setModalOpen(true);
+  };
+
+  const handleSalvar = (e) => {
+    e.preventDefault();
+    if (!titulo.trim()) return;
+
+    let nomeClienteFinal = clienteNomeCustom;
+    if (clienteId) {
+      const cliFound = clientes.find(c => String(c.id) === String(clienteId));
+      if (cliFound) nomeClienteFinal = cliFound.nome;
+    }
+
+    const valorNum = parseFloat(valor) || 0;
+
+    if (editId) {
+      const atualizados = agenda.map(a => {
+        if (a.id === editId) {
+          return {
+            ...a,
+            titulo,
+            clienteId,
+            clienteNome: nomeClienteFinal || 'Cliente Não Especificado',
+            data,
+            horario,
+            valor: valorNum,
+            descricao,
+            prioridade
+          };
+        }
+        return a;
+      });
+      onSaveAgenda(atualizados);
+      triggerToast(`✏️ Agendamento "${titulo}" atualizado!`);
+    } else {
+      const novoAgendamento = {
+        id: 'ag_' + Date.now(),
+        titulo,
+        clienteId,
+        clienteNome: nomeClienteFinal || 'Cliente Não Especificado',
+        data,
+        horario,
+        valor: valorNum,
+        descricao,
+        concluido: false,
+        prioridade
+      };
+      onSaveAgenda([...agenda, novoAgendamento]);
+      playNotificationSound(); // TOCAR SOM DE NOTIFICAÇÃO AO CRIAR AGENDAMENTO
+      triggerToast(`✨ Agendamento "${titulo}" adicionado para ${safeFormatDate(data)} às ${horario}!`);
+    }
+
+    setModalOpen(false);
+  };
+
+  const adicionarDataManual = () => {
+    if (!dataInputAdicionar) return;
+    if (listaDatasEscolhidas.includes(dataInputAdicionar)) {
+      alert('⚠️ Esta data já foi adicionada na lista.');
+      return;
+    }
+    const novaLista = [...listaDatasEscolhidas, dataInputAdicionar].sort();
+    setListaDatasEscolhidas(novaLista);
+  };
+
+  const removerDataManual = (dataParaRemover) => {
+    setListaDatasEscolhidas(prev => prev.filter(d => d !== dataParaRemover));
+  };
+
+  const gerarDatasRecorrentes = () => {
+    const datasGeradas = [];
+    const inicio = new Date(dataInicioRec + 'T00:00:00');
+    const fim = new Date(dataFimRec + 'T00:00:00');
+
+    if (inicio > fim) {
+      alert('⚠️ A data inicial não pode ser posterior à data final.');
+      return;
+    }
+
+    const curr = new Date(inicio);
+    while (curr <= fim) {
+      const dayOfWeek = curr.getDay();
+      if (diasSemana[dayOfWeek]) {
+        const dateStr = curr.toISOString().split('T')[0];
+        datasGeradas.push(dateStr);
+      }
+      curr.setDate(curr.getDate() + 1);
+    }
+
+    if (datasGeradas.length === 0) {
+      alert('⚠️ Nenhuma data foi gerada. Marque ao menos um dia da semana (ex: Segunda, Quarta).');
+      return;
+    }
+
+    setListaDatasEscolhidas(datasGeradas);
+    setTipoSelecaoDias('manual');
+    triggerToast(`✨ ${datasGeradas.length} datas geradas no período!`);
+  };
+
+  const handleSalvarMultiplos = (e) => {
+    e.preventDefault();
+    if (!multiTitulo.trim()) {
+      alert('⚠️ Digite o título do serviço/compromisso.');
+      return;
+    }
+    if (listaDatasEscolhidas.length === 0) {
+      alert('⚠️ Escolha ao menos uma data para agendar.');
+      return;
+    }
+
+    let nomeClienteFinal = multiClienteNomeCustom;
+    if (multiClienteId) {
+      const cliFound = clientes.find(c => String(c.id) === String(multiClienteId));
+      if (cliFound) nomeClienteFinal = cliFound.nome;
+    }
+
+    const valorNum = parseFloat(multiValor) || 0;
+    const novosAgendamentos = listaDatasEscolhidas.map((d, index) => ({
+      id: 'ag_' + (Date.now() + index),
+      titulo: multiTitulo.trim(),
+      clienteId: multiClienteId,
+      clienteNome: nomeClienteFinal || 'Cliente Não Especificado',
+      data: d,
+      horario: multiHorario,
+      valor: valorNum,
+      descricao: multiDescricao,
+      concluido: false,
+      prioridade: multiPrioridade
+    }));
+
+    onSaveAgenda([...agenda, ...novosAgendamentos]);
+    playNotificationSound(); // TOCAR SOM DE NOTIFICAÇÃO AO CRIAR AGENDAMENTOS EM LOTE
+    triggerToast(`🎉 Sucesso! ${novosAgendamentos.length} agendamentos criados de uma só vez!`);
+    setModalMultiploOpen(false);
+  };
+
+  const handleConcluir = (ag) => {
+    const novoStatus = !ag.concluido;
+    if (onToggleConcluidoAgenda) {
+      onToggleConcluidoAgenda(ag.id, novoStatus);
+    } else {
+      const atualizada = agenda.map(a => a.id === ag.id ? { ...a, concluido: novoStatus } : a);
+      onSaveAgenda(atualizada);
+    }
+
+    if (novoStatus) {
+      const valStr = ag.valor > 0 ? ` (R$ ${Number(ag.valor).toFixed(2)} lançado nas Receitas!)` : '';
+      triggerToast(`✅ Compromisso "${ag.titulo}" Concluído com Sucesso!${valStr}`);
+    } else {
+      triggerToast(`🔄 Compromisso reaberto.`);
+    }
+  };
+
+  // NAVEGAÇÃO DO CALENDÁRIO MENSAL
+  const handleMesAnterior = () => {
+    const d = new Date(dataMesAtual);
+    d.setMonth(d.getMonth() - 1);
+    setDataMesAtual(d);
+  };
+
+  const handleMesProximo = () => {
+    const d = new Date(dataMesAtual);
+    d.setMonth(d.getMonth() + 1);
+    setDataMesAtual(d);
+  };
+
+  const handleHoje = () => {
+    setDataMesAtual(new Date());
+  };
+
+  const nomeMes = dataMesAtual.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const anoAtual = dataMesAtual.getFullYear();
+  const mesIndex = dataMesAtual.getMonth();
+
+  const getDiasCalendario = () => {
+    const primeiroDia = new Date(anoAtual, mesIndex, 1);
+    const ultimoDia = new Date(anoAtual, mesIndex + 1, 0);
+
+    const diaSemanaInicio = primeiroDia.getDay();
+    const totalDiasMes = ultimoDia.getDate();
+
+    const hojeStr = new Date().toISOString().split('T')[0];
+
+    const celulas = [];
+
+    const mesAnteriorUltimoDia = new Date(anoAtual, mesIndex, 0).getDate();
+    for (let i = diaSemanaInicio - 1; i >= 0; i--) {
+      const diaNum = mesAnteriorUltimoDia - i;
+      const dataObj = new Date(anoAtual, mesIndex - 1, diaNum);
+      const dateStr = dataObj.toISOString().split('T')[0];
+      celulas.push({
+        diaNum,
+        dateStr,
+        isCurrentMonth: false,
+        isToday: dateStr === hojeStr
+      });
+    }
+
+    for (let d = 1; d <= totalDiasMes; d++) {
+      const dateStr = `${anoAtual}-${String(mesIndex + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      celulas.push({
+        diaNum: d,
+        dateStr,
+        isCurrentMonth: true,
+        isToday: dateStr === hojeStr
+      });
+    }
+
+    const totalCelulasNecessarias = celulas.length > 35 ? 42 : 35;
+    const faltam = totalCelulasNecessarias - celulas.length;
+    for (let i = 1; i <= faltam; i++) {
+      const dataObj = new Date(anoAtual, mesIndex + 1, i);
+      const dateStr = dataObj.toISOString().split('T')[0];
+      celulas.push({
+        diaNum: i,
+        dateStr,
+        isCurrentMonth: false,
+        isToday: dateStr === hojeStr
+      });
+    }
+
+    return celulas;
+  };
+
+  const celulasCalendario = getDiasCalendario();
+
+  let agendaFiltrada = agenda.filter(a => {
+    if (filtro === 'pendentes') return !a.concluido;
+    if (filtro === 'concluidos') return a.concluido;
+    return true;
+  });
+
+  if (dataFiltro) {
+    agendaFiltrada = agendaFiltrada.filter(a => a.data === dataFiltro);
+  }
+
+  agendaFiltrada.sort((a, b) => {
+    if (a.data !== b.data) return a.data.localeCompare(b.data);
+    return a.horario.localeCompare(b.horario);
+  });
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Toast Alert Banner */}
+      {toastAlert && (
+        <div style={{
+          position: 'fixed',
+          bottom: '80px',
+          right: '20px',
+          background: 'var(--orange-gradient)',
+          color: '#fff',
+          padding: '14px 20px',
+          borderRadius: '12px',
+          boxShadow: 'var(--shadow-orange-btn)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          zIndex: 2000,
+          fontWeight: 700,
+          animation: 'slideIn 0.3s ease'
+        }}>
+          <AlertCircle size={20} />
+          <span>{toastAlert}</span>
+        </div>
+      )}
+
+      {/* Cabeçalho do Módulo */}
+      <div className="card card-orange" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--orange-primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <CalendarIcon size={24} /> Agenda & Compromissos
+          </h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+            Visualize seus compromissos no <strong>Calendário Interativo Mensal</strong> ou na Lista Completa!
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <button className="btn btn-secondary" onClick={abrirModalMultiplo} style={{ background: '#ffffff', borderColor: 'var(--orange-primary)', color: 'var(--orange-primary)' }}>
+            <Layers size={18} /> Agendamento Múltiplo (Vários Dias)
+          </button>
+          <button className="btn btn-orange" onClick={abrirModalNovo}>
+            <Plus size={18} /> Novo Agendamento
+          </button>
+        </div>
+      </div>
+
+      {/* BARRA DE CONTROLE DE VISÃO (CALENDÁRIO vs LISTA) */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', background: '#ffffff', padding: '12px 18px', borderRadius: '14px', border: '1.5px solid var(--blue-border)', boxShadow: 'var(--shadow-sm)' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button 
+            className={`btn btn-sm ${modoVisao === 'calendario' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setModoVisao('calendario')}
+          >
+            <Grid size={16} /> Visão Calendário Mensal
+          </button>
+          <button 
+            className={`btn btn-sm ${modoVisao === 'lista' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setModoVisao('lista')}
+          >
+            <List size={16} /> Visão em Lista ({agenda.length})
+          </button>
+        </div>
+
+        {modoVisao === 'calendario' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button className="btn btn-sm btn-secondary" onClick={handleMesAnterior} title="Mês Anterior">
+              <ChevronLeft size={16} />
+            </button>
+            <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--blue-primary)', textTransform: 'capitalize', minWidth: '160px', textAlign: 'center' }}>
+              {nomeMes}
+            </span>
+            <button className="btn btn-sm btn-secondary" onClick={handleMesProximo} title="Próximo Mês">
+              <ChevronRight size={16} />
+            </button>
+            <button className="btn btn-sm btn-orange" onClick={handleHoje} style={{ fontSize: '0.78rem', padding: '4px 10px' }}>
+              Hoje
+            </button>
+          </div>
+        )}
+
+        {modoVisao === 'lista' && (
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <button className={`btn btn-sm ${filtro === 'todos' ? 'btn-orange' : 'btn-secondary'}`} onClick={() => setFiltro('todos')}>
+              Todos
+            </button>
+            <button className={`btn btn-sm ${filtro === 'pendentes' ? 'btn-orange' : 'btn-secondary'}`} onClick={() => setFiltro('pendentes')}>
+              Pendentes ({agenda.filter(a => !a.concluido).length})
+            </button>
+            <button className={`btn btn-sm ${filtro === 'concluidos' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setFiltro('concluidos')}>
+              Concluídos ({agenda.filter(a => a.concluido).length})
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ==========================================================================
+         VISÃO 1: CALENDÁRIO INTERATIVO MENSAL
+         ========================================================================== */}
+      {modoVisao === 'calendario' && (
+        <div className="card" style={{ padding: '16px', border: '2px solid var(--blue-border)', background: '#ffffff' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px', textAlign: 'center', marginBottom: '8px' }}>
+            {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((diaSemana, index) => (
+              <div 
+                key={diaSemana} 
+                style={{ 
+                  padding: '10px', 
+                  fontWeight: 800, 
+                  fontSize: '0.82rem', 
+                  color: index === 0 || index === 6 ? 'var(--orange-primary)' : 'var(--blue-primary)',
+                  background: 'var(--blue-ice-bg)',
+                  borderRadius: '8px',
+                  textTransform: 'uppercase',
+                  border: '1px solid var(--blue-border)'
+                }}
+              >
+                {diaSemana}
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
+            {celulasCalendario.map((celula, i) => {
+              const compromissosDoDia = agenda.filter(a => a.data === celula.dateStr);
+
+              return (
+                <div
+                  key={i}
+                  onClick={() => abrirModalNovoParaData(celula.dateStr)}
+                  style={{
+                    minHeight: '110px',
+                    background: celula.isToday 
+                      ? '#fff7ed' 
+                      : celula.isCurrentMonth 
+                        ? '#ffffff' 
+                        : '#f8fafc',
+                    border: celula.isToday 
+                      ? '2px solid var(--orange-primary)' 
+                      : '1.5px solid #e2e8f0',
+                    borderRadius: '10px',
+                    padding: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    opacity: celula.isCurrentMonth ? 1 : 0.4
+                  }}
+                  className="calendar-day-cell"
+                  title={`Clique para agendar um compromisso no dia ${safeFormatDate(celula.dateStr)}`}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ 
+                      fontSize: '0.9rem', 
+                      fontWeight: 800, 
+                      color: celula.isToday ? 'var(--orange-secondary)' : celula.isCurrentMonth ? 'var(--text-main)' : 'var(--text-muted)',
+                      background: celula.isToday ? 'var(--orange-border)' : 'transparent',
+                      width: '26px',
+                      height: '26px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      {celula.diaNum}
+                    </span>
+
+                    {compromissosDoDia.length > 0 && (
+                      <span className="badge badge-orange" style={{ padding: '2px 6px', fontSize: '0.68rem' }}>
+                        {compromissosDoDia.length} ag.
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px', overflowY: 'auto', maxHeight: '75px' }}>
+                    {compromissosDoDia.map(ag => {
+                      const primeiroNome = ag.clienteNome && ag.clienteNome !== 'Cliente Não Especificado'
+                        ? ag.clienteNome.trim().split(' ')[0]
+                        : ag.titulo;
+
+                      return (
+                        <div
+                          key={ag.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            abrirModalEditar(ag);
+                          }}
+                          style={{
+                            background: ag.concluido ? '#d1fae5' : 'var(--blue-light-bg)',
+                            border: `1px solid ${ag.concluido ? '#6ee7b7' : 'var(--blue-border)'}`,
+                            color: ag.concluido ? '#047857' : 'var(--blue-primary)',
+                            padding: '3px 6px',
+                            borderRadius: '6px',
+                            fontSize: '0.74rem',
+                            fontWeight: 700,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                          title={`${ag.horario} - ${ag.titulo} (${ag.clienteNome})`}
+                        >
+                          <span style={{ fontSize: '0.68rem', fontWeight: 800 }}>{ag.horario}</span>
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{primeiroNome}</span>
+                          <Trash2
+                            size={12}
+                            style={{ color: '#ef4444', marginLeft: 'auto', cursor: 'pointer', flexShrink: 0 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleExcluirCompromisso(ag.id, ag.titulo);
+                            }}
+                            title="Excluir compromisso"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ==========================================================================
+         VISÃO 2: LISTA DE AGENDAMENTOS COMPLETA
+         ========================================================================== */}
+      {modoVisao === 'lista' && (
+        <>
+          {agendaFiltrada.length === 0 ? (
+            <div className="card" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+              <CalendarIcon size={48} style={{ opacity: 0.3, marginBottom: '12px' }} />
+              <p>Nenhum agendamento encontrado.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {agendaFiltrada.map((ag) => (
+                <div
+                  key={ag.id}
+                  className="card"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justify: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '16px',
+                    padding: '16px 20px',
+                    borderLeft: `6px solid ${ag.concluido ? 'var(--success)' : 'var(--orange-bright)'}`,
+                    background: ag.concluido ? 'var(--success-bg)' : 'var(--card-bg)',
+                    opacity: ag.concluido ? 0.9 : 1
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <button
+                      className="btn"
+                      onClick={() => handleConcluir(ag)}
+                      title={ag.concluido ? "Reabrir compromisso" : "Marcar como Concluído e Lançar nas Receitas"}
+                      style={{
+                        background: ag.concluido ? 'var(--success)' : 'var(--orange-gradient)',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '8px 14px',
+                        borderRadius: '8px',
+                        fontWeight: 800,
+                        fontSize: '0.85rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <CheckCircle size={18} /> {ag.concluido ? 'Concluído ✅' : 'Marcar Concluído'}
+                    </button>
+
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <h3 style={{ fontSize: '1.05rem', fontWeight: 800, textDecoration: ag.concluido ? 'line-through' : 'none', color: 'var(--text-main)' }}>
+                          {ag.titulo}
+                        </h3>
+                        <span className={`badge ${ag.concluido ? 'badge-success' : 'badge-orange'}`}>
+                          {ag.concluido ? 'Concluído & Lançado em Receitas' : ag.prioridade || 'Normal'}
+                        </span>
+                      </div>
+
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '4px', alignItems: 'center' }}>
+                        <span>🗓 {safeFormatDate(ag.data)}</span>
+                        <span>⏰ {ag.horario}</span>
+                        <span>👤 {ag.clienteNome}</span>
+                        {ag.valor > 0 && (
+                          <span style={{ fontWeight: 800, color: '#047857', background: '#ecfdf5', padding: '2px 8px', borderRadius: '6px', border: '1px solid #10b981' }}>
+                            💰 R$ {Number(ag.valor).toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+
+                      {ag.descricao && (
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px', fontStyle: 'italic' }}>
+                          "{ag.descricao}"
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button
+                      className="btn btn-sm btn-whatsapp"
+                      onClick={() => abrirWhatsapp(empresa.whatsapp, msgWhatsapp.agendamento(ag, empresa))}
+                      title="Enviar Lembrete por WhatsApp"
+                    >
+                      <Send size={14} /> WhatsApp
+                    </button>
+
+                    <button
+                      className="btn btn-sm btn-primary"
+                      onClick={() => abrirModalEditar(ag)}
+                      title="Editar Agendamento"
+                    >
+                      <Edit size={14} /> Editar
+                    </button>
+
+                    <button
+                      className="btn btn-sm btn-secondary"
+                      onClick={() => handleExcluirCompromisso(ag.id, ag.titulo)}
+                      title="Excluir compromisso"
+                      style={{ color: '#dc2626', borderColor: '#fca5a5' }}
+                    >
+                      <Trash2 size={14} /> Excluir
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* MODAL 1: AGENDAMENTO ÚNICO / EDITAR / EXCLUIR */}
+      {modalOpen && (
+        <div className="modal-overlay" onClick={() => setModalOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">{editId ? 'Editar Agendamento' : 'Novo Agendamento na Agenda'}</h3>
+              <button className="action-btn-circle" onClick={() => setModalOpen(false)}>✕</button>
+            </div>
+
+            <form onSubmit={handleSalvar}>
+              <div className="form-group" style={{ background: 'var(--blue-ice-bg)', padding: '12px', borderRadius: '10px', border: '1.5px solid var(--blue-border)' }}>
+                <label className="form-label" style={{ color: 'var(--orange-primary)', fontSize: '0.85rem' }}>
+                  Puxar de um Serviço / Produto Cadastrado (Opcional):
+                </label>
+                <select className="form-select" onChange={selecionarServicoParaAgenda}>
+                  <option value="">-- Selecionar da Lista ({produtos.length} cadastrados) --</option>
+                  {produtos.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.nome} (R$ {parseVal(p.precoVenda ?? p.preco ?? 0).toFixed(2)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Título do Compromisso / Serviço *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Ex: Instalação de Equipamento ou Reunião Comercial"
+                  value={titulo}
+                  onChange={(e) => setTitulo(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Selecione o Cliente (Opcional)</label>
+                <select
+                  className="form-select"
+                  value={clienteId}
+                  onChange={(e) => setClienteId(e.target.value)}
+                >
+                  <option value="">-- Selecionar Cliente Cadastrado --</option>
+                  {clientes.map(c => (
+                    <option key={c.id} value={c.id}>{c.nome}</option>
+                  ))}
+                </select>
+              </div>
+
+              {!clienteId && (
+                <div className="form-group">
+                  <label className="form-label">Nome do Cliente (Manual)</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Nome do cliente caso não esteja cadastrado"
+                    value={clienteNomeCustom}
+                    onChange={(e) => setClienteNomeCustom(e.target.value)}
+                  />
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                <div className="form-group">
+                  <label className="form-label">Data *</label>
+                  <input
+                    type="date"
+                    className="form-input"
+                    value={data}
+                    onChange={(e) => setData(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Horário *</label>
+                  <input
+                    type="time"
+                    className="form-input"
+                    value={horario}
+                    onChange={(e) => setHorario(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" style={{ color: 'var(--orange-primary)', fontWeight: 800 }}>
+                    Valor Serviço (R$)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="form-input"
+                    placeholder="0.00"
+                    value={valor}
+                    onChange={(e) => setValor(e.target.value)}
+                    style={{ fontWeight: 800, borderColor: 'var(--orange-bright)' }}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Prioridade</label>
+                <select
+                  className="form-select"
+                  value={prioridade}
+                  onChange={(e) => setPrioridade(e.target.value)}
+                >
+                  <option value="Normal">Normal</option>
+                  <option value="Média">Média</option>
+                  <option value="Alta">Alta 🔥</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Observações / Detalhes</label>
+                <textarea
+                  className="form-textarea"
+                  rows="3"
+                  placeholder="Informações adicionais do compromisso..."
+                  value={descricao}
+                  onChange={(e) => setDescricao(e.target.value)}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '16px', flexWrap: 'wrap' }}>
+                {editId && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => handleExcluirCompromisso(editId, titulo)}
+                    style={{ color: '#dc2626', borderColor: '#fca5a5', marginRight: 'auto' }}
+                  >
+                    <Trash2 size={16} /> Excluir Compromisso
+                  </button>
+                )}
+                <button type="button" className="btn btn-secondary" onClick={() => setModalOpen(false)}>Cancelar</button>
+                <button type="submit" className="btn btn-orange">{editId ? 'Salvar Alterações' : 'Agendar e Salvar'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: AGENDAMENTO MÚLTIPLO DE UMA SÓ VEZ (VÁRIAS DATAS) */}
+      {modalMultiploOpen && (
+        <div className="modal-overlay" onClick={() => setModalMultiploOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '620px' }}>
+            <div className="modal-header">
+              <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Layers size={20} style={{ color: 'var(--orange-primary)' }} /> Agendamento Múltiplo (Vários Dias)
+              </h3>
+              <button className="action-btn-circle" onClick={() => setModalMultiploOpen(false)}>✕</button>
+            </div>
+
+            <form onSubmit={handleSalvarMultiplos} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="form-group" style={{ background: 'var(--blue-ice-bg)', padding: '12px', borderRadius: '10px', border: '1.5px solid var(--blue-border)', marginBottom: 0 }}>
+                <label className="form-label" style={{ color: 'var(--orange-primary)', fontSize: '0.85rem' }}>
+                  Puxar de um Serviço / Produto Cadastrado (Opcional):
+                </label>
+                <select className="form-select" onChange={selecionarServicoParaMultiAgenda}>
+                  <option value="">-- Selecionar da Lista ({produtos.length} cadastrados) --</option>
+                  {produtos.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.nome} (R$ {parseVal(p.precoVenda ?? p.preco ?? 0).toFixed(2)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Título do Serviço / Compromisso *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Ex: Manutenção Semanal ou Pacote de Serviços"
+                  value={multiTitulo}
+                  onChange={(e) => setMultiTitulo(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Cliente (Opcional)</label>
+                  <select
+                    className="form-select"
+                    value={multiClienteId}
+                    onChange={(e) => setMultiClienteId(e.target.value)}
+                  >
+                    <option value="">-- Selecionar Cliente --</option>
+                    {clientes.map(c => (
+                      <option key={c.id} value={c.id}>{c.nome}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {!multiClienteId && (
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Nome Cliente (Manual)</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Nome do cliente"
+                      value={multiClienteNomeCustom}
+                      onChange={(e) => setMultiClienteNomeCustom(e.target.value)}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Horário Padrão *</label>
+                  <input
+                    type="time"
+                    className="form-input"
+                    value={multiHorario}
+                    onChange={(e) => setMultiHorario(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ color: 'var(--orange-primary)' }}>Valor p/ Sessão (R$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="form-input"
+                    placeholder="0.00"
+                    value={multiValor}
+                    onChange={(e) => setMultiValor(e.target.value)}
+                    style={{ fontWeight: 700 }}
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Prioridade</label>
+                  <select
+                    className="form-select"
+                    value={multiPrioridade}
+                    onChange={(e) => setMultiPrioridade(e.target.value)}
+                  >
+                    <option value="Normal">Normal</option>
+                    <option value="Média">Média</option>
+                    <option value="Alta">Alta 🔥</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ background: 'var(--blue-ice-bg)', padding: '14px', borderRadius: '12px', border: '1.5px solid var(--blue-border)' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--blue-primary)', marginBottom: '10px' }}>
+                  <span>🗓️ ESCOLHA COMO AGENDAR OS DIAS:</span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                  <button
+                    type="button"
+                    className={`btn btn-sm ${tipoSelecaoDias === 'manual' ? 'btn-orange' : 'btn-secondary'}`}
+                    onClick={() => setTipoSelecaoDias('manual')}
+                  >
+                    1. Escolher Datas Manuais
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn btn-sm ${tipoSelecaoDias === 'recorrente' ? 'btn-orange' : 'btn-secondary'}`}
+                    onClick={() => setTipoSelecaoDias('recorrente')}
+                  >
+                    2. Gerar Dias da Semana (Ex: Toda Seg/Qua)
+                  </button>
+                </div>
+
+                {tipoSelecaoDias === 'manual' && (
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <input
+                      type="date"
+                      className="form-input"
+                      style={{ width: 'auto', padding: '6px 12px' }}
+                      value={dataInputAdicionar}
+                      onChange={(e) => setDataInputAdicionar(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-orange"
+                      onClick={adicionarDataManual}
+                    >
+                      <PlusCircle size={16} /> Adicionar Esta Data à Lista
+                    </button>
+                  </div>
+                )}
+
+                {tipoSelecaoDias === 'recorrente' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                      <div>
+                        <label className="form-label" style={{ fontSize: '0.75rem' }}>Data Inicial</label>
+                        <input
+                          type="date"
+                          className="form-input"
+                          value={dataInicioRec}
+                          onChange={(e) => setDataInicioRec(e.target.value)}
+                          style={{ padding: '6px' }}
+                        />
+                      </div>
+                      <div>
+                        <label className="form-label" style={{ fontSize: '0.75rem' }}>Data Final</label>
+                        <input
+                          type="date"
+                          className="form-input"
+                          value={dataFimRec}
+                          onChange={(e) => setDataFimRec(e.target.value)}
+                          style={{ padding: '6px' }}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Marque os Dias da Semana desejados:</label>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '4px' }}>
+                        {[
+                          { key: 1, label: 'Seg' },
+                          { key: 2, label: 'Ter' },
+                          { key: 3, label: 'Qua' },
+                          { key: 4, label: 'Qui' },
+                          { key: 5, label: 'Sex' },
+                          { key: 6, label: 'Sáb' },
+                          { key: 0, label: 'Dom' }
+                        ].map(d => (
+                          <button
+                            key={d.key}
+                            type="button"
+                            className={`btn btn-sm ${diasSemana[d.key] ? 'btn-orange' : 'btn-secondary'}`}
+                            onClick={() => setDiasSemana(prev => ({ ...prev, [d.key]: !prev[d.key] }))}
+                            style={{ padding: '4px 8px', fontSize: '0.78rem' }}
+                          >
+                            {d.label} {diasSemana[d.key] ? '✓' : ''}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-primary"
+                      onClick={gerarDatasRecorrentes}
+                      style={{ marginTop: '6px' }}
+                    >
+                      ✨ Gerar Datas no Período
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ background: '#ffffff', padding: '12px', borderRadius: '10px', border: '1.5px solid var(--orange-border)' }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--orange-primary)', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>📋 LISTA DE DATAS QUE SERÃO AGENDADAS ({listaDatasEscolhidas.length} dias)</span>
+                  {listaDatasEscolhidas.length > 0 && (
+                    <button type="button" className="btn btn-sm btn-secondary" style={{ padding: '2px 6px', fontSize: '0.7rem' }} onClick={() => setListaDatasEscolhidas([])}>
+                      Limpar Lista
+                    </button>
+                  )}
+                </div>
+
+                {listaDatasEscolhidas.length === 0 ? (
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', padding: '10px' }}>
+                    Nenhuma data selecionada ainda. Escolha ou gere as datas acima.
+                  </p>
+                ) : (
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', maxHeight: '110px', overflowY: 'auto' }}>
+                    {listaDatasEscolhidas.map(d => (
+                      <span key={d} className="badge badge-orange" style={{ padding: '6px 10px', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem' }}>
+                        🗓 {safeFormatDate(d)}
+                        <X size={14} style={{ cursor: 'pointer' }} onClick={() => removerDataManual(d)} title="Remover esta data" />
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '10px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setModalMultiploOpen(false)}>Cancelar</button>
+                <button 
+                  type="submit" 
+                  className="btn btn-orange" 
+                  disabled={listaDatasEscolhidas.length === 0}
+                  style={{ fontWeight: 800, padding: '12px 24px' }}
+                >
+                  <CheckCircle size={20} /> Salvar {listaDatasEscolhidas.length} Agendamentos de Uma Só Vez!
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
