@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import Agenda from './components/Agenda';
+import Tarefas from './components/Tarefas';
 import Clientes from './components/Clientes';
 import Produtos from './components/Produtos';
 import HistoricoVendas from './components/HistoricoVendas';
@@ -20,6 +21,7 @@ import { playNotificationSound } from './utils/soundUtils';
 import {
   LayoutDashboard,
   Calendar,
+  CheckSquare,
   Users,
   Package,
   History,
@@ -58,6 +60,7 @@ export default function App() {
   const [clientes, setClientes] = useState(() => storageApi.getClientes());
   const [produtos, setProdutos] = useState(() => storageApi.getProdutos());
   const [agenda, setAgenda] = useState(() => storageApi.getAgenda());
+  const [tarefas, setTarefas] = useState(() => storageApi.getTarefas());
   const [financeiro, setFinanceiro] = useState(() => storageApi.getFinanceiro());
   const [orcamentos, setOrcamentos] = useState(() => storageApi.getOrcamentos());
   const [recibos, setRecibos] = useState(() => storageApi.getRecibos());
@@ -165,6 +168,10 @@ export default function App() {
   }, [agenda]);
 
   useEffect(() => {
+    storageApi.saveTarefas(tarefas);
+  }, [tarefas]);
+
+  useEffect(() => {
     storageApi.saveFinanceiro(financeiro);
   }, [financeiro]);
 
@@ -190,6 +197,9 @@ export default function App() {
 
   const handleSaveAgenda = (novos) => setAgenda(novos);
   const handleDeleteAgenda = (id) => setAgenda(agenda.filter(a => a.id !== id));
+
+  const handleSaveTarefas = (novas) => setTarefas(novas);
+  const handleDeleteTarefa = (id) => setTarefas(tarefas.filter(t => t.id !== id));
 
   const handleToggleConcluidoAgenda = (id, concluidoStatus) => {
     const agFound = agenda.find(a => a.id === id);
@@ -231,7 +241,8 @@ export default function App() {
   const estoqueBaixo = produtos.filter(p => p.estoque <= (p.estoqueMinimo || 5));
   const contasVencendo = financeiro.filter(f => f.status === 'Pendente');
   const compromissosPendentes = agenda.filter(a => !a.concluido);
-  const notificationCount = estoqueBaixo.length + contasVencendo.length + compromissosPendentes.length;
+  const tarefasPendentes = tarefas.filter(t => !t.concluida);
+  const notificationCount = estoqueBaixo.length + contasVencendo.length + compromissosPendentes.length + tarefasPendentes.length;
 
   // ROTA 1: PÁGINA PÚBLICA DE AGENDAMENTO ONLINE (#/agendar ou ?agendar)
   if (currentHash === '#/agendar' || currentHash.includes('agendar')) {
@@ -250,7 +261,7 @@ export default function App() {
   // ROTA 2: APLICAÇÃO PRINCIPAL DE GESTÃO DO PROPRIETÁRIO
   return (
     <div className="app-container">
-      {/* BANNER EM DESTAQUE DE NOVO AGENDAMENTO ONLINE REALIZADO (COM SOM E BOTÃO DE IR PARA AGENDA) */}
+      {/* BANNER EM DESTAQUE DE NOVO AGENDAMENTO ONLINE REALIZADO */}
       {novoAgendamentoBanner && (
         <div style={{
           position: 'fixed',
@@ -320,9 +331,12 @@ export default function App() {
 
           {/* Seção 2: Operacional */}
           <div className="nav-section">
-            <div className="nav-section-title">💼 Agenda & Clientes</div>
+            <div className="nav-section-title">💼 Agenda & Tarefas</div>
             <button className={`nav-btn ${abaAtiva === 'agenda' ? 'active-orange' : ''}`} onClick={() => setAbaAtiva('agenda')}>
               <Calendar size={20} /> Agenda & Compromissos
+            </button>
+            <button className={`nav-btn ${abaAtiva === 'tarefas' ? 'active-orange' : ''}`} onClick={() => setAbaAtiva('tarefas')}>
+              <CheckSquare size={20} /> Tarefas & Afazeres
             </button>
             <button className={`nav-btn ${abaAtiva === 'clientes' ? 'active-blue' : ''}`} onClick={() => setAbaAtiva('clientes')}>
               <Users size={20} /> Clientes
@@ -389,6 +403,14 @@ export default function App() {
               onSaveAgenda={handleSaveAgenda}
               onDeleteAgenda={handleDeleteAgenda}
               onToggleConcluidoAgenda={handleToggleConcluidoAgenda}
+            />
+          )}
+
+          {abaAtiva === 'tarefas' && (
+            <Tarefas
+              tarefas={tarefas}
+              onSaveTarefas={handleSaveTarefas}
+              onDeleteTarefa={handleDeleteTarefa}
             />
           )}
 
@@ -459,16 +481,26 @@ export default function App() {
         </main>
       </div>
 
-      {/* Menu Inferior Celular & Tablet */}
-      <nav className="mobile-bottom-bar">
+      {/* Menu Inferior Celular & Tablet (INCLUINDO FINANCEIRO E TAREFAS) */}
+      <nav className="mobile-bottom-bar" style={{ overflowX: 'auto', flexWrap: 'nowrap', justifyContent: 'flex-start', padding: '6px 8px' }}>
         <button className={`mobile-nav-btn ${abaAtiva === 'dashboard' ? 'active' : ''}`} onClick={() => setAbaAtiva('dashboard')}>
           <LayoutDashboard size={20} />
           <span>Painel</span>
         </button>
 
+        <button className={`mobile-nav-btn ${abaAtiva === 'financeiro' ? 'active' : ''}`} onClick={() => setAbaAtiva('financeiro')}>
+          <DollarSign size={20} />
+          <span>Financeiro</span>
+        </button>
+
         <button className={`mobile-nav-btn ${abaAtiva === 'agenda' ? 'active' : ''}`} onClick={() => setAbaAtiva('agenda')}>
           <Calendar size={20} />
           <span>Agenda</span>
+        </button>
+
+        <button className={`mobile-nav-btn ${abaAtiva === 'tarefas' ? 'active' : ''}`} onClick={() => setAbaAtiva('tarefas')}>
+          <CheckSquare size={20} />
+          <span>Tarefas</span>
         </button>
 
         <button className={`mobile-nav-btn ${abaAtiva === 'produtos' ? 'active' : ''}`} onClick={() => setAbaAtiva('produtos')}>
@@ -524,6 +556,39 @@ export default function App() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '70vh', overflowY: 'auto' }}>
+              {/* Tarefas Pendentes */}
+              {tarefasPendentes.length > 0 && (
+                <div>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--orange-primary)', marginBottom: '8px' }}>
+                    ☑️ Tarefas Pendentes ({tarefasPendentes.length})
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {tarefasPendentes.map(t => (
+                      <div key={t.id} style={{ background: '#fff7ed', padding: '10px 14px', borderRadius: '8px', border: '1px solid #fed7aa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <strong>{t.titulo}</strong> ({t.categoria})
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                            📅 Data Limite: {safeFormatDate(t.dataLimite)} às {t.horario}
+                          </div>
+                        </div>
+                        <button
+                          className="btn btn-sm btn-orange"
+                          style={{ padding: '4px 8px', fontSize: '0.75rem' }}
+                          onClick={() => {
+                            const at = tarefas.map(item => item.id === t.id ? { ...item, concluida: true } : item);
+                            setTarefas(at);
+                            playNotificationSound();
+                            setNotifOpen(false);
+                          }}
+                        >
+                          <CheckCircle size={14} /> Dar Baixa
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Compromissos Pendentes da Agenda */}
               {compromissosPendentes.length > 0 && (
                 <div>

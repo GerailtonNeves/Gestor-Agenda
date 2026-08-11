@@ -9,7 +9,8 @@ export const STORAGE_KEYS = {
   FINANCEIRO: 'eb_financeiro_v1',
   ORCAMENTOS: 'eb_orcamentos_v1',
   RECIBOS: 'eb_recibos_v1',
-  VENDAS: 'eb_vendas_v1'
+  VENDAS: 'eb_vendas_v1',
+  TAREFAS: 'eb_tarefas_v1'
 };
 
 export const safeFormatDate = (dateStr) => {
@@ -46,6 +47,7 @@ const DEFAULT_FINANCEIRO = [];
 const DEFAULT_ORCAMENTOS = [];
 const DEFAULT_RECIBOS = [];
 const DEFAULT_VENDAS = [];
+const DEFAULT_TAREFAS = [];
 
 // Função Utilitária Interna para obter do LocalStorage com fallback limpo
 const getStorageData = (key, defaultVal) => {
@@ -109,7 +111,12 @@ export const storageApi = {
   saveVendas: (lista) => setStorageData(STORAGE_KEYS.VENDAS, lista),
   setVendas: (lista) => setStorageData(STORAGE_KEYS.VENDAS, lista),
 
-  // Limpar Todos os Dados Fictícios de Terceiros e Manter o Sistema 100% Limpo
+  // Tarefas & Compromissos
+  getTarefas: () => getStorageData(STORAGE_KEYS.TAREFAS, DEFAULT_TAREFAS),
+  saveTarefas: (lista) => setStorageData(STORAGE_KEYS.TAREFAS, lista),
+  setTarefas: (lista) => setStorageData(STORAGE_KEYS.TAREFAS, lista),
+
+  // Limpar Todos os Dados
   clearAllData: () => {
     try {
       Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
