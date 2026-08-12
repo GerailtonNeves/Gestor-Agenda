@@ -70,6 +70,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
   const [multiTitulo, setMultiTitulo] = useState('');
   const [multiClienteId, setMultiClienteId] = useState('');
   const [multiClienteNomeCustom, setMultiClienteNomeCustom] = useState('');
+  const [multiClienteTelefoneCustom, setMultiClienteTelefoneCustom] = useState('');
   const [multiHorario, setMultiHorario] = useState('09:00');
   const [multiValor, setMultiValor] = useState('');
   const [multiDescricao, setMultiDescricao] = useState('');
@@ -154,6 +155,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
     setMultiTitulo('');
     setMultiClienteId('');
     setMultiClienteNomeCustom('');
+    setMultiClienteTelefoneCustom('');
     setMultiHorario('09:00');
     setMultiValor('');
     setMultiDescricao('');
@@ -324,12 +326,12 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
     }
 
     let nomeClienteFinal = multiClienteNomeCustom;
-    let telCliente = '';
+    let telCliente = multiClienteTelefoneCustom;
     if (multiClienteId) {
       const cliFound = clientes.find(c => String(c.id) === String(multiClienteId));
       if (cliFound) {
         nomeClienteFinal = cliFound.nome;
-        telCliente = cliFound.whatsapp || cliFound.telefone || '';
+        telCliente = cliFound.whatsapp || cliFound.telefone || telCliente;
       }
     }
 
@@ -352,6 +354,19 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
     playNotificationSound();
     triggerToast(`🎉 Sucesso! ${novosAgendamentos.length} agendamentos criados de uma só vez!`);
     setModalMultiploOpen(false);
+
+    if (window.confirm(`🎉 Sucesso! ${novosAgendamentos.length} agendamentos criados de uma só vez!\n\nDeseja enviar a mensagem de confirmação do Agendamento Múltiplo para o WhatsApp de ${nomeClienteFinal || 'Cliente'} agora?`)) {
+      abrirWhatsapp(
+        telCliente || empresa.whatsapp,
+        msgWhatsapp.confirmacaoAgendamentoMultiplo(
+          nomeClienteFinal || 'Cliente',
+          multiTitulo.trim(),
+          multiHorario,
+          listaDatasEscolhidas,
+          empresa
+        )
+      );
+    }
   };
 
   const handleConcluir = (ag) => {
@@ -1172,33 +1187,54 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                 />
               </div>
 
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Selecione o Cliente Cadastrado (Opcional)</label>
+                <select
+                  className="form-select"
+                  value={multiClienteId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setMultiClienteId(id);
+                    if (id) {
+                      const cFound = clientes.find(c => String(c.id) === String(id));
+                      if (cFound) {
+                        setMultiClienteNomeCustom(cFound.nome);
+                        setMultiClienteTelefoneCustom(cFound.whatsapp || cFound.telefone || '');
+                      }
+                    }
+                  }}
+                >
+                  <option value="">-- Selecionar Cliente Cadastrado --</option>
+                  {clientes.map(c => (
+                    <option key={c.id} value={c.id}>{c.nome} {c.whatsapp ? `(${c.whatsapp})` : ''}</option>
+                  ))}
+                </select>
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Cliente (Opcional)</label>
-                  <select
-                    className="form-select"
-                    value={multiClienteId}
-                    onChange={(e) => setMultiClienteId(e.target.value)}
-                  >
-                    <option value="">-- Selecionar Cliente --</option>
-                    {clientes.map(c => (
-                      <option key={c.id} value={c.id}>{c.nome}</option>
-                    ))}
-                  </select>
+                  <label className="form-label">Nome do Cliente *</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Nome do cliente"
+                    value={multiClienteNomeCustom}
+                    onChange={(e) => setMultiClienteNomeCustom(e.target.value)}
+                    required
+                  />
                 </div>
 
-                {!multiClienteId && (
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Nome Cliente (Manual)</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Nome do cliente"
-                      value={multiClienteNomeCustom}
-                      onChange={(e) => setMultiClienteNomeCustom(e.target.value)}
-                    />
-                  </div>
-                )}
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">WhatsApp do Cliente *</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="(00) 00000-0000"
+                    value={multiClienteTelefoneCustom}
+                    onChange={(e) => setMultiClienteTelefoneCustom(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
