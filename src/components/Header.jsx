@@ -13,7 +13,8 @@ import {
   Menu as MenuIcon, 
   X,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  ExternalLink
 } from 'lucide-react';
 import { licenseApi } from '../utils/licenseUtils';
 
@@ -53,6 +54,10 @@ export default function Header({
     navigator.clipboard.writeText(publicLink);
     setCopiado(true);
     setTimeout(() => setCopiado(false), 3000);
+  };
+
+  const handleAbrirPaginaPublica = () => {
+    window.open(publicLink, '_blank');
   };
 
   return (
@@ -99,174 +104,141 @@ export default function Header({
               <Briefcase size={20} style={{ color: 'var(--blue-primary)' }} />
             )}
           </div>
-
-          <div style={{ overflow: 'hidden' }}>
-            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              <span>{empresa.nomeFantasia || 'Escritório de Bolso'}</span>
-            </div>
-            <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#ffedd5', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
-              <span>Gestão Empresarial</span>
-            </div>
+          <div>
+            <h1 className="topbar-title" style={{ fontSize: '1.05rem', margin: 0, lineHeight: '1.1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {empresa.razaoSocial || empresa.nomeFantasia || 'Escritório de Bolso'}
+            </h1>
+            <span className="topbar-subtitle" style={{ fontSize: '0.68rem', opacity: 0.9 }}>
+              {empresa.ramoAtividade || 'Gestão Inteligente ERP'}
+            </span>
           </div>
         </div>
 
-        {/* Relógio Digital Visible (Apenas em telas de computador maiores) */}
-        <div 
-          className="desktop-only-clock"
-          title="Relógio Digital Sincronizado"
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '8px', 
-            background: 'rgba(255, 255, 255, 0.12)', 
-            padding: '6px 12px', 
-            borderRadius: '10px', 
-            border: '1px solid rgba(255, 255, 255, 0.2)' 
-          }}
-        >
-          <Clock size={16} style={{ color: '#ffedd5' }} />
-          <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#ffffff', fontFamily: 'monospace' }}>{formatHora(horaAtual)}</span>
-        </div>
-
-        {/* Pesquisa Global Trigger */}
-        <div 
-          className="desktop-only-search"
-          onClick={onOpenSearch} 
-          title="Pesquisar Qualquer Coisa no Sistema"
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '8px', 
-            background: 'rgba(255, 255, 255, 0.18)', 
-            padding: '6px 14px', 
-            borderRadius: '20px', 
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            cursor: 'pointer',
-            color: '#ffffff',
-            fontSize: '0.85rem'
-          }}
-        >
-          <Search size={16} style={{ color: '#ffedd5' }} />
-          <span>Pesquisar...</span>
-        </div>
-
-        {/* Botões de Ação Direta no Topo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {/* Lupa em Celular */}
+        {/* Ações Rápidas no Topo */}
+        <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* BOTÃO COMPACTO OPÇÕES ⚙️ (ABRE O MENU DROPDOWN ELEGANTE) */}
           <button 
-            type="button" 
-            className="action-btn-circle mobile-only-btn" 
-            onClick={onOpenSearch} 
-            title="Pesquisar"
+            className="btn btn-sm btn-orange mobile-only-btn" 
+            onClick={() => setMenuRapidoOpen(true)}
+            style={{ fontWeight: 800, padding: '6px 12px', borderRadius: '10px', fontSize: '0.85rem' }}
           >
+            Opções ⚙️
+          </button>
+
+          {/* BOTÃO LINK PÚBLICO RAPIDO (DESKTOP) */}
+          <button 
+            className="action-btn-circle desktop-only-search" 
+            onClick={handleAbrirPaginaPublica} 
+            title="Abrir Página Pública de Agendamentos em Nova Aba"
+            style={{ background: 'var(--orange-gradient)' }}
+          >
+            <ExternalLink size={18} />
+          </button>
+
+          <button className="action-btn-circle desktop-only-search" onClick={onOpenSearch} title="Busca Global no Sistema (Ctrl + K)">
             <Search size={18} />
           </button>
-
-          {/* Alertas & Notificações */}
-          <button 
-            type="button" 
-            className="action-btn-circle" 
-            onClick={onOpenNotifications} 
-            title="Alertas & Notificações"
-          >
-            <Bell size={18} />
-            {notificationCount > 0 && (
-              <span className="badge-count">
-                {notificationCount}
-              </span>
-            )}
+          
+          <button className="action-btn-circle desktop-only-clock" onClick={onOpenCalc} title="Calculadora Comercial">
+            <Calculator size={18} />
           </button>
 
-          {/* BOTÃO PRINCIPAL DE MENU RÁPIDO COM TODAS AS OPÇÕES DENTRO */}
+          <button className="action-btn-circle" onClick={onOpenNotifications} title="Central de Alertas e Notificações">
+            <Bell size={18} />
+            {notificationCount > 0 && <span className="badge-count">{notificationCount}</span>}
+          </button>
+
           <button 
-            type="button" 
-            className="btn btn-orange" 
-            onClick={() => setMenuRapidoOpen(true)}
-            style={{ 
-              padding: '6px 12px', 
-              fontSize: '0.85rem', 
-              fontWeight: 800, 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '6px',
-              borderRadius: '10px',
-              boxShadow: 'var(--shadow-orange-btn)'
-            }}
-            title="Abrir Menu com Instalar App, Link Público, Licença e Mais"
+            className="action-btn-circle desktop-only-search" 
+            onClick={() => setMenuRapidoOpen(true)} 
+            title="Abrir Todas as Opções do Sistema ⚙️"
           >
-            <MenuIcon size={18} />
-            <span style={{ display: 'inline' }}>Opções ⚙️</span>
+            <MenuIcon size={20} />
           </button>
         </div>
       </header>
 
-      {/* MODAL / MENU DROPDOWN DE OPÇÕES ESCONDIDAS */}
+      {/* MODAL DROPDOWN ELEGANTE DE TODAS AS OPÇÕES ⚙️ */}
       {menuRapidoOpen && (
-        <div className="modal-overlay" onClick={() => setMenuRapidoOpen(false)} style={{ zIndex: 3500 }}>
+        <div className="modal-overlay" onClick={() => setMenuRapidoOpen(false)}>
           <div 
             className="modal-content" 
             onClick={(e) => e.stopPropagation()} 
-            style={{ 
-              maxWidth: '480px', 
-              padding: '20px', 
-              borderRadius: '20px', 
-              boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
-              background: '#ffffff'
-            }}
+            style={{ maxWidth: '440px', padding: '20px', borderRadius: '20px', border: '2px solid var(--orange-primary)' }}
           >
-            <div className="modal-header" style={{ marginBottom: '16px' }}>
-              <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--blue-primary)', fontSize: '1.15rem' }}>
-                <Sparkles size={22} style={{ color: 'var(--orange-primary)' }} /> Opções Rápidas do Sistema
+            <div className="modal-header" style={{ marginBottom: '16px', paddingBottom: '10px' }}>
+              <h3 className="modal-title" style={{ color: 'var(--orange-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={22} /> Opções & Ferramentas ⚙️
               </h3>
-              <button className="action-btn-circle" onClick={() => setMenuRapidoOpen(false)}>
-                <X size={16} />
-              </button>
+              <button className="action-btn-circle" onClick={() => setMenuRapidoOpen(false)}>✕</button>
             </div>
 
-            {/* Lista de Opções Organizadas em Botões Elegantes */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {/* 1. INSTALAR APPLICATIVO NO CELULAR OU PC */}
-              {onInstallPWA && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMenuRapidoOpen(false);
-                    onInstallPWA();
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justify: 'space-between',
-                    background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-                    color: '#ffffff',
-                    border: 'none',
-                    padding: '14px 16px',
-                    borderRadius: '12px',
-                    fontWeight: 800,
-                    fontSize: '0.95rem',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Smartphone size={20} />
-                    <span>📱 Instalar Aplicativo no Celular / PC</span>
-                  </div>
-                  <ChevronRight size={18} />
-                </button>
-              )}
-
-              {/* 2. LINK DE AGENDAMENTO PÚBLICO */}
+              {/* 1. INSTALAR APLICATIVO NATIVO PWA */}
               <button
                 type="button"
                 onClick={() => {
-                  handleCopiarLinkPublico();
+                  setMenuRapidoOpen(false);
+                  onInstallPWA();
                 }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   justify: 'space-between',
-                  background: copiado ? '#059669' : 'var(--orange-gradient)',
+                  background: '#ecfdf5',
+                  color: '#047857',
+                  border: '1.5px solid #6ee7b7',
+                  padding: '14px 16px',
+                  borderRadius: '12px',
+                  fontWeight: 800,
+                  fontSize: '0.95rem',
+                  cursor: 'pointer'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Smartphone size={22} style={{ color: '#10b981' }} />
+                  <span>📱 Instalar Aplicativo no Dispositivo</span>
+                </div>
+                <ChevronRight size={18} />
+              </button>
+
+              {/* 2. ABRIR PAGINA PUBLICA EM NOVA ABA */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuRapidoOpen(false);
+                  handleAbrirPaginaPublica();
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justify: 'space-between',
+                  background: 'var(--blue-ice-bg)',
+                  color: 'var(--blue-primary)',
+                  border: '1.5px solid var(--blue-border)',
+                  padding: '14px 16px',
+                  borderRadius: '12px',
+                  fontWeight: 800,
+                  fontSize: '0.95rem',
+                  cursor: 'pointer'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <ExternalLink size={20} style={{ color: 'var(--blue-primary)' }} />
+                  <span>🌐 Abrir Página Pública de Agendamento</span>
+                </div>
+                <ChevronRight size={18} />
+              </button>
+
+              {/* 3. COPIAR LINK PÚBLICO */}
+              <button
+                type="button"
+                onClick={handleCopiarLinkPublico}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justify: 'space-between',
+                  background: 'var(--orange-gradient)',
                   color: '#ffffff',
                   border: 'none',
                   padding: '14px 16px',
@@ -279,12 +251,12 @@ export default function Header({
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   {copiado ? <Check size={20} /> : <LinkIcon size={20} />}
-                  <span>{copiado ? 'Link Copiado para a Área de Transferência! 📋' : '🔗 Copiar Link de Agendamento Público'}</span>
+                  <span>{copiado ? 'Link Copiado! 📋' : '🔗 Copiar Link de Agendamento'}</span>
                 </div>
                 <ChevronRight size={18} />
               </button>
 
-              {/* 3. GERENCIADOR DE LICENÇA */}
+              {/* 4. GERENCIADOR DE LICENÇA */}
               <button
                 type="button"
                 onClick={() => {
@@ -307,12 +279,12 @@ export default function Header({
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <Key size={20} style={{ color: 'var(--orange-primary)' }} />
-                  <span>Chave de Licença: <strong>{lic.diasValidade >= 9000 ? 'Vitalícia ⭐' : `${diasRestantes} dias restantes`}</strong></span>
+                  <span>Chave de Licença: <strong>{lic.diasValidade >= 9000 ? 'Vitalícia ⭐' : `${diasRestantes} dias`}</strong></span>
                 </div>
                 <ChevronRight size={18} />
               </button>
 
-              {/* 4. RELÓGIO DIGITAL & DATA */}
+              {/* 5. RELÓGIO DIGITAL & DATA */}
               <div
                 style={{
                   display: 'flex',
@@ -337,7 +309,7 @@ export default function Header({
                 </div>
               </div>
 
-              {/* 5. CALCULADORA COMERCIAL */}
+              {/* 6. CALCULADORA COMERCIAL */}
               <button
                 type="button"
                 onClick={() => {
@@ -350,7 +322,7 @@ export default function Header({
                   justify: 'space-between',
                   background: '#ffffff',
                   color: 'var(--text-main)',
-                  border: '1.5px solid #cbd5e1',
+                  border: '1.5px solid var(--border-color)',
                   padding: '12px 16px',
                   borderRadius: '12px',
                   fontWeight: 700,
@@ -359,13 +331,13 @@ export default function Header({
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Calculator size={18} style={{ color: 'var(--orange-primary)' }} />
+                  <Calculator size={18} style={{ color: 'var(--blue-primary)' }} />
                   <span>Calculadora Comercial</span>
                 </div>
                 <ChevronRight size={18} />
               </button>
 
-              {/* 6. DADOS DA MINHA EMPRESA */}
+              {/* 7. CONFIGURAR MINHA EMPRESA */}
               <button
                 type="button"
                 onClick={() => {
@@ -378,7 +350,7 @@ export default function Header({
                   justify: 'space-between',
                   background: '#ffffff',
                   color: 'var(--text-main)',
-                  border: '1.5px solid #cbd5e1',
+                  border: '1.5px solid var(--border-color)',
                   padding: '12px 16px',
                   borderRadius: '12px',
                   fontWeight: 700,
@@ -387,8 +359,8 @@ export default function Header({
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Building size={18} style={{ color: 'var(--blue-primary)' }} />
-                  <span>Minha Empresa (Logo, CNPJ & Chave PIX)</span>
+                  <Building size={18} style={{ color: 'var(--orange-primary)' }} />
+                  <span>Minha Empresa (Logo / Dados)</span>
                 </div>
                 <ChevronRight size={18} />
               </button>

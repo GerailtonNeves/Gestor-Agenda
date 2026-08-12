@@ -38,7 +38,14 @@ import {
 } from 'lucide-react';
 
 export default function App() {
-  const [currentHash, setCurrentHash] = useState(() => window.location.hash);
+  const checkIsPublicRoute = () => {
+    const hash = window.location.hash || '';
+    const search = window.location.search || '';
+    const pathname = window.location.pathname || '';
+    return hash.includes('agendar') || search.includes('agendar') || pathname.includes('agendar');
+  };
+
+  const [isPublicRoute, setIsPublicRoute] = useState(checkIsPublicRoute);
   const [abaAtiva, setAbaAtiva] = useState('dashboard');
   
   const [calcOpen, setCalcOpen] = useState(false);
@@ -91,13 +98,18 @@ export default function App() {
     }
   };
 
-  // Monitorar Alterações no Hash da URL (Navegação de Rota)
+  // Monitorar Alterações na URL (Navegação de Rota Pública e Privada)
   useEffect(() => {
-    const handleHashChange = () => {
-      setCurrentHash(window.location.hash);
+    const handleUrlChange = () => {
+      setIsPublicRoute(checkIsPublicRoute());
     };
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+
+    window.addEventListener('hashchange', handleUrlChange);
+    window.addEventListener('popstate', handleUrlChange);
+    return () => {
+      window.removeEventListener('hashchange', handleUrlChange);
+      window.removeEventListener('popstate', handleUrlChange);
+    };
   }, []);
 
   // OUVINTE EM TEMPO REAL DE VERIFICAÇÃO DE LICENÇA BLOQUEADA
@@ -244,8 +256,8 @@ export default function App() {
   const tarefasPendentes = tarefas.filter(t => !t.concluida);
   const notificationCount = estoqueBaixo.length + contasVencendo.length + compromissosPendentes.length + tarefasPendentes.length;
 
-  // ROTA 1: PÁGINA PÚBLICA DE AGENDAMENTO ONLINE (#/agendar ou ?agendar)
-  if (currentHash === '#/agendar' || currentHash.includes('agendar')) {
+  // ROTA 1: PÁGINA PÚBLICA DE AGENDAMENTO ONLINE (#/agendar ou ?agendar ou /agendar)
+  if (isPublicRoute) {
     return <AgendamentoPublico />;
   }
 
@@ -417,6 +429,7 @@ export default function App() {
           {abaAtiva === 'clientes' && (
             <Clientes
               clientes={clientes}
+              empresa={empresa}
               onSaveClientes={handleSaveClientes}
               onDeleteCliente={handleDeleteCliente}
             />
