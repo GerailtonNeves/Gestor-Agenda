@@ -146,7 +146,9 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
   };
 
   const nomeRazaoEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Estúdio de Locução';
-  const cidadeFooter = documento.cidadeUf || empresa.cidadeUf || empresa.cidade || 'São Paulo - SP';
+  const cidadeEmpresaConfig = (empresa.cidadeUf || empresa.cidade || '').trim();
+  const cidadeDocCustom = (documento.cidadeUf && documento.cidadeUf !== 'São Paulo - SP') ? documento.cidadeUf : null;
+  const cidadeFooter = cidadeEmpresaConfig || cidadeDocCustom || documento.cidadeUf || 'São Paulo - SP';
 
   return (
     <div className="modal-overlay" onClick={onClose} style={{ zIndex: 3000 }}>
@@ -402,7 +404,7 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
               </div>
             )}
 
-            {/* RODAPÉ COMPACTO COM CIDADE DA EMPRESA, DATA E ASSINATURA DIGITAL (SEM ATT GERAILTON NEVES LOCUTOR) */}
+            {/* RODAPÉ COMPACTO COM CIDADE DA EMPRESA, DATA E ASSINATURA DIGITAL */}
             <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: '12px', borderTop: '1.5px solid #cbd5e1' }}>
               <div style={{ fontSize: '0.82rem', color: '#475569' }}>
                 <div>📍 <strong>{cidadeFooter}</strong>, {dataEmissaoFormatada}</div>

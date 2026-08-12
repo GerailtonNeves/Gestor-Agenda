@@ -93,6 +93,8 @@ export default function Recibos({ recibos = [], clientes = [], produtos = [], em
   const [editId, setEditId] = useState(null);
   const [docVisualizar, setDocVisualizar] = useState(null);
 
+  const cidadeDefault = empresa.cidadeUf || empresa.cidade || 'São Paulo - SP';
+
   // Form State para Recibo Elaborado
   const [clienteId, setClienteId] = useState('');
   const [clienteNome, setClienteNome] = useState('');
@@ -101,7 +103,7 @@ export default function Recibos({ recibos = [], clientes = [], produtos = [], em
   const [valorExtenso, setValorExtenso] = useState('');
   const [referenteA, setReferenteA] = useState('');
   const [formaPagamento, setFormaPagamento] = useState('PIX');
-  const [cidadeUf, setCidadeUf] = useState('São Paulo - SP');
+  const [cidadeUf, setCidadeUf] = useState(cidadeDefault);
   const [observacoes, setObservacoes] = useState('');
 
   const abrirModalNovo = () => {
@@ -113,7 +115,7 @@ export default function Recibos({ recibos = [], clientes = [], produtos = [], em
     setValorExtenso('');
     setReferenteA('');
     setFormaPagamento('PIX');
-    setCidadeUf('São Paulo - SP');
+    setCidadeUf(empresa.cidadeUf || empresa.cidade || 'São Paulo - SP');
     setObservacoes('');
     setModalNovoOpen(true);
   };
@@ -127,7 +129,7 @@ export default function Recibos({ recibos = [], clientes = [], produtos = [], em
     setValorExtenso(rec.valorExtenso || numeroParaExtenso(rec.valor));
     setReferenteA(rec.referenteA || '');
     setFormaPagamento(rec.formaPagamento || 'PIX');
-    setCidadeUf(rec.cidadeUf || 'São Paulo - SP');
+    setCidadeUf(rec.cidadeUf || empresa.cidadeUf || empresa.cidade || 'São Paulo - SP');
     setObservacoes(rec.observacoes || '');
     setModalNovoOpen(true);
   };
@@ -180,7 +182,7 @@ export default function Recibos({ recibos = [], clientes = [], produtos = [], em
       valorExtenso: valorExtenso || numeroParaExtenso(valorNum),
       referenteA: referenteA.trim(),
       formaPagamento,
-      cidadeUf,
+      cidadeUf: cidadeUf || empresa.cidadeUf || empresa.cidade || 'São Paulo - SP',
       observacoes
     };
 
@@ -489,7 +491,9 @@ export default function Recibos({ recibos = [], clientes = [], produtos = [], em
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label" style={{ color: 'var(--orange-primary)', fontWeight: 800 }}>Valor (R$) *</label>
+                  <label className="form-label" style={{ color: 'var(--orange-primary)', fontWeight: 800 }}>
+                    Valor (R$) * <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>(Editável)</span>
+                  </label>
                   <input
                     type="number"
                     step="0.01"
