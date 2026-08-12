@@ -98,16 +98,19 @@ export const msgWhatsapp = {
       `\n*ATT: GERAILTON NEVES LOCUTOR*`;
   },
 
-  // 6. Envio de Recibo de Pagamento
+  // 6. Envio de Recibo Oficial de Pagamento (Puxando Razão Social da Empresa, Nome do Cliente e Serviço)
   recibo: (rec, empresa) => {
     const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Estúdio de Locução';
-    return `🧾 *RECIBO DE PAGAMENTO* - *${nomeEmpresa}*\n\n` +
-      `Recebemos de *${rec.clienteNome}* a quantia de *R$ ${Number(rec.valor).toFixed(2)}*.\n\n` +
-      `📋 *Nº do Recibo:* ${rec.numero}\n` +
-      `🗓 *Data:* ${new Date(rec.dataEmissao + 'T00:00:00').toLocaleDateString('pt-BR')}\n` +
+    const dataFmt = rec.dataEmissao ? new Date(rec.dataEmissao + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+    const extensoStr = rec.valorExtenso ? ` (${rec.valorExtenso})` : '';
+
+    return `🧾 *RECIBO OFICIAL DE PAGAMENTO* - *${nomeEmpresa}*\n\n` +
+      `Declaro(amos) que recebemos de *${rec.clienteNome}*, por intermédio da empresa *${nomeEmpresa}*, a quantia de *R$ ${Number(rec.valor).toFixed(2)}*${extensoStr}.\n\n` +
+      `📝 *Referente a:* ${rec.referenteA}\n` +
       `💳 *Forma de Pagamento:* ${rec.formaPagamento}\n` +
-      `📝 *Referente a:* ${rec.referenteA}\n\n` +
-      `Obrigado pela preferência e parceria! 🙏\n` +
+      `📋 *Nº do Recibo:* ${rec.numero}\n` +
+      `🗓 *Data de Emissão:* ${dataFmt}\n\n` +
+      `Damos a devida e plena quitação do valor recebido. Obrigado pela preferência e parceria!\n\n` +
       `*ATT: GERAILTON NEVES LOCUTOR*`;
   }
 };

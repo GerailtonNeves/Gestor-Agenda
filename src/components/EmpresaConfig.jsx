@@ -10,6 +10,7 @@ export default function EmpresaConfig({ empresa = {}, onSaveEmpresa }) {
     telefone: empresa.telefone || '',
     whatsapp: empresa.whatsapp || '',
     email: empresa.email || '',
+    cidadeUf: empresa.cidadeUf || empresa.cidade || 'São Paulo - SP',
     endereco: empresa.endereco || '',
     chavePix: empresa.chavePix || '',
     logo: empresa.logo || '',
@@ -28,6 +29,7 @@ export default function EmpresaConfig({ empresa = {}, onSaveEmpresa }) {
       telefone: empresa.telefone || '',
       whatsapp: empresa.whatsapp || '',
       email: empresa.email || '',
+      cidadeUf: empresa.cidadeUf || empresa.cidade || 'São Paulo - SP',
       endereco: empresa.endereco || '',
       chavePix: empresa.chavePix || '',
       logo: empresa.logo || '',
@@ -82,10 +84,6 @@ export default function EmpresaConfig({ empresa = {}, onSaveEmpresa }) {
     const { x, y } = getCoordinates(e);
     ctx.beginPath();
     ctx.moveTo(x, y);
-    ctx.strokeStyle = '#0f172a';
-    ctx.lineWidth = 2.5;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
   };
 
   const draw = (e) => {
@@ -94,6 +92,9 @@ export default function EmpresaConfig({ empresa = {}, onSaveEmpresa }) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const { x, y } = getCoordinates(e);
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#0f172a';
     ctx.lineTo(x, y);
     ctx.stroke();
   };
@@ -120,13 +121,15 @@ export default function EmpresaConfig({ empresa = {}, onSaveEmpresa }) {
   const handleSalvar = (e) => {
     e.preventDefault();
     onSaveEmpresa(formData);
-    setNotificacao('✅ Configurações e Assinatura Digital salvas com sucesso!');
+    setNotificacao('✨ Dados da empresa e assinatura salvos com sucesso!');
     setTimeout(() => setNotificacao(null), 3000);
   };
 
   const handleZerarSistema = () => {
-    if (window.confirm("⚠️ Tem certeza que deseja LIMPAR TODOS OS DADOS e deixar o sistema 100% zerado apenas com os seus novos cadastros?")) {
-      storageApi.clearAllData();
+    if (window.confirm('⚠️ ATENÇÃO: Deseja realmente ZERAR todos os dados do sistema Escritório de Bolso?\n\nEsta ação apagará todos os clientes, vendas, recibos, orçamentos e agendamentos.')) {
+      storageApi.clearAll();
+      alert('Sistemas limpos com sucesso. Recarregando...');
+      window.location.reload();
     }
   };
 
@@ -136,16 +139,15 @@ export default function EmpresaConfig({ empresa = {}, onSaveEmpresa }) {
       {notificacao && (
         <div style={{
           position: 'fixed',
-          top: '80px',
+          bottom: '80px',
           right: '20px',
           background: 'var(--orange-gradient)',
           color: '#fff',
-          padding: '14px 22px',
+          padding: '14px 20px',
           borderRadius: '12px',
           boxShadow: 'var(--shadow-orange-btn)',
+          zIndex: 3000,
           fontWeight: 800,
-          fontSize: '1rem',
-          zIndex: 2500,
           display: 'flex',
           alignItems: 'center',
           gap: '10px'
@@ -272,10 +274,15 @@ export default function EmpresaConfig({ empresa = {}, onSaveEmpresa }) {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
           <div className="form-group">
             <label className="form-label">E-mail Comercial</label>
             <input type="email" className="form-input" value={formData.email} onChange={(e) => handleChange('email', e.target.value)} />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Cidade - Estado (para Recibos)</label>
+            <input type="text" className="form-input" value={formData.cidadeUf} onChange={(e) => handleChange('cidadeUf', e.target.value)} placeholder="Ex: São Paulo - SP" />
           </div>
 
           <div className="form-group">
