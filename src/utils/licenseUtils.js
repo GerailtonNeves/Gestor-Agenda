@@ -72,7 +72,7 @@ export const licenseApi = {
     }
   },
 
-  // VERIFICAÇÃO INSTANTÂNEA SE O SISTEMA ESTÁ BLOQUEADO
+  // VERIFICAÇÃO INSTANTÂNEA SE O SISTEMA ESTÁ BLOQUEADO POR EXPIRAÇÃO OU PELO ADM
   isSystemBlocked: () => {
     const lic = licenseApi.getLicense();
     if (!lic) return true;
@@ -87,25 +87,43 @@ export const licenseApi = {
       }
     }
 
-    // Verifica se os dias de validade expiraram
-    const diasRestantes = licenseApi.getDaysRemaining();
-    if (diasRestantes <= 0 && lic.diasValidade < 9000) {
-      return true;
+    // Licença Vitalícia nunca expira
+    if (lic.diasValidade >= 9000 || lic.tipo.includes('Vitalício')) return false;
+
+    // Se possui dataExpiracao em milissegundos/ISO
+    if (lic.dataExpiracao) {
+      const expTime = new Date(lic.dataExpiracao).getTime();
+      if (Date.now() > expTime) {
+        return true;
+      }
+    } else {
+      // Cálculo por dias de validade a partir da dataAtivacao
+      const dataAtiv = new Date(lic.dataAtivacao).getTime();
+      const duracaoMs = (lic.diasValidade || 30) * 24 * 60 * 60 * 1000;
+      if (Date.now() > (dataAtiv + duracaoMs)) {
+        return true;
+      }
     }
 
     return false;
   },
 
-  // Gerador de Chaves Únicas e Formatadas
-  generateKey: (dias = 30) => {
+  // Gerador de Chaves Únicas e Formatadas com Suporte a 5 Minutos e 24 Horas
+  generateKey: (opcaoValidade = '30') => {
     const randomHex1 = Math.random().toString(36).substring(2, 6).toUpperCase();
     const randomHex2 = Math.random().toString(36).substring(2, 6).toUpperCase();
-    const prefix = dias >= 9000 ? 'VIT' : dias >= 365 ? 'ANU' : dias >= 90 ? 'TRI' : 'MEN';
-    const key = `EB-${prefix}-${dias}D-${randomHex1}-${randomHex2}`;
-    return key;
+
+    let prefix = 'MEN-30D';
+    if (opcaoValidade === '5MIN') prefix = 'TESTE-5MIN';
+    else if (opcaoValidade === '24H') prefix = 'TESTE-24H';
+    else if (opcaoValidade === '90') prefix = 'TRI-90D';
+    else if (opcaoValidade === '365') prefix = 'ANU-365D';
+    else if (opcaoValidade === '9999') prefix = 'VIT-UNLIMITED';
+
+    return `EB-${prefix}-${randomHex1}-${randomHex2}`;
   },
 
-  // VALIDAÇÃO RÍGIDA E ESTRITA DA CHAVE DE LICENÇA (DIFERENCIA CARACTERES INCORRETOS)
+  // VALIDAÇÃO RÍGIDA E ESTRITA DA CHAVE DE LICENÇA
   activateKey: (keyInput) => {
     if (!keyInput || typeof keyInput !== 'string' || !keyInput.trim()) {
       return { success: false, message: '❌ Digite todos os caracteres da chave de licença.' };
@@ -146,15 +164,23 @@ export const licenseApi = {
       };
     }
 
-    // 4. Se encontrou e está Ativa, realiza a ativação
-    let tipoStr = licEncontrada.tipo || 'Mensal (30 dias)';
-    let dias = licEncontrada.diasValidade || 30;
+    // 4. Calcular data de expiração exata em milissegundos
+    let duracaoMs = (licEncontrada.diasValidade || 30) * 24 * 60 * 60 * 1000;
+    if (licEncontrada.tipo.includes('5 Minutos') || licEncontrada.opcaoValidade === '5MIN') {
+      duracaoMs = 5 * 60 * 1000; // 5 minutos
+    } else if (licEncontrada.tipo.includes('24 Horas') || licEncontrada.opcaoValidade === '24H') {
+      duracaoMs = 24 * 60 * 60 * 1000; // 24 horas
+    }
+
+    const dataAtiv = new Date();
+    const dataExp = new Date(dataAtiv.getTime() + duracaoMs);
 
     const novaLicensa = {
       chave: keyUpper,
-      tipo: tipoStr,
-      diasValidade: dias,
-      dataAtivacao: new Date().toISOString(),
+      tipo: licEncontrada.tipo || 'Mensal (30 dias)',
+      diasValidade: licEncontrada.diasValidade || 30,
+      dataAtivacao: dataAtiv.toISOString(),
+      dataExpiracao: dataExp.toISOString(),
       status: 'Ativo',
       clienteNome: licEncontrada.clienteNome || 'Cliente'
     };
@@ -162,23 +188,41 @@ export const licenseApi = {
     licenseApi.setLicense(novaLicensa);
     return {
       success: true,
-      message: `✅ Licença do cliente "${licEncontrada.clienteNome}" (${tipoStr}) ativada com sucesso!`,
+      message: `✅ Licença "${licEncontrada.tipo}" de "${licEncontrada.clienteNome}" ativada com sucesso!`,
       license: novaLicensa
     };
   },
 
-  // Calcula Dias Restantes do Sistema
-  getDaysRemaining: () => {
+  // Retorna texto amigável do tempo restante
+  getDaysRemainingText: () => {
     const lic = licenseApi.getLicense();
-    if (!lic || lic.diasValidade >= 9000) return 9999; // Vitalício
+    if (!lic || lic.diasValidade >= 9000 || (lic.tipo && lic.tipo.includes('Vitalício'))) return 'VITALÍCIO ⭐';
 
-    const dataAtiv = new Date(lic.dataAtivacao);
-    const dataExpira = new Date(dataAtiv);
-    dataExpira.setDate(dataExpira.getDate() + lic.diasValidade);
+    let expTime = 0;
+    if (lic.dataExpiracao) {
+      expTime = new Date(lic.dataExpiracao).getTime();
+    } else {
+      const ativ = new Date(lic.dataAtivacao).getTime();
+      expTime = ativ + (lic.diasValidade || 30) * 24 * 60 * 60 * 1000;
+    }
 
-    const hoje = new Date();
-    const diffTime = dataExpira - hoje;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? diffDays : 0;
+    const diffMs = expTime - Date.now();
+    if (diffMs <= 0) return 'EXPIRADO (0m)';
+
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    if (diffMinutes < 60) return `${diffMinutes} Minutos Restantes ⏱️`;
+
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    if (diffHours < 48) return `${diffHours} Horas Restantes ⏳`;
+
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    return `${diffDays} Dias Restantes`;
+  },
+
+  getDaysRemaining: () => {
+    const text = licenseApi.getDaysRemainingText();
+    if (text.includes('VITALÍCIO')) return 9999;
+    if (text.includes('EXPIRADO')) return 0;
+    return 1;
   }
 };

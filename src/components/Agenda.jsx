@@ -18,7 +18,8 @@ import {
   List,
   Grid,
   ThumbsUp,
-  MessageSquare
+  MessageSquare,
+  Sun
 } from 'lucide-react';
 import { abrirWhatsapp, msgWhatsapp } from '../utils/whatsapp';
 import { safeFormatDate } from '../utils/storage';
@@ -54,6 +55,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
   const [clienteNomeCustom, setClienteNomeCustom] = useState('');
   const [data, setData] = useState(new Date().toISOString().split('T')[0]);
   const [horario, setHorario] = useState('09:00');
+  const [diaInteiro, setDiaInteiro] = useState(false);
   const [valor, setValor] = useState('');
   const [descricao, setDescricao] = useState('');
   const [prioridade, setPrioridade] = useState('Normal');
@@ -132,6 +134,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
     setClienteNomeCustom('');
     setData(dataTarget || new Date().toISOString().split('T')[0]);
     setHorario('09:00');
+    setDiaInteiro(false);
     setValor('');
     setDescricao('');
     setPrioridade('Normal');
@@ -161,6 +164,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
     setClienteNomeCustom(ag.clienteNome || '');
     setData(ag.data || new Date().toISOString().split('T')[0]);
     setHorario(ag.horario || '09:00');
+    setDiaInteiro(!!ag.diaInteiro || ag.horario === 'Dia Inteiro');
     setValor(ag.valor ? String(ag.valor) : '');
     setDescricao(ag.descricao || '');
     setPrioridade(ag.prioridade || 'Normal');
@@ -170,6 +174,29 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
   const handleSalvar = (e) => {
     e.preventDefault();
     if (!titulo.trim()) return;
+
+    // VERIFICAÇÃO DE CONFLITO DE DATA E HORÁRIO
+    if (!editId) {
+      const conflitoDiaInteiro = agenda.find(a => a.data === data && a.diaInteiro);
+      if (conflitoDiaInteiro) {
+        alert(`❌ A data ${safeFormatDate(data)} já possui um compromisso de DIA INTEIRO ("${conflitoDiaInteiro.titulo}"). Escolha outra data.`);
+        return;
+      }
+
+      if (diaInteiro) {
+        const existeCompromisso = agenda.find(a => a.data === data);
+        if (existeCompromisso) {
+          alert(`❌ A data ${safeFormatDate(data)} já possui compromissos agendados. Não é possível marcar o dia inteiro.`);
+          return;
+        }
+      } else {
+        const conflitoHorario = agenda.find(a => a.data === data && a.horario === horario);
+        if (conflitoHorario) {
+          alert(`❌ A data ${safeFormatDate(data)} às ${horario} já se encontra OCUPADA por outro agendamento ("${conflitoHorario.titulo}"). Escolha outro horário.`);
+          return;
+        }
+      }
+    }
 
     let nomeClienteFinal = clienteNomeCustom;
     let telCliente = '';
@@ -192,7 +219,8 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
             clienteId,
             clienteNome: nomeClienteFinal || 'Cliente Não Especificado',
             data,
-            horario,
+            horario: diaInteiro ? 'Dia Inteiro' : horario,
+            diaInteiro: !!diaInteiro,
             valor: valorNum,
             descricao,
             prioridade
@@ -210,7 +238,8 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
         clienteNome: nomeClienteFinal || 'Cliente Não Especificado',
         clienteTelefone: telCliente,
         data,
-        horario,
+        horario: diaInteiro ? 'Dia Inteiro' : horario,
+        diaInteiro: !!diaInteiro,
         valor: valorNum,
         descricao,
         concluido: false,
@@ -219,12 +248,11 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
       onSaveAgenda([...agenda, novoAgendamento]);
       playNotificationSound();
 
-      // Opção de Enviar Mensagem Automática de Confirmação no WhatsApp do Cliente
       if (window.confirm(`✨ Agendamento registrado com sucesso!\n\nDeseja enviar a mensagem de confirmação para o cliente no WhatsApp agora?`)) {
         abrirWhatsapp(telCliente || empresa.whatsapp, msgWhatsapp.confirmacaoNovoAgendamento(novoAgendamento, empresa));
       }
 
-      triggerToast(`✨ Agendamento "${titulo}" adicionado para ${safeFormatDate(data)} às ${horario}!`);
+      triggerToast(`✨ Agendamento "${titulo}" adicionado para ${safeFormatDate(data)} ${diaInteiro ? '(Dia Inteiro)' : 'às ' + horario}!`);
     }
 
     setModalOpen(false);
@@ -349,7 +377,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
   const anoAtual = dataMesAtual.getFullYear();
   const mesIndex = dataMesAtual.getMonth();
 
-  // Calcular Data de Amanhã para Filtro de Pre-Vencimento (1 Dia Antes)
+  // Calcular Data de Amanhã
   const amanhaObj = new Date();
   amanhaObj.setDate(amanhaObj.getDate() + 1);
   const dataAmanhaStr = amanhaObj.toISOString().split('T')[0];
@@ -512,7 +540,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
             <button 
               className={`btn btn-sm ${filtro === 'amanha' ? 'btn-whatsapp' : 'btn-secondary'}`} 
               onClick={() => setFiltro('amanha')}
-              title="Filtrar compromissos de amanhã para enviar lembretes com pedido de joinha 👍"
+              title="Filtrar compromissos de amanhã para enviar lembretes"
               style={{ fontWeight: 800 }}
             >
               <ThumbsUp size={14} /> ⏰ Amanhã ({agenda.filter(a => a.data === dataAmanhaStr).length})
@@ -618,9 +646,9 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                             abrirModalEditar(ag);
                           }}
                           style={{
-                            background: ag.concluido ? '#d1fae5' : 'var(--blue-light-bg)',
-                            border: `1px solid ${ag.concluido ? '#6ee7b7' : 'var(--blue-border)'}`,
-                            color: ag.concluido ? '#047857' : 'var(--blue-primary)',
+                            background: ag.concluido ? '#d1fae5' : ag.diaInteiro ? '#ffedd5' : 'var(--blue-light-bg)',
+                            border: `1px solid ${ag.concluido ? '#6ee7b7' : ag.diaInteiro ? '#fed7aa' : 'var(--blue-border)'}`,
+                            color: ag.concluido ? '#047857' : ag.diaInteiro ? '#ea580c' : 'var(--blue-primary)',
                             padding: '3px 6px',
                             borderRadius: '6px',
                             fontSize: '0.74rem',
@@ -632,9 +660,9 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                             alignItems: 'center',
                             gap: '4px'
                           }}
-                          title={`${ag.horario} - ${ag.titulo} (${ag.clienteNome})`}
+                          title={`${ag.diaInteiro ? 'Dia Inteiro' : ag.horario} - ${ag.titulo} (${ag.clienteNome})`}
                         >
-                          <span style={{ fontSize: '0.68rem', fontWeight: 800 }}>{ag.horario}</span>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 800 }}>{ag.diaInteiro ? '☀️' : ag.horario}</span>
                           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{primeiroNome}</span>
                           <Trash2
                             size={12}
@@ -656,7 +684,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
         </div>
       )}
 
-      {/* VISÃO 2: LISTA DE AGENDAMENTOS COMPLETA COM BOTÕES AUTOMÁTICOS DE WHATSAPP */}
+      {/* VISÃO 2: LISTA DE AGENDAMENTOS COMPLETA */}
       {modoVisao === 'lista' && (
         <>
           {agendaFiltrada.length === 0 ? (
@@ -677,7 +705,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                     flexWrap: 'wrap',
                     gap: '16px',
                     padding: '16px 20px',
-                    borderLeft: `6px solid ${ag.concluido ? 'var(--success)' : 'var(--orange-bright)'}`,
+                    borderLeft: `6px solid ${ag.concluido ? 'var(--success)' : ag.diaInteiro ? '#f97316' : 'var(--blue-primary)'}`,
                     background: ag.concluido ? 'var(--success-bg)' : 'var(--card-bg)',
                     opacity: ag.concluido ? 0.9 : 1
                   }}
@@ -711,6 +739,9 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                         <span className={`badge ${ag.concluido ? 'badge-success' : 'badge-orange'}`}>
                           {ag.concluido ? 'Concluído & Lançado em Receitas' : ag.prioridade || 'Normal'}
                         </span>
+                        {ag.diaInteiro && (
+                          <span className="badge badge-orange" style={{ background: '#fff7ed', color: '#ea580c' }}>☀️ Dia Inteiro</span>
+                        )}
                         {ag.data === dataAmanhaStr && !ag.concluido && (
                           <span className="badge badge-blue">🗓️ Amanhã</span>
                         )}
@@ -718,7 +749,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
 
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '4px', alignItems: 'center' }}>
                         <span>🗓 {safeFormatDate(ag.data)}</span>
-                        <span>⏰ {ag.horario}</span>
+                        <span>⏰ {ag.diaInteiro ? '☀️ Dia Inteiro' : ag.horario}</span>
                         <span>👤 {ag.clienteNome}</span>
                         {ag.valor > 0 && (
                           <span style={{ fontWeight: 800, color: '#047857', background: '#ecfdf5', padding: '2px 8px', borderRadius: '6px', border: '1px solid #10b981' }}>
@@ -737,7 +768,6 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
 
                   {/* AÇÕES DE WHATSAPP AUTOMÁTICAS E EDIÇÃO */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                    {/* Botão 1: Confirmar Agendamento */}
                     <button
                       className="btn btn-sm btn-whatsapp"
                       onClick={() => abrirWhatsapp(ag.clienteTelefone || empresa.whatsapp, msgWhatsapp.confirmacaoNovoAgendamento(ag, empresa))}
@@ -746,11 +776,10 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                       <MessageSquare size={14} /> Confirmação
                     </button>
 
-                    {/* Botão 2: Lembrete Pre-Vencimento (1 Dia Antes com Joinha 👍) */}
                     <button
                       className="btn btn-sm"
                       onClick={() => abrirWhatsapp(ag.clienteTelefone || empresa.whatsapp, msgWhatsapp.lembretePreVencimentoAmanha(ag, empresa))}
-                      title="Enviar Lembrete de Amanhã no WhatsApp pedindo confirmação com Joinha 👍"
+                      title="Enviar Lembrete de Amanhã no WhatsApp"
                       style={{ background: '#0284c7', color: '#ffffff', fontWeight: 800 }}
                     >
                       <ThumbsUp size={14} /> Lembrete Amanhã 👍
@@ -780,7 +809,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
         </>
       )}
 
-      {/* MODAL 1: AGENDAMENTO ÚNICO / EDITAR / EXCLUIR */}
+      {/* MODAL 1: AGENDAMENTO ÚNICO / EDITAR */}
       {modalOpen && (
         <div className="modal-overlay" onClick={() => setModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -855,16 +884,18 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                   />
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">Horário *</label>
-                  <input
-                    type="time"
-                    className="form-input"
-                    value={horario}
-                    onChange={(e) => setHorario(e.target.value)}
-                    required
-                  />
-                </div>
+                {!diaInteiro && (
+                  <div className="form-group">
+                    <label className="form-label">Horário *</label>
+                    <input
+                      type="time"
+                      className="form-input"
+                      value={horario}
+                      onChange={(e) => setHorario(e.target.value)}
+                      required={!diaInteiro}
+                    />
+                  </div>
+                )}
 
                 <div className="form-group">
                   <label className="form-label" style={{ color: 'var(--orange-primary)', fontWeight: 800 }}>
@@ -880,6 +911,20 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                     style={{ fontWeight: 800, borderColor: 'var(--orange-bright)' }}
                   />
                 </div>
+              </div>
+
+              {/* Checkbox Dia Inteiro */}
+              <div style={{ background: '#fff7ed', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #fed7aa', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input
+                  type="checkbox"
+                  id="modalCheckDiaInteiro"
+                  checked={diaInteiro}
+                  onChange={(e) => setDiaInteiro(e.target.checked)}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                />
+                <label htmlFor="modalCheckDiaInteiro" style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--orange-primary)', cursor: 'pointer' }}>
+                  ☀️ Compromisso de DIA INTEIRO (Bloqueia a data completa para novos agendamentos)
+                </label>
               </div>
 
               <div className="form-group">

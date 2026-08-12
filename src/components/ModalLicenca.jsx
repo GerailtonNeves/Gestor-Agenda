@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Key, ShieldCheck, Copy, CheckCircle, Trash2, Edit, Ban, Unlock, Plus, Send, AlertTriangle, Users, Sparkles, RefreshCw } from 'lucide-react';
+import { Key, ShieldCheck, Copy, CheckCircle, Trash2, Edit, Ban, Unlock, Plus, Send, AlertTriangle, Users, Sparkles, RefreshCw, Clock } from 'lucide-react';
 import { licenseApi } from '../utils/licenseUtils';
 import { abrirWhatsapp } from '../utils/whatsapp';
 
@@ -12,7 +12,7 @@ export default function ModalLicenca({ isOpen, onClose, onUpdateLicense }) {
   const [editId, setEditId] = useState(null);
   const [clienteNome, setClienteNome] = useState('');
   const [clienteTelefone, setClienteTelefone] = useState('');
-  const [diasValidade, setDiasValidade] = useState(30);
+  const [opcaoValidade, setOpcaoValidade] = useState('30'); // '5MIN', '24H', '30', '90', '365', '9999'
 
   // Form de Ativar Licença no Sistema
   const [inputChaveAtivar, setInputChaveAtivar] = useState('');
@@ -21,7 +21,7 @@ export default function ModalLicenca({ isOpen, onClose, onUpdateLicense }) {
 
   if (!isOpen) return null;
 
-  const diasRestantesSistema = licenseApi.getDaysRemaining();
+  const tempoRestanteTexto = licenseApi.getDaysRemainingText();
 
   const handleSalvarClienteLicenca = (e) => {
     e.preventDefault();
@@ -30,11 +30,25 @@ export default function ModalLicenca({ isOpen, onClose, onUpdateLicense }) {
       return;
     }
 
-    const dias = parseInt(diasValidade);
     let tipoStr = 'Mensal (30 dias)';
-    if (dias >= 9000) tipoStr = 'Vitalício (Ilimitado)';
-    else if (dias >= 365) tipoStr = 'Anual (365 dias)';
-    else if (dias >= 90) tipoStr = 'Trimestral (90 dias)';
+    let diasNum = 30;
+
+    if (opcaoValidade === '5MIN') {
+      tipoStr = '⏱️ Licença Teste (5 Minutos)';
+      diasNum = 0.0035;
+    } else if (opcaoValidade === '24H') {
+      tipoStr = '⏳ Licença Teste (24 Horas)';
+      diasNum = 1;
+    } else if (opcaoValidade === '90') {
+      tipoStr = 'Trimestral (90 dias)';
+      diasNum = 90;
+    } else if (opcaoValidade === '365') {
+      tipoStr = 'Anual (365 dias)';
+      diasNum = 365;
+    } else if (opcaoValidade === '9999') {
+      tipoStr = 'Vitalício (Ilimitado ⭐)';
+      diasNum = 9999;
+    }
 
     if (editId) {
       const atualizados = listaClientes.map(item => {
@@ -43,7 +57,8 @@ export default function ModalLicenca({ isOpen, onClose, onUpdateLicense }) {
             ...item,
             clienteNome: clienteNome.trim(),
             clienteTelefone: clienteTelefone.trim(),
-            diasValidade: dias,
+            diasValidade: diasNum,
+            opcaoValidade,
             tipo: tipoStr
           };
         }
@@ -54,13 +69,14 @@ export default function ModalLicenca({ isOpen, onClose, onUpdateLicense }) {
       setStatusTipo('success');
       setMensagemStatus(`✨ Licença do cliente "${clienteNome}" atualizada com sucesso!`);
     } else {
-      const novaChave = licenseApi.generateKey(dias);
+      const novaChave = licenseApi.generateKey(opcaoValidade);
       const novaLicencaCliente = {
         id: 'lic_cli_' + Date.now(),
         clienteNome: clienteNome.trim(),
         clienteTelefone: clienteTelefone.trim(),
         chave: novaChave,
-        diasValidade: dias,
+        diasValidade: diasNum,
+        opcaoValidade,
         tipo: tipoStr,
         dataCriacao: new Date().toISOString().split('T')[0],
         status: 'Ativo'
@@ -76,7 +92,7 @@ export default function ModalLicenca({ isOpen, onClose, onUpdateLicense }) {
     setEditId(null);
     setClienteNome('');
     setClienteTelefone('');
-    setDiasValidade(30);
+    setOpcaoValidade('30');
     setAbaAtiva('clientes');
   };
 
@@ -84,7 +100,7 @@ export default function ModalLicenca({ isOpen, onClose, onUpdateLicense }) {
     setEditId(lic.id);
     setClienteNome(lic.clienteNome || '');
     setClienteTelefone(lic.clienteTelefone || '');
-    setDiasValidade(lic.diasValidade || 30);
+    setOpcaoValidade(lic.opcaoValidade || '30');
     setAbaAtiva('gerar');
   };
 
@@ -94,7 +110,6 @@ export default function ModalLicenca({ isOpen, onClose, onUpdateLicense }) {
     licenseApi.saveLicencasClientes(atualizados);
     setListaClientes(atualizados);
 
-    // Se o cliente bloqueado for a licença ativa deste sistema, atualiza e bloqueia instantaneamente!
     if (licencaSistema && licencaSistema.chave && licencaSistema.chave.trim().toUpperCase() === lic.chave.trim().toUpperCase()) {
       const licAtualizada = { ...licencaSistema, status: novoStatus };
       licenseApi.setLicense(licAtualizada);
@@ -171,12 +186,12 @@ export default function ModalLicenca({ isOpen, onClose, onUpdateLicense }) {
 
           <div>
             <span style={{ background: licencaSistema.status === 'Bloqueado' ? '#dc2626' : '#059669', color: '#fff', padding: '6px 14px', borderRadius: '20px', fontWeight: 800, fontSize: '0.82rem' }}>
-              {licencaSistema.status === 'Bloqueado' ? '🚫 SISTEMA BLOQUEADO' : licencaSistema.diasValidade >= 9000 ? 'VITALÍCIO ⭐' : `${diasRestantesSistema} DIAS RESTANTES`}
+              {licencaSistema.status === 'Bloqueado' ? '🚫 SISTEMA BLOQUEADO' : tempoRestanteTexto}
             </span>
           </div>
         </div>
 
-        {/* MENSAGEM DE FEEDBACK / ALERTA DE ERRO RIGOROSO */}
+        {/* MENSAGEM DE FEEDBACK */}
         {mensagemStatus && (
           <div style={{
             background: statusTipo === 'error' ? '#fee2e2' : statusTipo === 'success' ? '#d1fae5' : '#e0f2fe',
@@ -196,8 +211,8 @@ export default function ModalLicenca({ isOpen, onClose, onUpdateLicense }) {
           </div>
         )}
 
-        {/* CONTROLE DE ABAS NAVEGÁVEIS */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+        {/* CONTROLE DE ABAS */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
           <button
             className={`btn btn-sm ${abaAtiva === 'clientes' ? 'btn-orange' : 'btn-secondary'}`}
             onClick={() => setAbaAtiva('clientes')}
@@ -210,11 +225,11 @@ export default function ModalLicenca({ isOpen, onClose, onUpdateLicense }) {
               setEditId(null);
               setClienteNome('');
               setClienteTelefone('');
-              setDiasValidade(30);
+              setOpcaoValidade('30');
               setAbaAtiva('gerar');
             }}
           >
-            <Plus size={16} /> Gerar Nova Licença
+            <Plus size={16} /> Gerar Nova Licença (Inc. 5 Min e 24h)
           </button>
           <button
             className={`btn btn-sm ${abaAtiva === 'ativar' ? 'btn-primary' : 'btn-secondary'}`}
@@ -224,9 +239,7 @@ export default function ModalLicenca({ isOpen, onClose, onUpdateLicense }) {
           </button>
         </div>
 
-        {/* ==========================================================================
-           ABA 1: LISTA E GERENCIAMENTO DOS CLIENTES QUE COMPRARAM LICENÇA
-           ========================================================================== */}
+        {/* ABA 1: LISTA E GERENCIAMENTO DOS CLIENTES QUE COMPRARAM LICENÇA */}
         {abaAtiva === 'clientes' && (
           <div className="table-responsive">
             <table className="custom-table">
@@ -317,9 +330,7 @@ export default function ModalLicenca({ isOpen, onClose, onUpdateLicense }) {
           </div>
         )}
 
-        {/* ==========================================================================
-           ABA 2: FORMULÁRIO PARA GERAR E CADASTRAR LICENÇA PARA UM CLIENTE
-           ========================================================================== */}
+        {/* ABA 2: FORMULÁRIO PARA GERAR LICENÇA (INCLUINDO 5 MINUTOS E 24 HORAS) */}
         {abaAtiva === 'gerar' && (
           <form onSubmit={handleSalvarClienteLicenca} style={{ background: '#ffffff', padding: '18px', borderRadius: '14px', border: '1.5px solid var(--orange-border)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--orange-primary)', margin: 0 }}>
@@ -332,7 +343,7 @@ export default function ModalLicenca({ isOpen, onClose, onUpdateLicense }) {
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Ex: João da Silva ou Salão Modelo"
+                  placeholder="Ex: João da Silva ou Cliente Teste"
                   value={clienteNome}
                   onChange={(e) => setClienteNome(e.target.value)}
                   required
@@ -352,12 +363,14 @@ export default function ModalLicenca({ isOpen, onClose, onUpdateLicense }) {
             </div>
 
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Duração da Licença</label>
-              <select className="form-select" value={diasValidade} onChange={(e) => setDiasValidade(e.target.value)}>
-                <option value={30}>Mensal (30 dias)</option>
-                <option value={90}>Trimestral (90 dias)</option>
-                <option value={365}>Anual (365 dias)</option>
-                <option value={9999}>Vitalício (Ilimitado ⭐)</option>
+              <label className="form-label">Duração da Licença *</label>
+              <select className="form-select" value={opcaoValidade} onChange={(e) => setOpcaoValidade(e.target.value)} style={{ fontWeight: 800 }}>
+                <option value="5MIN">⏱️ Licença Teste Rápido (5 Minutos)</option>
+                <option value="24H">⏳ Licença Teste Demonstrativo (24 Horas)</option>
+                <option value="30">Mensal (30 dias)</option>
+                <option value="90">Trimestral (90 dias)</option>
+                <option value="365">Anual (365 dias)</option>
+                <option value="9999">Vitalício (Ilimitado ⭐)</option>
               </select>
             </div>
 
@@ -372,9 +385,7 @@ export default function ModalLicenca({ isOpen, onClose, onUpdateLicense }) {
           </form>
         )}
 
-        {/* ==========================================================================
-           ABA 3: ATIVAR CHAVE DE LICENÇA COM VALIDAÇÃO RÍGIDA E ESTRITA
-           ========================================================================== */}
+        {/* ABA 3: ATIVAR CHAVE DE LICENÇA */}
         {abaAtiva === 'ativar' && (
           <form onSubmit={handleAtivarChave} style={{ background: '#f8fafc', padding: '20px', borderRadius: '14px', border: '1.5px solid var(--blue-border)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--blue-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -382,7 +393,7 @@ export default function ModalLicenca({ isOpen, onClose, onUpdateLicense }) {
             </h4>
 
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
-              Digite ou cole a chave de licença exatamente como foi gerada (incluindo letras, números e traços). Caso haja qualquer caractere incorreto ou se estiver bloqueada, o sistema <strong>não ativará</strong>.
+              Digite ou cole a chave de licença exatamente como foi gerada (incluindo letras, números e traços).
             </p>
 
             <div className="form-group" style={{ marginBottom: 0 }}>
@@ -390,7 +401,7 @@ export default function ModalLicenca({ isOpen, onClose, onUpdateLicense }) {
               <input
                 type="text"
                 className="form-input"
-                placeholder="Ex: EB-VIT-9999D-X7A1-M9K2"
+                placeholder="Ex: EB-TESTE-5MIN-X7A1-M9K2 ou EB-TESTE-24H-B2V1-99A1"
                 value={inputChaveAtivar}
                 onChange={(e) => setInputChaveAtivar(e.target.value)}
                 style={{ fontWeight: 800, letterSpacing: '1px', fontSize: '1.05rem', borderColor: 'var(--blue-primary)' }}
