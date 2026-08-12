@@ -265,7 +265,7 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
                     {nomeRazaoEmpresa}
                   </h1>
                   <div style={{ fontSize: '0.8rem', opacity: 0.92, marginTop: '2px' }}>
-                    {empresa.cnpj ? `CNPJ/CPF: ${empresa.cnpj}` : ''} {empresa.whatsapp || empresa.telefone ? `• Tel: ${empresa.whatsapp || empresa.telefone}` : ''}
+                    {empresa.cnpj ? `CNPJ/CPF: ${empresa.cnpj}` : ''} {empresa.whatsapp || empresa.telefone ? `• Tel: ${empresa.whatsapp || empresa.telefone}` : ''} {empresa.nomeFuncionario ? `• Atendente: ${empresa.nomeFuncionario}` : ''}
                   </div>
                 </div>
               </div>
@@ -408,6 +408,7 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
             <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: '12px', borderTop: '1.5px solid #cbd5e1' }}>
               <div style={{ fontSize: '0.82rem', color: '#475569' }}>
                 <div>📍 <strong>{cidadeFooter}</strong>, {dataEmissaoFormatada}</div>
+                {empresa.nomeGerente && <div style={{ fontSize: '0.76rem', color: '#334155', fontWeight: 700, marginTop: '2px' }}>Gerente / Resp: {empresa.nomeGerente}</div>}
                 <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>Quitação dada com a emissão deste comprovante.</div>
               </div>
 

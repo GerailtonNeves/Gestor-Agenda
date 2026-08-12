@@ -1,4 +1,5 @@
 // Utilitário de Integração e Automação de Mensagens WhatsApp Empresarial (Locução & Estúdio)
+import { safeFormatDate } from './storage';
 
 export const formatPhoneForWhatsapp = (phone) => {
   if (!phone) return '';
@@ -24,42 +25,56 @@ export const abrirWhatsapp = (phone, text) => {
   window.open(url, '_blank');
 };
 
-// Formatadores de Mensagens Automáticas de Locução e Serviços Profissionais
+// Helper interno para formatar o Bloco de Dados do Funcionário e Empresa
+const getBlocoFuncionarioEmpresa = (empresa = {}) => {
+  const nomeFunc = empresa.nomeFuncionario ? `👤 *Atendente:* ${empresa.nomeFuncionario}` + (empresa.cargoFuncionario ? ` (${empresa.cargoFuncionario})` : '') : '';
+  const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Estúdio de Locução';
+  const gerenteStr = empresa.nomeGerente ? `👨‍💼 *Gerente / Responsável:* ${empresa.nomeGerente}\n` : '';
+  const cidadeStr = (empresa.cidadeUf || empresa.cidade) ? `📍 *Cidade:* ${empresa.cidadeUf || empresa.cidade}\n` : '';
+
+  let text = '';
+  if (nomeFunc) text += `${nomeFunc}\n`;
+  text += `🏢 *Empresa:* ${nomeEmpresa}\n`;
+  if (gerenteStr) text += gerenteStr;
+  if (cidadeStr) text += cidadeStr;
+
+  return text;
+};
+
+// Formatadores de Mensagens Automáticas com Estrutura Profissional (Funcionário, Gerente, Empresa e Serviço)
 export const msgWhatsapp = {
-  // 1. Confirmação Instantânea de Agendamento de Locução (Enviada direto para o WhatsApp do Cliente)
+  // 1. Confirmação Instantânea de Agendamento
   confirmacaoNovoAgendamento: (ag, empresa) => {
-    const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Estúdio de Locução';
-    const dataFmt = ag.data ? new Date(ag.data + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+    const dataFmt = ag.data ? safeFormatDate(ag.data) : '';
     const horarioStr = ag.diaInteiro ? '☀️ Dia Inteiro' : ag.horario;
-    
-    return `🎙️ *CONFIRMAÇÃO DE AGENDAMENTO DE LOCUÇÃO!* - *${nomeEmpresa}*\n\n` +
-      `Olá, *${ag.clienteNome}*!\n` +
-      `Sua gravação/locução foi agendada no nosso sistema com sucesso! 🎧🎉\n\n` +
-      `📌 *Serviço/Trabalho:* ${ag.titulo}\n` +
-      `📅 *Data:* ${dataFmt}\n` +
-      `⏰ *Horário:* ${horarioStr}\n` +
-      (ag.valor > 0 ? `💰 *Valor:* R$ ${Number(ag.valor).toFixed(2)}\n` : '') +
-      (ag.descricao ? `ℹ️ *Detalhes:* ${ag.descricao}\n` : '') +
-      `\nConte conosco para uma gravação de alta qualidade profissional!\n` +
-      `Caso precise alterar algo, fale conosco por aqui.\n\n` +
+    const bloco = getBlocoFuncionarioEmpresa(empresa);
+
+    return `✨ *CONFIRMAÇÃO DE AGENDAMENTO DE LOCUÇÃO / SERVIÇO*\n\n` +
+      bloco + `\n` +
+      `📌 *DETALHES DO SERVIÇO PRESTADO:*\n` +
+      `• *Cliente:* ${ag.clienteNome}\n` +
+      `• *Serviço:* ${ag.titulo}\n` +
+      `• *Data:* ${dataFmt}\n` +
+      `• *Horário:* ${horarioStr}\n` +
+      (ag.valor > 0 ? `• *Valor do Serviço:* R$ ${Number(ag.valor).toFixed(2)}\n` : '') +
+      (ag.descricao ? `• *Detalhes:* ${ag.descricao}\n` : '') +
+      `\nSe estiver tudo certo, por favor dê um *OK* ou responda com um *JOINHA* 👍 para confirmar que esta tudo certo!\n` +
+      `Obrigado Pela Preferência!\n\n` +
       `*Equipe: Gerailton Neves*`;
   },
 
-  // 2. Confirmação de Agendamento Múltiplo (Várias Datas Selecionadas)
+  // 2. Confirmação de Agendamento Múltiplo (Várias Datas)
   confirmacaoAgendamentoMultiplo: (clienteNome, titulo, horario, datasArray, empresa) => {
-    const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Estúdio de Locução';
-    const datasFormatadas = datasArray.map(d => {
-      const parts = d.split('-');
-      if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-      return d;
-    }).join('\n• ');
+    const bloco = getBlocoFuncionarioEmpresa(empresa);
+    const datasFormatadas = datasArray.map(d => safeFormatDate(d)).join('\n• ');
 
-    return `✨ *AGENDAMENTO MÚLTIPLO CONFIRMADO COM SUCESSO!* - *${nomeEmpresa}*\n\n` +
-      `Olá, *${clienteNome}*!\n` +
-      `Seus agendamentos foram realizados no nosso sistema com sucesso! 🎉\n\n` +
-      `📌 *Serviço/Trabalho:* ${titulo}\n` +
-      `⏰ *Horário:* ${horario}\n` +
-      `🗓️ *Datas Agendadas:*\n• ${datasFormatadas}\n\n` +
+    return `✨ *CONFIRMAÇÃO DE AGENDAMENTO MÚLTIPLO (VÁRIAS DATAS)*\n\n` +
+      bloco + `\n` +
+      `📌 *DETALHES DO PACOTE DE SERVIÇOS:*\n` +
+      `• *Cliente:* ${clienteNome}\n` +
+      `• *Serviço:* ${titulo}\n` +
+      `• *Horário Padrão:* ${horario}\n` +
+      `• *Datas Agendadas:*\n• ${datasFormatadas}\n\n` +
       `Se estiver tudo certo, por favor dê um *OK* ou responda com um *JOINHA* 👍 para confirmar que esta tudo certo!\n` +
       `Obrigado Pela Preferência!\n\n` +
       `*Equipe: Gerailton Neves*`;
@@ -67,69 +82,70 @@ export const msgWhatsapp = {
 
   // 3. Lembrete de Locução 1 Dia Antes (Com OK e JOINHA em Negrito e Rodapé Personalizado)
   lembretePreVencimentoAmanha: (ag, empresa) => {
-    const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Estúdio de Locução';
-    const dataFmt = ag.data ? new Date(ag.data + 'T00:00:00').toLocaleDateString('pt-BR') : 'Amanhã';
+    const dataFmt = ag.data ? safeFormatDate(ag.data) : 'Amanhã';
     const horarioStr = ag.diaInteiro ? '☀️ Dia Inteiro' : ag.horario;
+    const bloco = getBlocoFuncionarioEmpresa(empresa);
 
-    return `👋 *OLÁ, ${ag.clienteNome.toUpperCase()}! LEMBRETE DE LOCUÇÃO / AGENDAMENTO* - *${nomeEmpresa}*\n\n` +
-      `Passando para avisar e lembrar sobre a sua locução/serviço de *${ag.titulo}* agendada para *AMANHÃ*, dia *${dataFmt}* às ⏰ *${horarioStr}*.\n\n` +
-      `Se estiver tudo certo, por favor dê um *OK* ou responda com um *JOINHA* 👍 para confirmar que esta tudo certo!\n` +
+    return `👋 *LEMBRETE DE LOCUÇÃO / AGENDAMENTO - AMANHÃ*\n\n` +
+      bloco + `\n` +
+      `📌 *DETALHES DO AGENDAMENTO:*\n` +
+      `• *Cliente:* ${ag.clienteNome}\n` +
+      `• *Serviço:* ${ag.titulo}\n` +
+      `• *Data:* AMANHÃ, dia ${dataFmt}\n` +
+      `• *Horário:* ⏰ ${horarioStr}\n` +
+      (ag.valor > 0 ? `• *Valor do Serviço:* R$ ${Number(ag.valor).toFixed(2)}\n` : '') +
+      `\nSe estiver tudo certo, por favor dê um *OK* ou responda com um *JOINHA* 👍 para confirmar que esta tudo certo!\n` +
       `Obrigado Pela Preferência!\n\n` +
       `*Equipe: Gerailton Neves*`;
   },
 
-  // 4. Notificação de Gravação / Locução Concluída e Pronta
-  locucaoPronta: (ag, empresa) => {
-    const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Estúdio de Locução';
-    return `🎙️ *SUA LOCUÇÃO / GRAVAÇÃO ESTÁ PRONTA!* - *${nomeEmpresa}*\n\n` +
-      `Olá, *${ag.clienteNome}*!\n` +
-      `Sua gravação de *${ag.titulo}* foi concluída com sucesso no nosso estúdio! 🎧✨\n\n` +
-      `Obrigado pela preferência e parceria!\n\n` +
+  // 4. Lembrete Geral de Agendamento
+  agendamento: (ag, empresa) => {
+    const bloco = getBlocoFuncionarioEmpresa(empresa);
+    const dataFmt = ag.data ? safeFormatDate(ag.data) : '';
+
+    return `📌 *LEMBRETE DE LOCUÇÃO / SERVIÇO*\n\n` +
+      bloco + `\n` +
+      `📌 *DETALHES DO COMPROMISSO:*\n` +
+      `• *Cliente:* ${ag.clienteNome}\n` +
+      `• *Serviço:* ${ag.titulo}\n` +
+      `• *Data:* ${dataFmt}\n` +
+      `• *Horário:* ${ag.horario}\n` +
+      (ag.descricao ? `• *Detalhes:* ${ag.descricao}\n` : '') +
+      `\n*Equipe: Gerailton Neves*`;
+  },
+
+  // 5. Envio de Orçamento
+  orcamento: (orc, empresa) => {
+    const bloco = getBlocoFuncionarioEmpresa(empresa);
+    const itensTexto = orc.itens ? orc.itens.map(i => `• ${i.qtd}x ${i.descricao} - R$ ${(i.qtd * i.valorUnitario).toFixed(2)}`).join('\n') : '';
+
+    return `📄 *ORÇAMENTO OFICIAL DE SERVIÇOS - Nº ${orc.numero}*\n\n` +
+      bloco + `\n` +
+      `📌 *DETALHES DO ORÇAMENTO:*\n` +
+      `• *Cliente:* ${orc.clienteNome}\n` +
+      `• *Itens / Serviços:*\n${itensTexto}\n\n` +
+      (orc.desconto > 0 ? `• *Desconto:* R$ ${Number(orc.desconto).toFixed(2)}\n` : '') +
+      `• *VALOR TOTAL:* R$ ${Number(orc.total).toFixed(2)}\n` +
+      (orc.dataValidade ? `• *Validade:* ${safeFormatDate(orc.dataValidade)}\n` : '') +
+      (empresa.chavePix ? `\n🔑 *Chave PIX:* ${empresa.chavePix}\n` : '') +
+      `\nObrigado Pela Preferência!\n\n` +
       `*Equipe: Gerailton Neves*`;
   },
 
-  // 5. Lembrete Geral de Agendamento
-  agendamento: (ag, empresa) => {
-    const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Estúdio de Locução';
-    const dataFmt = ag.data ? new Date(ag.data + 'T00:00:00').toLocaleDateString('pt-BR') : '';
-    return `📌 *LEMBRETE DE LOCUÇÃO* - *${nomeEmpresa}*\n\n` +
-      `Olá, *${ag.clienteNome}*!\n` +
-      `Passando para lembrar do seu agendamento de locução:\n\n` +
-      `🗓 *Data:* ${dataFmt}\n` +
-      `⏰ *Horário:* ${ag.horario}\n` +
-      `📝 *Serviço:* ${ag.titulo}\n` +
-      (ag.descricao ? `ℹ️ *Detalhes:* ${ag.descricao}\n` : '') +
-      `\n*Equipe: Gerailton Neves*`;
-  },
-
-  // 6. Envio de Orçamento de Locução
-  orcamento: (orc, empresa) => {
-    const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Estúdio de Locução';
-    const itensTexto = orc.itens ? orc.itens.map(i => `• ${i.qtd}x ${i.descricao} - R$ ${(i.qtd * i.valorUnitario).toFixed(2)}`).join('\n') : '';
-    return `📄 *ORÇAMENTO DE LOCUÇÃO / GRAVAÇÃO* - *${nomeEmpresa}*\n\n` +
-      `Olá, *${orc.clienteNome}*!\n` +
-      `Conforme solicitado, segue o detalhamento do seu orçamento *Nº ${orc.numero}*:\n\n` +
-      `🛒 *Itens:*\n${itensTexto}\n\n` +
-      (orc.desconto > 0 ? `🎟 *Desconto:* R$ ${Number(orc.desconto).toFixed(2)}\n` : '') +
-      `💰 *VALOR TOTAL:* R$ ${Number(orc.total).toFixed(2)}\n` +
-      `📅 *Validade:* ${new Date(orc.dataValidade + 'T00:00:00').toLocaleDateString('pt-BR')}\n` +
-      (orc.observacoes ? `\n💬 *Observações:* ${orc.observacoes}\n` : '') +
-      (empresa.chavePix ? `\n🔑 *Chave PIX para pagamento:* ${empresa.chavePix}\n` : '') +
-      `\n*Equipe: Gerailton Neves*`;
-  },
-
-  // 7. Envio de Recibo Oficial de Pagamento (Puxando Razão Social da Empresa, Nome do Cliente e Serviço)
+  // 6. Envio de Recibo Oficial de Pagamento
   recibo: (rec, empresa) => {
-    const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Estúdio de Locução';
-    const dataFmt = rec.dataEmissao ? new Date(rec.dataEmissao + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+    const bloco = getBlocoFuncionarioEmpresa(empresa);
+    const dataFmt = rec.dataEmissao ? safeFormatDate(rec.dataEmissao) : '';
     const extensoStr = rec.valorExtenso ? ` (${rec.valorExtenso})` : '';
 
-    return `🧾 *RECIBO OFICIAL DE PAGAMENTO* - *${nomeEmpresa}*\n\n` +
-      `Declaro(amos) que recebemos de *${rec.clienteNome}*, por intermédio da empresa *${nomeEmpresa}*, a quantia de *R$ ${Number(rec.valor).toFixed(2)}*${extensoStr}.\n\n` +
-      `📝 *Referente a:* ${rec.referenteA}\n` +
-      `💳 *Forma de Pagamento:* ${rec.formaPagamento}\n` +
-      `📋 *Nº do Recibo:* ${rec.numero}\n` +
-      `🗓 *Data de Emissão:* ${dataFmt}\n\n` +
+    return `🧾 *RECIBO OFICIAL DE PAGAMENTO - Nº ${rec.numero}*\n\n` +
+      bloco + `\n` +
+      `Declaro(amos) que recebemos de *${rec.clienteNome}*, a quantia de *R$ ${Number(rec.valor).toFixed(2)}*${extensoStr}.\n\n` +
+      `📌 *DETALHES DA QUITAÇÃO:*\n` +
+      `• *Serviço Prestado:* ${rec.referenteA}\n` +
+      `• *Forma de Pagamento:* ${rec.formaPagamento}\n` +
+      `• *Data de Emissão:* ${dataFmt}\n\n` +
       `Damos a devida e plena quitação do valor recebido. Obrigado pela preferência e parceria!\n\n` +
       `*Equipe: Gerailton Neves*`;
   }

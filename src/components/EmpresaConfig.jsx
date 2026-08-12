@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Building, Save, Upload, CheckCircle, RefreshCw, Trash2, PenTool, Eraser } from 'lucide-react';
+import { Building, Save, Upload, CheckCircle, RefreshCw, Trash2, PenTool, Eraser, UserCheck } from 'lucide-react';
 import { storageApi } from '../utils/storage';
 
 export default function EmpresaConfig({ empresa = {}, onSaveEmpresa }) {
@@ -11,6 +11,9 @@ export default function EmpresaConfig({ empresa = {}, onSaveEmpresa }) {
     whatsapp: empresa.whatsapp || '',
     email: empresa.email || '',
     cidadeUf: empresa.cidadeUf || empresa.cidade || 'São Paulo - SP',
+    nomeGerente: empresa.nomeGerente || '',
+    nomeFuncionario: empresa.nomeFuncionario || '',
+    cargoFuncionario: empresa.cargoFuncionario || '',
     endereco: empresa.endereco || '',
     chavePix: empresa.chavePix || '',
     logo: empresa.logo || '',
@@ -30,6 +33,9 @@ export default function EmpresaConfig({ empresa = {}, onSaveEmpresa }) {
       whatsapp: empresa.whatsapp || '',
       email: empresa.email || '',
       cidadeUf: empresa.cidadeUf || empresa.cidade || 'São Paulo - SP',
+      nomeGerente: empresa.nomeGerente || '',
+      nomeFuncionario: empresa.nomeFuncionario || '',
+      cargoFuncionario: empresa.cargoFuncionario || '',
       endereco: empresa.endereco || '',
       chavePix: empresa.chavePix || '',
       logo: empresa.logo || '',
@@ -121,13 +127,13 @@ export default function EmpresaConfig({ empresa = {}, onSaveEmpresa }) {
   const handleSalvar = (e) => {
     e.preventDefault();
     onSaveEmpresa(formData);
-    setNotificacao('✨ Dados da empresa e assinatura salvos com sucesso!');
+    setNotificacao('✨ Dados da empresa, funcionário e assinatura salvos com sucesso!');
     setTimeout(() => setNotificacao(null), 3000);
   };
 
   const handleZerarSistema = () => {
     if (window.confirm('⚠️ ATENÇÃO: Deseja realmente ZERAR todos os dados do sistema Escritório de Bolso?\n\nEsta ação apagará todos os clientes, vendas, recibos, orçamentos e agendamentos.')) {
-      storageApi.clearAll();
+      storageApi.clearAllData();
       alert('Sistemas limpos com sucesso. Recarregando...');
       window.location.reload();
     }
@@ -160,15 +166,60 @@ export default function EmpresaConfig({ empresa = {}, onSaveEmpresa }) {
       <div className="card card-blue" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--blue-primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Building size={24} /> Minha Empresa & Assinatura Digital
+            <Building size={24} /> Minha Empresa, Funcionários & Assinatura
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            Cadastre a sua logo, dados e <strong>desenhe a sua assinatura digital</strong> para sair em todos os recibos e orçamentos!
+            Cadastre os <strong>dados do Funcionário/Atendente, Gerente e Cidade</strong> para saírem perfeitamente organizados em todas as mensagens do WhatsApp, recibos e orçamentos!
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleSalvar} className="card card-blue" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <form onSubmit={handleSalvar} className="card card-blue" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+        {/* NOVO BLOCO DESTACADO: DADOS DO FUNCIONÁRIO E GERENTE DA EMPRESA */}
+        <div style={{ background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)', padding: '18px 20px', borderRadius: '14px', border: '2px solid #0284c7', boxShadow: '0 4px 15px rgba(2, 132, 199, 0.08)' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0284c7', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <UserCheck size={22} /> Dados do Funcionário / Atendente & Gerente
+          </h3>
+          <p style={{ fontSize: '0.82rem', color: '#334155', margin: '0 0 14px 0' }}>
+            Estes dados serão estruturados com prioridade nas <strong>mensagens automáticas de WhatsApp, Recibos e Orçamentos</strong> geradas pelo sistema!
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label" style={{ fontWeight: 800, color: '#0369a1' }}>Nome do Funcionário / Atendente</label>
+              <input 
+                type="text" 
+                className="form-input" 
+                value={formData.nomeFuncionario} 
+                onChange={(e) => handleChange('nomeFuncionario', e.target.value)} 
+                placeholder="Ex: Luciana Neves" 
+              />
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label" style={{ fontWeight: 800, color: '#0369a1' }}>Cargo do Funcionário</label>
+              <input 
+                type="text" 
+                className="form-input" 
+                value={formData.cargoFuncionario} 
+                onChange={(e) => handleChange('cargoFuncionario', e.target.value)} 
+                placeholder="Ex: Atendente Comercial / Gerente" 
+              />
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label" style={{ fontWeight: 800, color: '#0369a1' }}>Nome do Gerente / Responsável</label>
+              <input 
+                type="text" 
+                className="form-input" 
+                value={formData.nomeGerente} 
+                onChange={(e) => handleChange('nomeGerente', e.target.value)} 
+                placeholder="Ex: Gerailton Neves" 
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Upload de Logo */}
         <div className="form-group" style={{ background: 'var(--blue-ice-bg)', padding: '20px', borderRadius: '12px', textAlign: 'center', border: '1.5px dashed var(--blue-border)' }}>
           <label className="form-label" style={{ fontSize: '1.05rem', color: 'var(--blue-primary)' }}>Logo da Empresa</label>
@@ -281,7 +332,7 @@ export default function EmpresaConfig({ empresa = {}, onSaveEmpresa }) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Cidade - Estado (para Recibos)</label>
+            <label className="form-label">Cidade - Estado (para Recibos e Mensagens)</label>
             <input type="text" className="form-input" value={formData.cidadeUf} onChange={(e) => handleChange('cidadeUf', e.target.value)} placeholder="Ex: São Paulo - SP" />
           </div>
 
