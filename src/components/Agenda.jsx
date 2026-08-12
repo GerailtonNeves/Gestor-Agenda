@@ -19,7 +19,8 @@ import {
   Grid,
   ThumbsUp,
   MessageSquare,
-  Sun
+  Sun,
+  Mic
 } from 'lucide-react';
 import { abrirWhatsapp, msgWhatsapp } from '../utils/whatsapp';
 import { safeFormatDate } from '../utils/storage';
@@ -53,6 +54,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
   const [titulo, setTitulo] = useState('');
   const [clienteId, setClienteId] = useState('');
   const [clienteNomeCustom, setClienteNomeCustom] = useState('');
+  const [clienteTelefoneCustom, setClienteTelefoneCustom] = useState('');
   const [data, setData] = useState(new Date().toISOString().split('T')[0]);
   const [horario, setHorario] = useState('09:00');
   const [diaInteiro, setDiaInteiro] = useState(false);
@@ -132,6 +134,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
     setTitulo('');
     setClienteId('');
     setClienteNomeCustom('');
+    setClienteTelefoneCustom('');
     setData(dataTarget || new Date().toISOString().split('T')[0]);
     setHorario('09:00');
     setDiaInteiro(false);
@@ -162,6 +165,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
     setTitulo(ag.titulo || '');
     setClienteId(ag.clienteId || '');
     setClienteNomeCustom(ag.clienteNome || '');
+    setClienteTelefoneCustom(ag.clienteTelefone || '');
     setData(ag.data || new Date().toISOString().split('T')[0]);
     setHorario(ag.horario || '09:00');
     setDiaInteiro(!!ag.diaInteiro || ag.horario === 'Dia Inteiro');
@@ -199,12 +203,13 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
     }
 
     let nomeClienteFinal = clienteNomeCustom;
-    let telCliente = '';
+    let telCliente = clienteTelefoneCustom;
+
     if (clienteId) {
       const cliFound = clientes.find(c => String(c.id) === String(clienteId));
       if (cliFound) {
         nomeClienteFinal = cliFound.nome;
-        telCliente = cliFound.whatsapp || cliFound.telefone || '';
+        telCliente = cliFound.whatsapp || cliFound.telefone || telCliente;
       }
     }
 
@@ -218,6 +223,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
             titulo,
             clienteId,
             clienteNome: nomeClienteFinal || 'Cliente Não Especificado',
+            clienteTelefone: telCliente || a.clienteTelefone || '',
             data,
             horario: diaInteiro ? 'Dia Inteiro' : horario,
             diaInteiro: !!diaInteiro,
@@ -236,7 +242,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
         titulo,
         clienteId,
         clienteNome: nomeClienteFinal || 'Cliente Não Especificado',
-        clienteTelefone: telCliente,
+        clienteTelefone: telCliente || '',
         data,
         horario: diaInteiro ? 'Dia Inteiro' : horario,
         diaInteiro: !!diaInteiro,
@@ -248,7 +254,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
       onSaveAgenda([...agenda, novoAgendamento]);
       playNotificationSound();
 
-      if (window.confirm(`✨ Agendamento registrado com sucesso!\n\nDeseja enviar a mensagem de confirmação para o cliente no WhatsApp agora?`)) {
+      if (window.confirm(`✨ Agendamento registrado com sucesso!\n\nDeseja enviar a mensagem de confirmação diretamente para o WhatsApp de ${nomeClienteFinal || 'Cliente'} agora?`)) {
         abrirWhatsapp(telCliente || empresa.whatsapp, msgWhatsapp.confirmacaoNovoAgendamento(novoAgendamento, empresa));
       }
 
@@ -314,9 +320,13 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
     }
 
     let nomeClienteFinal = multiClienteNomeCustom;
+    let telCliente = '';
     if (multiClienteId) {
       const cliFound = clientes.find(c => String(c.id) === String(multiClienteId));
-      if (cliFound) nomeClienteFinal = cliFound.nome;
+      if (cliFound) {
+        nomeClienteFinal = cliFound.nome;
+        telCliente = cliFound.whatsapp || cliFound.telefone || '';
+      }
     }
 
     const valorNum = parseFloat(multiValor) || 0;
@@ -325,6 +335,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
       titulo: multiTitulo.trim(),
       clienteId: multiClienteId,
       clienteNome: nomeClienteFinal || 'Cliente Não Especificado',
+      clienteTelefone: telCliente || '',
       data: d,
       horario: multiHorario,
       valor: valorNum,
@@ -479,10 +490,10 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
       <div className="card card-orange" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--orange-primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <CalendarIcon size={24} /> Agenda & Compromissos
+            <Mic size={26} /> Agenda de Locução & Compromissos
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            Envie <strong>confirmações automáticas</strong> e <strong>lembretes 1 dia antes</strong> aos clientes no WhatsApp!
+            Envie mensagens de confirmação, lembretes de gravação e aviso de <strong>Áudio Pronto</strong> direto no WhatsApp do cliente!
           </p>
         </div>
 
@@ -607,7 +618,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                     opacity: celula.isCurrentMonth ? 1 : 0.4
                   }}
                   className="calendar-day-cell"
-                  title={`Clique para agendar um compromisso no dia ${safeFormatDate(celula.dateStr)}`}
+                  title={`Clique para agendar uma locução no dia ${safeFormatDate(celula.dateStr)}`}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ 
@@ -684,7 +695,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
         </div>
       )}
 
-      {/* VISÃO 2: LISTA DE AGENDAMENTOS COMPLETA */}
+      {/* VISÃO 2: LISTA DE AGENDAMENTOS COMPLETA COM AÇÕES DIRETA PARA O WHATSAPP DO CLIENTE */}
       {modoVisao === 'lista' && (
         <>
           {agendaFiltrada.length === 0 ? (
@@ -750,7 +761,10 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '4px', alignItems: 'center' }}>
                         <span>🗓 {safeFormatDate(ag.data)}</span>
                         <span>⏰ {ag.diaInteiro ? '☀️ Dia Inteiro' : ag.horario}</span>
-                        <span>👤 {ag.clienteNome}</span>
+                        <span>👤 <strong>{ag.clienteNome}</strong></span>
+                        {ag.clienteTelefone && (
+                          <span style={{ color: '#16a34a', fontWeight: 700 }}>📱 {ag.clienteTelefone}</span>
+                        )}
                         {ag.valor > 0 && (
                           <span style={{ fontWeight: 800, color: '#047857', background: '#ecfdf5', padding: '2px 8px', borderRadius: '6px', border: '1px solid #10b981' }}>
                             💰 R$ {Number(ag.valor).toFixed(2)}
@@ -766,23 +780,35 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                     </div>
                   </div>
 
-                  {/* AÇÕES DE WHATSAPP AUTOMÁTICAS E EDIÇÃO */}
+                  {/* AÇÕES DE WHATSAPP DIRETAS PARA O TELEFONE DO CLIENTE */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    {/* Botão 1: Confirmar Agendamento */}
                     <button
                       className="btn btn-sm btn-whatsapp"
                       onClick={() => abrirWhatsapp(ag.clienteTelefone || empresa.whatsapp, msgWhatsapp.confirmacaoNovoAgendamento(ag, empresa))}
-                      title="Enviar Mensagem de Confirmação de Agendamento no WhatsApp"
+                      title="Enviar Mensagem de Confirmação no WhatsApp do Cliente"
                     >
                       <MessageSquare size={14} /> Confirmação
                     </button>
 
+                    {/* Botão 2: Lembrete Pre-Vencimento (1 Dia Antes) */}
                     <button
                       className="btn btn-sm"
                       onClick={() => abrirWhatsapp(ag.clienteTelefone || empresa.whatsapp, msgWhatsapp.lembretePreVencimentoAmanha(ag, empresa))}
-                      title="Enviar Lembrete de Amanhã no WhatsApp"
+                      title="Enviar Lembrete de Amanhã no WhatsApp do Cliente"
                       style={{ background: '#0284c7', color: '#ffffff', fontWeight: 800 }}
                     >
                       <ThumbsUp size={14} /> Lembrete Amanhã 👍
+                    </button>
+
+                    {/* Botão 3: Notificação de Áudio / Locução Pronta */}
+                    <button
+                      className="btn btn-sm"
+                      onClick={() => abrirWhatsapp(ag.clienteTelefone || empresa.whatsapp, msgWhatsapp.locucaoPronta(ag, empresa))}
+                      title="Enviar Aviso de Locução/Áudio Pronto no WhatsApp do Cliente"
+                      style={{ background: '#8b5cf6', color: '#ffffff', fontWeight: 800 }}
+                    >
+                      <Mic size={14} /> Áudio Pronto 🎧
                     </button>
 
                     <button
@@ -814,7 +840,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
         <div className="modal-overlay" onClick={() => setModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3 className="modal-title">{editId ? 'Editar Agendamento' : 'Novo Agendamento na Agenda'}</h3>
+              <h3 className="modal-title">{editId ? 'Editar Agendamento de Locução' : 'Novo Agendamento na Agenda'}</h3>
               <button className="action-btn-circle" onClick={() => setModalOpen(false)}>✕</button>
             </div>
 
@@ -834,11 +860,11 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
               </div>
 
               <div className="form-group">
-                <label className="form-label">Título do Compromisso / Serviço *</label>
+                <label className="form-label">Título do Serviço / Locução *</label>
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Ex: Instalação de Equipamento ou Reunião Comercial"
+                  placeholder="Ex: Locução Comercial 30s ou Vinheta Rádio"
                   value={titulo}
                   onChange={(e) => setTitulo(e.target.value)}
                   required
@@ -846,31 +872,54 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
               </div>
 
               <div className="form-group">
-                <label className="form-label">Selecione o Cliente (Opcional)</label>
+                <label className="form-label">Selecione o Cliente Cadastrado (Opcional)</label>
                 <select
                   className="form-select"
                   value={clienteId}
-                  onChange={(e) => setClienteId(e.target.value)}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setClienteId(id);
+                    if (id) {
+                      const cFound = clientes.find(c => String(c.id) === String(id));
+                      if (cFound) {
+                        setClienteNomeCustom(cFound.nome);
+                        setClienteTelefoneCustom(cFound.whatsapp || cFound.telefone || '');
+                      }
+                    }
+                  }}
                 >
                   <option value="">-- Selecionar Cliente Cadastrado --</option>
                   {clientes.map(c => (
-                    <option key={c.id} value={c.id}>{c.nome}</option>
+                    <option key={c.id} value={c.id}>{c.nome} {c.whatsapp ? `(${c.whatsapp})` : ''}</option>
                   ))}
                 </select>
               </div>
 
-              {!clienteId && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div className="form-group">
-                  <label className="form-label">Nome do Cliente (Manual)</label>
+                  <label className="form-label">Nome do Cliente *</label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="Nome do cliente caso não esteja cadastrado"
+                    placeholder="Nome do cliente"
                     value={clienteNomeCustom}
                     onChange={(e) => setClienteNomeCustom(e.target.value)}
+                    required
                   />
                 </div>
-              )}
+
+                <div className="form-group">
+                  <label className="form-label">WhatsApp / Celular do Cliente *</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="(00) 00000-0000"
+                    value={clienteTelefoneCustom}
+                    onChange={(e) => setClienteTelefoneCustom(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                 <div className="form-group">
@@ -941,11 +990,11 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
               </div>
 
               <div className="form-group">
-                <label className="form-label">Observações / Detalhes</label>
+                <label className="form-label">Observações / Texto do Roteiro de Locução</label>
                 <textarea
                   className="form-textarea"
                   rows="3"
-                  placeholder="Informações adicionais do compromisso..."
+                  placeholder="Instruções da voz, estilo, tom, observações..."
                   value={descricao}
                   onChange={(e) => setDescricao(e.target.value)}
                 />
@@ -1001,7 +1050,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Ex: Manutenção Semanal ou Pacote de Serviços"
+                  placeholder="Ex: Manutenção Semanal ou Pacote de Locução"
                   value={multiTitulo}
                   onChange={(e) => setMultiTitulo(e.target.value)}
                   required

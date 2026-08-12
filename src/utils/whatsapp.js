@@ -1,4 +1,4 @@
-// Utilitário de Integração e Automação de Mensagens WhatsApp Empresarial
+// Utilitário de Integração e Automação de Mensagens WhatsApp Empresarial (Locução & Estúdio)
 
 export const formatPhoneForWhatsapp = (phone) => {
   if (!phone) return '';
@@ -24,41 +24,57 @@ export const abrirWhatsapp = (phone, text) => {
   window.open(url, '_blank');
 };
 
-// Formatadores de Mensagens Automáticas Profissionais com Razão Social e Rodapé Personalizado
+// Formatadores de Mensagens Automáticas de Locução e Serviços Profissionais
 export const msgWhatsapp = {
-  // 1. Confirmação Instantânea de Novo Agendamento (Link Público ou Manual)
+  // 1. Confirmação Instantânea de Agendamento de Locução (Enviada direto para o WhatsApp do Cliente)
   confirmacaoNovoAgendamento: (ag, empresa) => {
-    const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Sua Empresa';
+    const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Estúdio de Locução';
     const dataFmt = ag.data ? new Date(ag.data + 'T00:00:00').toLocaleDateString('pt-BR') : '';
-    return `✨ *AGENDAMENTO CONFIRMADO COM SUCESSO!* - *${nomeEmpresa}*\n\n` +
+    const horarioStr = ag.diaInteiro ? '☀️ Dia Inteiro' : ag.horario;
+    
+    return `🎙️ *CONFIRMAÇÃO DE AGENDAMENTO DE LOCUÇÃO!* - *${nomeEmpresa}*\n\n` +
       `Olá, *${ag.clienteNome}*!\n` +
-      `Seu agendamento foi registrado no nosso sistema com sucesso! 🎉\n\n` +
-      `📌 *Serviço/Compromisso:* ${ag.titulo}\n` +
+      `Sua gravação/locução foi agendada no nosso sistema com sucesso! 🎧🎉\n\n` +
+      `📌 *Serviço/Trabalho:* ${ag.titulo}\n` +
       `📅 *Data:* ${dataFmt}\n` +
-      `⏰ *Horário:* ${ag.horario}\n` +
+      `⏰ *Horário:* ${horarioStr}\n` +
       (ag.valor > 0 ? `💰 *Valor:* R$ ${Number(ag.valor).toFixed(2)}\n` : '') +
       (ag.descricao ? `ℹ️ *Detalhes:* ${ag.descricao}\n` : '') +
-      `\n*ATT: GERAILTON NEVES LOCUTOR*`;
+      `\nConte conosco para uma gravação de alta qualidade profissional!\n` +
+      `Caso precise alterar algo, fale conosco por aqui.\n\n` +
+      `*ATT: GERAILTON NEVES LOCUTOR*`;
   },
 
-  // 2. Lembrete de Vencimento 1 Dia Antes
+  // 2. Lembrete de Locução 1 Dia Antes (Com OK e JOINHA em Negrito e Rodapé Personalizado)
   lembretePreVencimentoAmanha: (ag, empresa) => {
-    const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Sua Empresa';
+    const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Estúdio de Locução';
     const dataFmt = ag.data ? new Date(ag.data + 'T00:00:00').toLocaleDateString('pt-BR') : 'Amanhã';
-    return `👋 *OLÁ, ${ag.clienteNome.toUpperCase()}! LEMBRETE DE COMPROMISSO* - *${nomeEmpresa}*\n\n` +
-      `Passando para avisar e lembrar sobre o seu compromisso de *${ag.titulo}* agendado para *AMANHÃ*, dia *${dataFmt}* às ⏰ *${ag.horario}*.\n\n` +
+    const horarioStr = ag.diaInteiro ? '☀️ Dia Inteiro' : ag.horario;
+
+    return `👋 *OLÁ, ${ag.clienteNome.toUpperCase()}! LEMBRETE DE LOCUÇÃO / AGENDAMENTO* - *${nomeEmpresa}*\n\n` +
+      `Passando para avisar e lembrar sobre a sua locução/serviço de *${ag.titulo}* agendada para *AMANHÃ*, dia *${dataFmt}* às ⏰ *${horarioStr}*.\n\n` +
       `Se estiver tudo certo, por favor dê um *OK* ou responda com um *JOINHA* 👍 para confirmar que esta tudo certo!\n` +
       `Obrigado Pela Preferência!\n\n` +
       `*ATT: GERAILTON NEVES LOCUTOR*`;
   },
 
-  // 3. Lembrete Geral de Agendamento
-  agendamento: (ag, empresa) => {
-    const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Sua Empresa';
-    const dataFmt = ag.data ? new Date(ag.data + 'T00:00:00').toLocaleDateString('pt-BR') : '';
-    return `📌 *LEMBRETE DE AGENDAMENTO* - *${nomeEmpresa}*\n\n` +
+  // 3. Notificação de Gravação / Locução Concluída e Pronta
+  locucaoPronta: (ag, empresa) => {
+    const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Estúdio de Locução';
+    return `🎙️ *SUA LOCUÇÃO / GRAVAÇÃO ESTÁ PRONTA!* - *${nomeEmpresa}*\n\n` +
       `Olá, *${ag.clienteNome}*!\n` +
-      `Passando para lembrar do seu compromisso agendado:\n\n` +
+      `Sua gravação de *${ag.titulo}* foi concluída com sucesso no nosso estúdio! 🎧✨\n\n` +
+      `Obrigado pela preferência e parceria!\n\n` +
+      `*ATT: GERAILTON NEVES LOCUTOR*`;
+  },
+
+  // 4. Lembrete Geral de Agendamento
+  agendamento: (ag, empresa) => {
+    const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Estúdio de Locução';
+    const dataFmt = ag.data ? new Date(ag.data + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+    return `📌 *LEMBRETE DE LOCUÇÃO* - *${nomeEmpresa}*\n\n` +
+      `Olá, *${ag.clienteNome}*!\n` +
+      `Passando para lembrar do seu agendamento de locução:\n\n` +
       `🗓 *Data:* ${dataFmt}\n` +
       `⏰ *Horário:* ${ag.horario}\n` +
       `📝 *Serviço:* ${ag.titulo}\n` +
@@ -66,11 +82,11 @@ export const msgWhatsapp = {
       `\n*ATT: GERAILTON NEVES LOCUTOR*`;
   },
 
-  // 4. Envio de Orçamento
+  // 5. Envio de Orçamento de Locução
   orcamento: (orc, empresa) => {
-    const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Sua Empresa';
+    const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Estúdio de Locução';
     const itensTexto = orc.itens ? orc.itens.map(i => `• ${i.qtd}x ${i.descricao} - R$ ${(i.qtd * i.valorUnitario).toFixed(2)}`).join('\n') : '';
-    return `📄 *ORÇAMENTO DE SERVIÇOS/PRODUTOS* - *${nomeEmpresa}*\n\n` +
+    return `📄 *ORÇAMENTO DE LOCUÇÃO / GRAVAÇÃO* - *${nomeEmpresa}*\n\n` +
       `Olá, *${orc.clienteNome}*!\n` +
       `Conforme solicitado, segue o detalhamento do seu orçamento *Nº ${orc.numero}*:\n\n` +
       `🛒 *Itens:*\n${itensTexto}\n\n` +
@@ -82,16 +98,16 @@ export const msgWhatsapp = {
       `\n*ATT: GERAILTON NEVES LOCUTOR*`;
   },
 
-  // 5. Envio de Recibo
+  // 6. Envio de Recibo de Pagamento
   recibo: (rec, empresa) => {
-    const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Sua Empresa';
+    const nomeEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Estúdio de Locução';
     return `🧾 *RECIBO DE PAGAMENTO* - *${nomeEmpresa}*\n\n` +
       `Recebemos de *${rec.clienteNome}* a quantia de *R$ ${Number(rec.valor).toFixed(2)}*.\n\n` +
       `📋 *Nº do Recibo:* ${rec.numero}\n` +
       `🗓 *Data:* ${new Date(rec.dataEmissao + 'T00:00:00').toLocaleDateString('pt-BR')}\n` +
       `💳 *Forma de Pagamento:* ${rec.formaPagamento}\n` +
       `📝 *Referente a:* ${rec.referenteA}\n\n` +
-      `Obrigado pela preferência! 🙏\n` +
+      `Obrigado pela preferência e parceria! 🙏\n` +
       `*ATT: GERAILTON NEVES LOCUTOR*`;
   }
 };
