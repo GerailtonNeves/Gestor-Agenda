@@ -20,7 +20,9 @@ import {
   ThumbsUp,
   MessageSquare,
   Sun,
-  Mic
+  Mic,
+  CalendarCheck,
+  Smartphone
 } from 'lucide-react';
 import { abrirWhatsapp, msgWhatsapp } from '../utils/whatsapp';
 import { safeFormatDate } from '../utils/storage';
@@ -45,6 +47,8 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMultiploOpen, setModalMultiploOpen] = useState(false);
+  const [diaDetalhesDate, setDiaDetalhesDate] = useState(null);
+
   const [editId, setEditId] = useState(null);
   const [filtro, setFiltro] = useState('todos'); // 'todos', 'pendentes', 'concluidos', 'amanha'
   const [dataFiltro, setDataFiltro] = useState('');
@@ -461,6 +465,8 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
     return a.horario.localeCompare(b.horario);
   });
 
+  const compromissosDiaSelecionado = diaDetalhesDate ? agenda.filter(a => a.data === diaDetalhesDate) : [];
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Toast Alert Banner */}
@@ -567,130 +573,149 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
         )}
       </div>
 
-      {/* VISÃO 1: CALENDÁRIO INTERATIVO MENSAL */}
+      {/* VISÃO 1: CALENDÁRIO INTERATIVO MENSAL OTIMIZADO PARA CELULAR E TABLET (SEM CORTE DE SEXTA/SÁBADO) */}
       {modoVisao === 'calendario' && (
-        <div className="card" style={{ padding: '16px', border: '2px solid var(--blue-border)', background: '#ffffff' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px', textAlign: 'center', marginBottom: '8px' }}>
-            {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((diaSemana, index) => (
-              <div 
-                key={diaSemana} 
-                style={{ 
-                  padding: '10px', 
-                  fontWeight: 800, 
-                  fontSize: '0.82rem', 
-                  color: index === 0 || index === 6 ? 'var(--orange-primary)' : 'var(--blue-primary)',
-                  background: 'var(--blue-ice-bg)',
-                  borderRadius: '8px',
-                  textTransform: 'uppercase',
-                  border: '1px solid var(--blue-border)'
-                }}
-              >
-                {diaSemana}
-              </div>
-            ))}
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
-            {celulasCalendario.map((celula, i) => {
-              const compromissosDoDia = agenda.filter(a => a.data === celula.dateStr);
-
-              return (
-                <div
-                  key={i}
-                  onClick={() => abrirModalNovoParaData(celula.dateStr)}
-                  style={{
-                    minHeight: '110px',
-                    background: celula.isToday 
-                      ? '#fff7ed' 
-                      : celula.isCurrentMonth 
-                        ? '#ffffff' 
-                        : '#f8fafc',
-                    border: celula.isToday 
-                      ? '2px solid var(--orange-primary)' 
-                      : '1.5px solid #e2e8f0',
-                    borderRadius: '10px',
-                    padding: '8px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justify: 'space-between',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    opacity: celula.isCurrentMonth ? 1 : 0.4
+        <div className="calendar-responsive-container">
+          <div className="calendar-grid-wrapper">
+            {/* Cabeçalho dos 7 Dias da Semana (Destaque Especial para Sexta e Sábado) */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px', textAlign: 'center', marginBottom: '8px' }}>
+              {[
+                { label: 'Dom', color: 'var(--orange-primary)' },
+                { label: 'Seg', color: 'var(--blue-primary)' },
+                { label: 'Ter', color: 'var(--blue-primary)' },
+                { label: 'Qua', color: 'var(--blue-primary)' },
+                { label: 'Qui', color: 'var(--blue-primary)' },
+                { label: 'Sex 🔥', color: '#ea580c' },
+                { label: 'Sáb 🌟', color: '#059669' }
+              ].map((diaObj, index) => (
+                <div 
+                  key={diaObj.label} 
+                  style={{ 
+                    padding: '10px 4px', 
+                    fontWeight: 800, 
+                    fontSize: '0.85rem', 
+                    color: diaObj.color,
+                    background: index === 5 || index === 6 ? '#fff7ed' : 'var(--blue-ice-bg)',
+                    borderRadius: '8px',
+                    textTransform: 'uppercase',
+                    border: `1.5px solid ${index === 5 || index === 6 ? '#fed7aa' : 'var(--blue-border)'}`
                   }}
-                  className="calendar-day-cell"
-                  title={`Clique para agendar uma locução no dia ${safeFormatDate(celula.dateStr)}`}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ 
-                      fontSize: '0.9rem', 
-                      fontWeight: 800, 
-                      color: celula.isToday ? 'var(--orange-secondary)' : celula.isCurrentMonth ? 'var(--text-main)' : 'var(--text-muted)',
-                      background: celula.isToday ? 'var(--orange-border)' : 'transparent',
-                      width: '26px',
-                      height: '26px',
-                      borderRadius: '50%',
+                  {diaObj.label}
+                </div>
+              ))}
+            </div>
+
+            {/* Grid dos Dias do Mês */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
+              {celulasCalendario.map((celula, i) => {
+                const compromissosDoDia = agenda.filter(a => a.data === celula.dateStr);
+
+                return (
+                  <div
+                    key={i}
+                    onClick={() => {
+                      if (compromissosDoDia.length > 0) {
+                        setDiaDetalhesDate(celula.dateStr);
+                      } else {
+                        abrirModalNovoParaData(celula.dateStr);
+                      }
+                    }}
+                    style={{
+                      minHeight: '105px',
+                      background: celula.isToday 
+                        ? '#fff7ed' 
+                        : celula.isCurrentMonth 
+                          ? '#ffffff' 
+                          : '#f8fafc',
+                      border: celula.isToday 
+                        ? '2px solid var(--orange-primary)' 
+                        : '1.5px solid #cbd5e1',
+                      borderRadius: '10px',
+                      padding: '6px',
                       display: 'flex',
-                      alignItems: 'center',
-                      justify: 'center'
-                    }}>
-                      {celula.diaNum}
-                    </span>
-
-                    {compromissosDoDia.length > 0 && (
-                      <span className="badge badge-orange" style={{ padding: '2px 6px', fontSize: '0.68rem' }}>
-                        {compromissosDoDia.length} ag.
+                      flexDirection: 'column',
+                      justify: 'space-between',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      opacity: celula.isCurrentMonth ? 1 : 0.35,
+                      boxShadow: celula.isToday ? 'var(--shadow-md)' : 'none'
+                    }}
+                    className="calendar-day-cell"
+                    title={`Clique para ver ou agendar compromissos no dia ${safeFormatDate(celula.dateStr)}`}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ 
+                        fontSize: '0.88rem', 
+                        fontWeight: 800, 
+                        color: celula.isToday ? '#ea580c' : celula.isCurrentMonth ? 'var(--text-main)' : 'var(--text-muted)',
+                        background: celula.isToday ? '#fed7aa' : 'transparent',
+                        width: '26px',
+                        height: '26px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justify: 'center'
+                      }}>
+                        {celula.diaNum}
                       </span>
-                    )}
-                  </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px', overflowY: 'auto', maxHeight: '75px' }}>
-                    {compromissosDoDia.map(ag => {
-                      const primeiroNome = ag.clienteNome && ag.clienteNome !== 'Cliente Não Especificado'
-                        ? ag.clienteNome.trim().split(' ')[0]
-                        : ag.titulo;
+                      {compromissosDoDia.length > 0 && (
+                        <span className="badge badge-orange" style={{ padding: '2px 6px', fontSize: '0.7rem', fontWeight: 800 }}>
+                          {compromissosDoDia.length} ag.
+                        </span>
+                      )}
+                    </div>
 
-                      return (
-                        <div
-                          key={ag.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            abrirModalEditar(ag);
-                          }}
-                          style={{
-                            background: ag.concluido ? '#d1fae5' : ag.diaInteiro ? '#ffedd5' : 'var(--blue-light-bg)',
-                            border: `1px solid ${ag.concluido ? '#6ee7b7' : ag.diaInteiro ? '#fed7aa' : 'var(--blue-border)'}`,
-                            color: ag.concluido ? '#047857' : ag.diaInteiro ? '#ea580c' : 'var(--blue-primary)',
-                            padding: '3px 6px',
-                            borderRadius: '6px',
-                            fontSize: '0.74rem',
-                            fontWeight: 700,
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                          }}
-                          title={`${ag.diaInteiro ? 'Dia Inteiro' : ag.horario} - ${ag.titulo} (${ag.clienteNome})`}
-                        >
-                          <span style={{ fontSize: '0.68rem', fontWeight: 800 }}>{ag.diaInteiro ? '☀️' : ag.horario}</span>
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{primeiroNome}</span>
-                          <Trash2
-                            size={12}
-                            style={{ color: '#ef4444', marginLeft: 'auto', cursor: 'pointer', flexShrink: 0 }}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px', overflowY: 'auto', maxHeight: '72px' }}>
+                      {compromissosDoDia.map(ag => {
+                        const primeiroNome = ag.clienteNome && ag.clienteNome !== 'Cliente Não Especificado'
+                          ? ag.clienteNome.trim().split(' ')[0]
+                          : ag.titulo;
+
+                        return (
+                          <div
+                            key={ag.id}
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleExcluirCompromisso(ag.id, ag.titulo);
+                              abrirModalEditar(ag);
                             }}
-                            title="Excluir compromisso"
-                          />
-                        </div>
-                      );
-                    })}
+                            style={{
+                              background: ag.concluido ? '#d1fae5' : ag.diaInteiro ? '#ffedd5' : 'var(--blue-light-bg)',
+                              border: `1px solid ${ag.concluido ? '#6ee7b7' : ag.diaInteiro ? '#fed7aa' : 'var(--blue-border)'}`,
+                              color: ag.concluido ? '#047857' : ag.diaInteiro ? '#ea580c' : 'var(--blue-primary)',
+                              padding: '3px 5px',
+                              borderRadius: '6px',
+                              fontSize: '0.73rem',
+                              fontWeight: 700,
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}
+                            title={`${ag.diaInteiro ? 'Dia Inteiro' : ag.horario} - ${ag.titulo} (${ag.clienteNome})`}
+                          >
+                            <span style={{ fontSize: '0.68rem', fontWeight: 800 }}>{ag.diaInteiro ? '☀️' : ag.horario}</span>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{primeiroNome}</span>
+                            <Trash2
+                              size={12}
+                              style={{ color: '#ef4444', marginLeft: 'auto', cursor: 'pointer', flexShrink: 0 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleExcluirCompromisso(ag.id, ag.titulo);
+                              }}
+                              title="Excluir compromisso"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -833,6 +858,96 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
             </div>
           )}
         </>
+      )}
+
+      {/* MODAL ESPECIAL: VER AGENDAMENTOS DO DIA SELECIONADO NO CELULAR/TABLET */}
+      {diaDetalhesDate && (
+        <div className="modal-overlay" onClick={() => setDiaDetalhesDate(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px' }}>
+            <div className="modal-header">
+              <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CalendarCheck size={22} style={{ color: 'var(--orange-primary)' }} /> Agendamentos de {safeFormatDate(diaDetalhesDate)} ({compromissosDiaSelecionado.length})
+              </h3>
+              <button className="action-btn-circle" onClick={() => setDiaDetalhesDate(null)}>✕</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '60vh', overflowY: 'auto', marginBottom: '16px' }}>
+              {compromissosDiaSelecionado.length === 0 ? (
+                <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px' }}>
+                  Nenhum agendamento neste dia.
+                </p>
+              ) : (
+                compromissosDiaSelecionado.map(ag => (
+                  <div key={ag.id} style={{ background: 'var(--blue-ice-bg)', padding: '14px', borderRadius: '12px', border: '1.5px solid var(--blue-border)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div>
+                        <strong style={{ fontSize: '1.05rem', color: 'var(--text-main)' }}>{ag.titulo}</strong>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          ⏰ <strong>{ag.diaInteiro ? '☀️ Dia Inteiro' : ag.horario}</strong> • 👤 {ag.clienteNome} {ag.clienteTelefone ? `(${ag.clienteTelefone})` : ''}
+                        </div>
+                      </div>
+                      {ag.valor > 0 && (
+                        <span style={{ fontWeight: 800, color: '#047857', background: '#ecfdf5', padding: '2px 8px', borderRadius: '6px', border: '1px solid #10b981', fontSize: '0.88rem' }}>
+                          R$ {Number(ag.valor).toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      <button
+                        className="btn btn-sm btn-whatsapp"
+                        onClick={() => abrirWhatsapp(ag.clienteTelefone || empresa.whatsapp, msgWhatsapp.confirmacaoNovoAgendamento(ag, empresa))}
+                      >
+                        <MessageSquare size={13} /> Confirmação
+                      </button>
+
+                      <button
+                        className="btn btn-sm"
+                        onClick={() => abrirWhatsapp(ag.clienteTelefone || empresa.whatsapp, msgWhatsapp.lembretePreVencimentoAmanha(ag, empresa))}
+                        style={{ background: '#0284c7', color: '#fff', fontWeight: 800 }}
+                      >
+                        <ThumbsUp size={13} /> Lembrete 👍
+                      </button>
+
+                      <button
+                        className="btn btn-sm"
+                        onClick={() => abrirWhatsapp(ag.clienteTelefone || empresa.whatsapp, msgWhatsapp.locucaoPronta(ag, empresa))}
+                        style={{ background: '#8b5cf6', color: '#fff', fontWeight: 800 }}
+                      >
+                        <Mic size={13} /> Áudio Pronto 🎧
+                      </button>
+
+                      <button
+                        className="btn btn-sm btn-primary"
+                        onClick={() => {
+                          setDiaDetalhesDate(null);
+                          abrirModalEditar(ag);
+                        }}
+                      >
+                        <Edit size={13} /> Editar
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button 
+                type="button" 
+                className="btn btn-orange" 
+                onClick={() => {
+                  const targetDate = diaDetalhesDate;
+                  setDiaDetalhesDate(null);
+                  abrirModalNovoParaData(targetDate);
+                }}
+                style={{ width: '100%' }}
+              >
+                <Plus size={18} /> Novo Agendamento neste dia ({safeFormatDate(diaDetalhesDate)})
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* MODAL 1: AGENDAMENTO ÚNICO / EDITAR */}

@@ -83,6 +83,7 @@ body {
 
 .app-layout {
   display: flex;
+  flex-direction: row;
   flex: 1;
   width: 100%;
 }
@@ -102,9 +103,7 @@ body {
   }
 }
 
-/* ==========================================================================
-   TOPBAR HEADER (AZUL CLARO ELEGANTE)
-   ========================================================================== */
+/* TOPBAR HEADER */
 .topbar {
   background: var(--blue-gradient);
   color: #ffffff;
@@ -197,9 +196,7 @@ body {
   border: 2px solid #ffffff;
 }
 
-/* ==========================================================================
-   SIDEBAR LATERAL (MENU AZUL CLARO ELEGANTE)
-   ========================================================================== */
+/* SIDEBAR LATERAL */
 .sidebar {
   width: 290px;
   background: #ffffff;
@@ -274,9 +271,7 @@ body {
   box-shadow: var(--shadow-orange-btn);
 }
 
-/* ==========================================================================
-   MENU INFERIOR CELULAR E TABLET (AZUL CLARO & LARANJA)
-   ========================================================================== */
+/* MENU INFERIOR CELULAR E TABLET */
 .mobile-nav, .mobile-bottom-bar {
   position: fixed;
   bottom: 0;
@@ -319,9 +314,7 @@ body {
   box-shadow: var(--shadow-orange-btn);
 }
 
-/* ==========================================================================
-   CARTÕES & SUPERFÍCIES
-   ========================================================================== */
+/* CARTÕES & SUPERFÍCIES */
 .card {
   background: var(--card-bg);
   border: 1.5px solid var(--blue-border);
@@ -361,9 +354,7 @@ body {
   color: var(--blue-primary);
 }
 
-/* ==========================================================================
-   BOTÕES ELEGANTES DE ALTO CONSTRASTE
-   ========================================================================== */
+/* BOTÕES ELEGANTES DE ALTO CONSTRASTE */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -427,9 +418,7 @@ body {
   min-height: 36px;
 }
 
-/* ==========================================================================
-   FORMULÁRIOS & ENTRADAS
-   ========================================================================== */
+/* FORMULÁRIOS & ENTRADAS */
 .form-group {
   margin-bottom: 16px;
   display: flex;
@@ -462,9 +451,7 @@ body {
   box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.2);
 }
 
-/* ==========================================================================
-   TABELAS E BADGES
-   ========================================================================== */
+/* TABELAS E BADGES */
 .table-responsive {
   width: 100%;
   overflow-x: auto;
@@ -587,42 +574,27 @@ body {
   color: var(--blue-primary);
 }
 
-/* IMPRESSÃO PERFEITA DE PDF PARA ORÇAMENTOS E RECIBOS */
-@media print {
-  html, body {
-    background: #ffffff !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  body * {
-    visibility: hidden !important;
-  }
-
-  .no-print, .topbar, .sidebar, .mobile-nav, .modal-overlay {
-    display: none !important;
-  }
-
-  #documento-impressao, #documento-impressao *,
-  .print-document, .print-document *,
-  #cupom-impressao, #cupom-impressao * {
-    visibility: visible !important;
-  }
-
-  #documento-impressao, .print-document {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 20px !important;
-    box-shadow: none !important;
-    border: none !important;
-  }
+/* OTIMIZAÇÃO DE CALENDÁRIO RESPONSIVO PARA CELULAR E TABLET */
+.calendar-responsive-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--blue-border);
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
 }
 
-/* Utilitários para Otimização de Header Mobile */
+.calendar-grid-wrapper {
+  min-width: 700px;
+  padding: 14px;
+}
+
 @media (max-width: 768px) {
+  .calendar-day-cell {
+    min-height: 95px !important;
+    padding: 6px !important;
+  }
   .desktop-only-clock {
     display: none !important;
   }
@@ -639,4 +611,3 @@ body {
     display: none !important;
   }
 }
-
