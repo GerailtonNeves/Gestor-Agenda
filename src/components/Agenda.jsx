@@ -22,7 +22,8 @@ import {
   Sun,
   Mic,
   CalendarCheck,
-  Smartphone
+  Smartphone,
+  User
 } from 'lucide-react';
 import { abrirWhatsapp, msgWhatsapp } from '../utils/whatsapp';
 import { safeFormatDate } from '../utils/storage';
@@ -735,7 +736,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
         </div>
       )}
 
-      {/* VISÃO 2: LISTA DE AGENDAMENTOS COMPLETA COM AÇÕES DIRETA PARA O WHATSAPP DO CLIENTE */}
+      {/* VISÃO 2: LISTA DE AGENDAMENTOS COMPLETA COM CARD REDESENHADO DE ALTO NÍVEL PROFISSIONAL */}
       {modoVisao === 'lista' && (
         <>
           {agendaFiltrada.length === 0 ? (
@@ -744,119 +745,147 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
               <p>Nenhum agendamento encontrado.</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {agendaFiltrada.map((ag) => (
                 <div
                   key={ag.id}
                   className="card"
                   style={{
                     display: 'flex',
-                    alignItems: 'center',
-                    justify: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: '16px',
-                    padding: '16px 20px',
+                    flexDirection: 'column',
+                    gap: '14px',
+                    padding: '18px 20px',
+                    borderRadius: '16px',
+                    border: '2px solid var(--blue-border)',
                     borderLeft: `6px solid ${ag.concluido ? 'var(--success)' : ag.diaInteiro ? '#f97316' : 'var(--blue-primary)'}`,
-                    background: ag.concluido ? 'var(--success-bg)' : 'var(--card-bg)',
-                    opacity: ag.concluido ? 0.9 : 1
+                    background: ag.concluido ? 'var(--success-bg)' : '#ffffff',
+                    boxShadow: '0 4px 15px rgba(2, 132, 199, 0.05)',
+                    position: 'relative'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: '280px' }}>
+                  {/* 1. CABEÇALHO DO CARD: TÍTULO, BADGES E DESTAQUE DE VALOR */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, textDecoration: ag.concluido ? 'line-through' : 'none', color: 'var(--text-main)' }}>
+                          {ag.titulo}
+                        </h3>
+                        <span className={`badge ${ag.concluido ? 'badge-success' : 'badge-orange'}`} style={{ fontSize: '0.75rem' }}>
+                          {ag.concluido ? 'Concluído ✅' : ag.prioridade || 'Normal'}
+                        </span>
+                        {ag.diaInteiro && (
+                          <span className="badge badge-orange" style={{ background: '#fff7ed', color: '#ea580c', fontSize: '0.75rem' }}>☀️ Dia Inteiro</span>
+                        )}
+                        {ag.data === dataAmanhaStr && !ag.concluido && (
+                          <span className="badge badge-blue" style={{ fontSize: '0.75rem' }}>🗓️ Amanhã</span>
+                        )}
+                      </div>
+
+                      {/* DETALHES DE DATA, HORÁRIO, CLIENTE E WHATSAPP EM BLOCOS MODERNOS */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginTop: '8px', fontSize: '0.86rem', color: 'var(--text-muted)' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#f1f5f9', padding: '4px 10px', borderRadius: '8px', fontWeight: 700, border: '1px solid #cbd5e1' }}>
+                          <CalendarIcon size={14} style={{ color: 'var(--blue-primary)' }} /> {safeFormatDate(ag.data)}
+                        </span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#f1f5f9', padding: '4px 10px', borderRadius: '8px', fontWeight: 700, border: '1px solid #cbd5e1' }}>
+                          <Clock size={14} style={{ color: '#ea580c' }} /> {ag.diaInteiro ? '☀️ Dia Inteiro' : ag.horario}
+                        </span>
+                        {ag.clienteNome && (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 700, color: 'var(--text-main)', background: '#f8fafc', padding: '4px 10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                            <User size={14} style={{ color: 'var(--blue-primary)' }} /> {ag.clienteNome}
+                          </span>
+                        )}
+                        {ag.clienteTelefone && (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 700, color: '#16a34a', background: '#f0fdf4', padding: '4px 10px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                            <Smartphone size={14} /> {ag.clienteTelefone}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* DESTAQUE DE VALOR DO SERVIÇO */}
+                    {ag.valor > 0 && (
+                      <div style={{ background: '#ecfdf5', padding: '6px 14px', borderRadius: '10px', border: '1.5px solid #6ee7b7', textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#047857', textTransform: 'uppercase' }}>VALOR</div>
+                        <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#065f46' }}>R$ {Number(ag.valor).toFixed(2)}</div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ROTEIRO / OBSERVAÇÕES SE HOUVER */}
+                  {ag.descricao && (
+                    <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', borderLeft: '3.5px solid var(--blue-primary)', fontSize: '0.84rem', color: '#475569', fontStyle: 'italic' }}>
+                      "{ag.descricao}"
+                    </div>
+                  )}
+
+                  {/* 2. BARRA DE BOTÕES ORGANIZADA EM LAYOUT EXECUTIVO */}
+                  <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {/* LINHA 1: MARCAR CONCLUÍDO (STATUS PRINCIPAL) */}
                     <button
                       className="btn"
                       onClick={() => handleConcluir(ag)}
                       title={ag.concluido ? "Reabrir compromisso" : "Marcar como Concluído e Lançar nas Receitas"}
                       style={{
+                        width: '100%',
                         background: ag.concluido ? 'var(--success)' : 'var(--orange-gradient)',
                         color: '#ffffff',
                         border: 'none',
-                        padding: '8px 14px',
-                        borderRadius: '8px',
+                        padding: '10px 16px',
+                        borderRadius: '10px',
                         fontWeight: 800,
-                        fontSize: '0.85rem',
+                        fontSize: '0.9rem',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '6px'
+                        justify: 'center',
+                        gap: '8px',
+                        boxShadow: ag.concluido ? 'none' : 'var(--shadow-orange-btn)'
                       }}
                     >
-                      <CheckCircle size={18} /> {ag.concluido ? 'Concluído ✅' : 'Marcar Concluído'}
+                      <CheckCircle size={18} /> {ag.concluido ? 'Compromisso Concluído ✅ (Clique p/ Reabrir)' : 'Marcar Como Concluído ✅'}
                     </button>
 
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                        <h3 style={{ fontSize: '1.05rem', fontWeight: 800, textDecoration: ag.concluido ? 'line-through' : 'none', color: 'var(--text-main)' }}>
-                          {ag.titulo}
-                        </h3>
-                        <span className={`badge ${ag.concluido ? 'badge-success' : 'badge-orange'}`}>
-                          {ag.concluido ? 'Concluído & Lançado em Receitas' : ag.prioridade || 'Normal'}
-                        </span>
-                        {ag.diaInteiro && (
-                          <span className="badge badge-orange" style={{ background: '#fff7ed', color: '#ea580c' }}>☀️ Dia Inteiro</span>
-                        )}
-                        {ag.data === dataAmanhaStr && !ag.concluido && (
-                          <span className="badge badge-blue">🗓️ Amanhã</span>
-                        )}
-                      </div>
+                    {/* LINHA 2: GRID DE AUTOMAÇÕES WHATSAPP & GERENCIAMENTO */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
+                      {/* Botão Confirmação WhatsApp */}
+                      <button
+                        className="btn btn-sm btn-whatsapp"
+                        onClick={() => abrirWhatsapp(ag.clienteTelefone || empresa.whatsapp, msgWhatsapp.confirmacaoNovoAgendamento(ag, empresa))}
+                        title="Enviar Mensagem de Confirmação no WhatsApp do Cliente"
+                        style={{ justifyContent: 'center', padding: '8px 10px', fontSize: '0.82rem', fontWeight: 800 }}
+                      >
+                        <MessageSquare size={14} /> Confirmação
+                      </button>
 
-                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '4px', alignItems: 'center' }}>
-                        <span>🗓 {safeFormatDate(ag.data)}</span>
-                        <span>⏰ {ag.diaInteiro ? '☀️ Dia Inteiro' : ag.horario}</span>
-                        <span>👤 <strong>{ag.clienteNome}</strong></span>
-                        {ag.clienteTelefone && (
-                          <span style={{ color: '#16a34a', fontWeight: 700 }}>📱 {ag.clienteTelefone}</span>
-                        )}
-                        {ag.valor > 0 && (
-                          <span style={{ fontWeight: 800, color: '#047857', background: '#ecfdf5', padding: '2px 8px', borderRadius: '6px', border: '1px solid #10b981' }}>
-                            💰 R$ {Number(ag.valor).toFixed(2)}
-                          </span>
-                        )}
-                      </div>
+                      {/* Botão Lembrete Amanhã */}
+                      <button
+                        className="btn btn-sm"
+                        onClick={() => abrirWhatsapp(ag.clienteTelefone || empresa.whatsapp, msgWhatsapp.lembretePreVencimentoAmanha(ag, empresa))}
+                        title="Enviar Lembrete de Amanhã no WhatsApp do Cliente"
+                        style={{ background: '#0284c7', color: '#ffffff', fontWeight: 800, justifyContent: 'center', padding: '8px 10px', fontSize: '0.82rem' }}
+                      >
+                        <ThumbsUp size={14} /> Lembrete Amanhã 👍
+                      </button>
 
-                      {ag.descricao && (
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px', fontStyle: 'italic' }}>
-                          "{ag.descricao}"
-                        </p>
-                      )}
+                      {/* Botão Editar */}
+                      <button
+                        className="btn btn-sm btn-primary"
+                        onClick={() => abrirModalEditar(ag)}
+                        title="Editar Agendamento"
+                        style={{ justifyContent: 'center', padding: '8px 10px', fontSize: '0.82rem', fontWeight: 800 }}
+                      >
+                        <Edit size={14} /> Editar
+                      </button>
+
+                      {/* Botão Excluir */}
+                      <button
+                        className="btn btn-sm btn-secondary"
+                        onClick={() => handleExcluirCompromisso(ag.id, ag.titulo)}
+                        title="Excluir compromisso"
+                        style={{ color: '#dc2626', borderColor: '#fca5a5', justifyContent: 'center', padding: '8px 10px', fontSize: '0.82rem', fontWeight: 800 }}
+                      >
+                        <Trash2 size={14} /> Excluir
+                      </button>
                     </div>
-                  </div>
-
-                  {/* AÇÕES DE WHATSAPP DIRETAS PARA O TELEFONE DO CLIENTE */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                    {/* Botão 1: Confirmar Agendamento */}
-                    <button
-                      className="btn btn-sm btn-whatsapp"
-                      onClick={() => abrirWhatsapp(ag.clienteTelefone || empresa.whatsapp, msgWhatsapp.confirmacaoNovoAgendamento(ag, empresa))}
-                      title="Enviar Mensagem de Confirmação no WhatsApp do Cliente"
-                    >
-                      <MessageSquare size={14} /> Confirmação
-                    </button>
-
-                    {/* Botão 2: Lembrete Pre-Vencimento (1 Dia Antes) */}
-                    <button
-                      className="btn btn-sm"
-                      onClick={() => abrirWhatsapp(ag.clienteTelefone || empresa.whatsapp, msgWhatsapp.lembretePreVencimentoAmanha(ag, empresa))}
-                      title="Enviar Lembrete de Amanhã no WhatsApp do Cliente"
-                      style={{ background: '#0284c7', color: '#ffffff', fontWeight: 800 }}
-                    >
-                      <ThumbsUp size={14} /> Lembrete Amanhã 👍
-                    </button>
-
-                    <button
-                      className="btn btn-sm btn-primary"
-                      onClick={() => abrirModalEditar(ag)}
-                      title="Editar Agendamento"
-                    >
-                      <Edit size={14} /> Editar
-                    </button>
-
-                    <button
-                      className="btn btn-sm btn-secondary"
-                      onClick={() => handleExcluirCompromisso(ag.id, ag.titulo)}
-                      title="Excluir compromisso"
-                      style={{ color: '#dc2626', borderColor: '#fca5a5' }}
-                    >
-                      <Trash2 size={14} /> Excluir
-                    </button>
                   </div>
                 </div>
               ))}
@@ -883,7 +912,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                 </p>
               ) : (
                 compromissosDiaSelecionado.map(ag => (
-                  <div key={ag.id} style={{ background: 'var(--blue-ice-bg)', padding: '14px', borderRadius: '12px', border: '1.5px solid var(--blue-border)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div key={ag.id} style={{ background: '#ffffff', padding: '14px', borderRadius: '12px', border: '1.5px solid var(--blue-border)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
                         <strong style={{ fontSize: '1.05rem', color: 'var(--text-main)' }}>{ag.titulo}</strong>
@@ -898,10 +927,11 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                       )}
                     </div>
 
-                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '6px' }}>
                       <button
                         className="btn btn-sm btn-whatsapp"
                         onClick={() => abrirWhatsapp(ag.clienteTelefone || empresa.whatsapp, msgWhatsapp.confirmacaoNovoAgendamento(ag, empresa))}
+                        style={{ justifyContent: 'center' }}
                       >
                         <MessageSquare size={13} /> Confirmação
                       </button>
@@ -909,7 +939,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                       <button
                         className="btn btn-sm"
                         onClick={() => abrirWhatsapp(ag.clienteTelefone || empresa.whatsapp, msgWhatsapp.lembretePreVencimentoAmanha(ag, empresa))}
-                        style={{ background: '#0284c7', color: '#fff', fontWeight: 800 }}
+                        style={{ background: '#0284c7', color: '#fff', fontWeight: 800, justifyContent: 'center' }}
                       >
                         <ThumbsUp size={13} /> Lembrete 👍
                       </button>
@@ -920,6 +950,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                           setDiaDetalhesDate(null);
                           abrirModalEditar(ag);
                         }}
+                        style={{ justifyContent: 'center' }}
                       >
                         <Edit size={13} /> Editar
                       </button>
