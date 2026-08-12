@@ -514,7 +514,7 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
             <Mic size={26} /> Agenda de Locução & Compromissos
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            Envie mensagens de confirmação, lembretes de gravação e aviso de <strong>Áudio Pronto</strong> direto no WhatsApp do cliente!
+            Envie mensagens de confirmação e lembretes de gravação direto no WhatsApp do cliente!
           </p>
         </div>
 
@@ -841,16 +841,6 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                       <ThumbsUp size={14} /> Lembrete Amanhã 👍
                     </button>
 
-                    {/* Botão 3: Notificação de Áudio / Locução Pronta */}
-                    <button
-                      className="btn btn-sm"
-                      onClick={() => abrirWhatsapp(ag.clienteTelefone || empresa.whatsapp, msgWhatsapp.locucaoPronta(ag, empresa))}
-                      title="Enviar Aviso de Locução/Áudio Pronto no WhatsApp do Cliente"
-                      style={{ background: '#8b5cf6', color: '#ffffff', fontWeight: 800 }}
-                    >
-                      <Mic size={14} /> Áudio Pronto 🎧
-                    </button>
-
                     <button
                       className="btn btn-sm btn-primary"
                       onClick={() => abrirModalEditar(ag)}
@@ -922,14 +912,6 @@ export default function Agenda({ agenda = [], clientes = [], produtos = [], empr
                         style={{ background: '#0284c7', color: '#fff', fontWeight: 800 }}
                       >
                         <ThumbsUp size={13} /> Lembrete 👍
-                      </button>
-
-                      <button
-                        className="btn btn-sm"
-                        onClick={() => abrirWhatsapp(ag.clienteTelefone || empresa.whatsapp, msgWhatsapp.locucaoPronta(ag, empresa))}
-                        style={{ background: '#8b5cf6', color: '#fff', fontWeight: 800 }}
-                      >
-                        <Mic size={13} /> Áudio Pronto 🎧
                       </button>
 
                       <button
