@@ -93,7 +93,7 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
           @page { size: A4 landscape; margin: 10mm; }
           body {
             font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
-            color: #0f172a;
+            color: #1c1917;
             background: #ffffff;
             margin: 0;
             padding: 0;
@@ -114,7 +114,7 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
       </head>
       <body>
         <div style="text-align: right; padding: 10px 20px;" class="no-print-btn">
-          <button onclick="window.print()" style="background:#0284c7;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-weight:bold;cursor:pointer;font-size:1rem;">
+          <button onclick="window.print()" style="background:#dc2626;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-weight:bold;cursor:pointer;font-size:1rem;">
             🖨️ Confirmar Impressão / Salvar como PDF
           </button>
         </div>
@@ -179,11 +179,11 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
         style={{ 
           maxWidth: isOrcamento ? '860px' : '920px', 
           background: '#fff', 
-          color: '#0f172a', 
+          color: '#1c1917', 
           padding: '20px', 
           borderRadius: '20px', 
           border: '2.5px solid var(--blue-border)',
-          boxShadow: '0 25px 60px rgba(2, 132, 199, 0.25)'
+          boxShadow: '0 25px 60px rgba(220, 38, 38, 0.25)'
         }}
       >
         {/* Controles de Ação Visual (Não aparecem na impressão) */}
@@ -229,20 +229,20 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
             style={{ 
               padding: '24px 28px', 
               fontFamily: 'Inter, system-ui, Arial, sans-serif', 
-              color: '#0f172a', 
+              color: '#1c1917', 
               background: '#ffffff', 
-              border: '2.5px solid #0284c7', 
+              border: '2.5px solid #dc2626', 
               borderRadius: '16px',
-              boxShadow: '0 10px 30px rgba(2, 132, 199, 0.08)',
+              boxShadow: '0 10px 30px rgba(220, 38, 38, 0.08)',
               minWidth: '720px'
             }}
           >
-            {/* TOPO: BARRA DE DESTAQUE ELEGANTE DA EMPRESA (COM ESPAÇAMENTO PERFEITO) */}
+            {/* TOPO: BARRA DE DESTAQUE ELEGANTE DA EMPRESA (TEMA VERMELHO E AMARELO) */}
             <div style={{ 
               display: 'flex', 
               justify: 'space-between', 
               alignItems: 'center', 
-              background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', 
+              background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)', 
               color: '#ffffff', 
               padding: '16px 22px', 
               borderRadius: '12px',
@@ -264,14 +264,14 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
                   <h1 style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0, color: '#ffffff', lineHeight: '1.2' }}>
                     {nomeRazaoEmpresa}
                   </h1>
-                  <div style={{ fontSize: '0.8rem', opacity: 0.92, marginTop: '2px' }}>
+                  <div style={{ fontSize: '0.8rem', opacity: 0.95, marginTop: '2px' }}>
                     {empresa.cnpj ? `CNPJ/CPF: ${empresa.cnpj}` : ''} {empresa.whatsapp || empresa.telefone ? `• Tel: ${empresa.whatsapp || empresa.telefone}` : ''} {empresa.nomeFuncionario ? `• Atendente: ${empresa.nomeFuncionario}` : ''}
                   </div>
                 </div>
               </div>
 
-              <div style={{ textAlign: 'right', background: 'rgba(255, 255, 255, 0.15)', padding: '8px 16px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.3)' }}>
-                <div style={{ fontSize: '1.05rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#ffedd5' }}>
+              <div style={{ textAlign: 'right', background: 'rgba(255, 255, 255, 0.18)', padding: '8px 16px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.35)' }}>
+                <div style={{ fontSize: '1.05rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#fde047' }}>
                   {isOrcamento ? 'ORÇAMENTO' : 'RECIBO OFICIAL DE PAGAMENTO'}
                 </div>
                 <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#ffffff' }}>
@@ -284,15 +284,15 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
             {isOrcamento ? (
               <div>
                 {/* Dados do Cliente */}
-                <div style={{ background: '#f8fafc', padding: '12px 18px', borderRadius: '10px', border: '1.5px solid #cbd5e1', marginBottom: '16px' }}>
+                <div style={{ background: '#fffdf5', padding: '12px 18px', borderRadius: '10px', border: '1.5px solid #fca5a5', marginBottom: '16px' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: documento.clienteTelefone ? '2fr 1fr' : '1fr', gap: '14px' }}>
                     <div>
-                      <div style={{ fontSize: '0.75rem', color: '#0284c7', fontWeight: 800, textTransform: 'uppercase' }}>CLIENTE / SOLICITANTE</div>
-                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>{documento.clienteNome || 'Cliente Não Informado'}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 800, textTransform: 'uppercase' }}>CLIENTE / SOLICITANTE</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1c1917' }}>{documento.clienteNome || 'Cliente Não Informado'}</div>
                     </div>
                     {documento.clienteTelefone && (
-                      <div style={{ borderLeft: '2px solid #e2e8f0', paddingLeft: '14px' }}>
-                        <div style={{ fontSize: '0.75rem', color: '#ea580c', fontWeight: 800, textTransform: 'uppercase' }}>WHATSAPP</div>
+                      <div style={{ borderLeft: '2px solid #e7e5e4', paddingLeft: '14px' }}>
+                        <div style={{ fontSize: '0.75rem', color: '#ca8a04', fontWeight: 800, textTransform: 'uppercase' }}>WHATSAPP</div>
                         <div style={{ fontSize: '1rem', fontWeight: 800 }}>{documento.clienteTelefone}</div>
                       </div>
                     )}
@@ -302,7 +302,7 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
                 {/* Tabela de Itens */}
                 <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '16px', fontSize: '0.88rem' }}>
                   <thead>
-                    <tr style={{ background: '#0284c7', color: '#fff', textTransform: 'uppercase', fontSize: '0.78rem' }}>
+                    <tr style={{ background: '#dc2626', color: '#fff', textTransform: 'uppercase', fontSize: '0.78rem' }}>
                       <th style={{ padding: '9px 12px', textAlign: 'left' }}>Item / Descrição do Serviço</th>
                       <th style={{ padding: '9px 12px', textAlign: 'center', width: '70px' }}>Qtd</th>
                       <th style={{ padding: '9px 12px', textAlign: 'right', width: '120px' }}>Valor Unit.</th>
@@ -311,7 +311,7 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
                   </thead>
                   <tbody>
                     {documento.itens && documento.itens.map((item, idx) => (
-                      <tr key={idx} style={{ borderBottom: '1px solid #cbd5e1' }}>
+                      <tr key={idx} style={{ borderBottom: '1px solid #fca5a5' }}>
                         <td style={{ padding: '9px 12px' }}>{item.descricao}</td>
                         <td style={{ padding: '9px 12px', textAlign: 'center' }}>{item.qtd}</td>
                         <td style={{ padding: '9px 12px', textAlign: 'right' }}>R$ {Number(item.valorUnitario).toFixed(2)}</td>
@@ -325,14 +325,14 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
 
                 {/* Totais */}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
-                  <div style={{ width: '260px', background: '#f0f9ff', padding: '12px', borderRadius: '8px', border: '1.5px solid #bae6fd' }}>
+                  <div style={{ width: '260px', background: '#fff5f5', padding: '12px', borderRadius: '8px', border: '1.5px solid #fca5a5' }}>
                     {documento.desconto > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#475569', marginBottom: '4px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#57534e', marginBottom: '4px' }}>
                         <span>Desconto:</span>
                         <span>- R$ {Number(documento.desconto).toFixed(2)}</span>
                       </div>
                     )}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.25rem', fontWeight: 800, color: '#0284c7' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.25rem', fontWeight: 800, color: '#dc2626' }}>
                       <span>TOTAL:</span>
                       <span>R$ {Number(documento.total).toFixed(2)}</span>
                     </div>
@@ -340,7 +340,7 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
                 </div>
 
                 {documento.observacoes && (
-                  <div style={{ background: '#fff7ed', borderLeft: '4px solid #ea580c', padding: '10px 14px', borderRadius: '6px', fontSize: '0.85rem', color: '#7c2d12', marginBottom: '16px' }}>
+                  <div style={{ background: '#fefce8', borderLeft: '4px solid #ca8a04', padding: '10px 14px', borderRadius: '6px', fontSize: '0.85rem', color: '#854d0e', marginBottom: '16px' }}>
                     <strong>Observações:</strong> {documento.observacoes}
                   </div>
                 )}
@@ -349,9 +349,9 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
               /* LAYOUT DE RECIBO EXECUTIVO COM TEXTO DE DECLARAÇÃO OFICIAL */
               <div>
                 {/* CARTÃO DE QUITAÇÃO DECLARAÇÃO OFICIAL */}
-                <div style={{ background: '#f8fafc', padding: '16px 20px', borderRadius: '12px', border: '1.5px solid #cbd5e1', marginBottom: '16px', fontSize: '0.98rem', lineHeight: '1.7', color: '#0f172a' }}>
-                  Declaro(amos) para os devidos fins de direito que recebemos de <strong>{documento.clienteNome || 'Cliente'}</strong>, por intermédio da empresa <strong>{nomeRazaoEmpresa}</strong>, a quantia de <strong style={{ color: '#0284c7', background: '#e0f2fe', padding: '2px 8px', borderRadius: '6px' }}>R$ {Number(documento.valor).toFixed(2)}</strong> <em>({documento.valorExtenso || 'valor numérico acima'})</em>, referente à prestação de serviços de <strong style={{ color: '#ea580c' }}>"{documento.referenteA}"</strong>.
-                  <div style={{ marginTop: '8px', fontSize: '0.84rem', color: '#475569', fontStyle: 'italic' }}>
+                <div style={{ background: '#fffdf5', padding: '16px 20px', borderRadius: '12px', border: '1.5px solid #fca5a5', marginBottom: '16px', fontSize: '0.98rem', lineHeight: '1.7', color: '#1c1917' }}>
+                  Declaro(amos) para os devidos fins de direito que recebemos de <strong>{documento.clienteNome || 'Cliente'}</strong>, por intermédio da empresa <strong>{nomeRazaoEmpresa}</strong>, a quantia de <strong style={{ color: '#dc2626', background: '#fee2e2', padding: '2px 8px', borderRadius: '6px' }}>R$ {Number(documento.valor).toFixed(2)}</strong> <em>({documento.valorExtenso || 'valor numérico acima'})</em>, referente à prestação de serviços de <strong style={{ color: '#ca8a04' }}>"{documento.referenteA}"</strong>.
+                  <div style={{ marginTop: '8px', fontSize: '0.84rem', color: '#57534e', fontStyle: 'italic' }}>
                     Por ser verdade e para dar a devida e geral quitação do valor recebido, firmamos o presente recibo comercial para que surta todos os seus efeitos legais.
                   </div>
                 </div>
@@ -359,12 +359,12 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
                 {/* CARTÃO EM 2 COLUNAS DE DETALHES DE PAGAMENTO E PIX */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '16px', marginBottom: '16px' }}>
                   {/* COLUNA ESQUERDA: DETALHES DO CLIENTE E WHATSAPP */}
-                  <div style={{ background: '#ffffff', padding: '14px 18px', borderRadius: '12px', border: '1.5px solid #cbd5e1', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '6px' }}>
+                  <div style={{ background: '#ffffff', padding: '14px 18px', borderRadius: '12px', border: '1.5px solid #fca5a5', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '6px' }}>
                     <div>
-                      <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#0284c7', textTransform: 'uppercase' }}>
+                      <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#dc2626', textTransform: 'uppercase' }}>
                         NOME DO CLIENTE / PAGADOR:
                       </div>
-                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1c1917' }}>
                         {documento.clienteNome || 'Cliente Não Informado'}
                       </div>
                     </div>
@@ -376,28 +376,28 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
                   </div>
 
                   {/* COLUNA DIREIRA: VALOR RECEBIDO E STATUS PAGO */}
-                  <div style={{ background: '#f0f9ff', padding: '14px 18px', borderRadius: '12px', border: '2px solid #0284c7', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#0284c7', textTransform: 'uppercase' }}>
+                  <div style={{ background: '#fff5f5', padding: '14px 18px', borderRadius: '12px', border: '2px solid #dc2626', textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#dc2626', textTransform: 'uppercase' }}>
                       VALOR RECEBIDO • PAGO ✅
                     </div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0f172a', margin: '2px 0' }}>
+                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#1c1917', margin: '2px 0' }}>
                       R$ {Number(documento.valor).toFixed(2)}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 700 }}>
+                    <div style={{ fontSize: '0.8rem', color: '#57534e', fontWeight: 700 }}>
                       Forma: <strong>{documento.formaPagamento || 'PIX'}</strong>
                     </div>
                   </div>
                 </div>
 
                 {documento.observacoes && (
-                  <div style={{ fontSize: '0.82rem', color: '#475569', background: '#fff7ed', borderLeft: '4px solid #f97316', padding: '8px 12px', borderRadius: '6px', marginBottom: '14px' }}>
+                  <div style={{ fontSize: '0.82rem', color: '#57534e', background: '#fefce8', borderLeft: '4px solid #ca8a04', padding: '8px 12px', borderRadius: '6px', marginBottom: '14px' }}>
                     <strong>Observações:</strong> {documento.observacoes}
                   </div>
                 )}
 
                 {/* DADOS PIX SE HOUVER */}
                 {empresa.chavePix && (
-                  <div style={{ fontSize: '0.82rem', color: '#0284c7', background: '#f0f9ff', padding: '8px 14px', borderRadius: '8px', border: '1px solid #bae6fd', marginBottom: '14px' }}>
+                  <div style={{ fontSize: '0.82rem', color: '#ca8a04', background: '#fefce8', padding: '8px 14px', borderRadius: '8px', border: '1px solid #fde047', marginBottom: '14px' }}>
                     🔑 <strong>Chave PIX da Empresa:</strong> {empresa.chavePix}
                   </div>
                 )}
@@ -405,11 +405,11 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
             )}
 
             {/* RODAPÉ COMPACTO COM CIDADE DA EMPRESA, DATA E ASSINATURA DIGITAL */}
-            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: '12px', borderTop: '1.5px solid #cbd5e1' }}>
-              <div style={{ fontSize: '0.82rem', color: '#475569' }}>
+            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: '12px', borderTop: '1.5px solid #fca5a5' }}>
+              <div style={{ fontSize: '0.82rem', color: '#57534e' }}>
                 <div>📍 <strong>{cidadeFooter}</strong>, {dataEmissaoFormatada}</div>
-                {empresa.nomeGerente && <div style={{ fontSize: '0.76rem', color: '#334155', fontWeight: 700, marginTop: '2px' }}>Gerente / Resp: {empresa.nomeGerente}</div>}
-                <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>Quitação dada com a emissão deste comprovante.</div>
+                {empresa.nomeGerente && <div style={{ fontSize: '0.76rem', color: '#1c1917', fontWeight: 700, marginTop: '2px' }}>Gerente / Resp: {empresa.nomeGerente}</div>}
+                <div style={{ fontSize: '0.72rem', color: '#78716c', marginTop: '2px' }}>Quitação dada com a emissão deste comprovante.</div>
               </div>
 
               <div style={{ textAlign: 'center', minWidth: '240px' }}>
@@ -418,9 +418,9 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
                     <img src={empresa.assinatura} alt="Assinatura" style={{ maxHeight: '55px', maxWidth: '200px', objectFit: 'contain' }} />
                   </div>
                 )}
-                <div style={{ borderTop: '2px solid #0f172a', paddingTop: '4px' }}>
-                  <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{nomeRazaoEmpresa}</strong>
-                  {empresa.cnpj && <div style={{ fontSize: '0.74rem', color: '#64748b' }}>CNPJ/CPF: {empresa.cnpj}</div>}
+                <div style={{ borderTop: '2px solid #1c1917', paddingTop: '4px' }}>
+                  <strong style={{ fontSize: '0.9rem', color: '#1c1917' }}>{nomeRazaoEmpresa}</strong>
+                  {empresa.cnpj && <div style={{ fontSize: '0.74rem', color: '#78716c' }}>CNPJ/CPF: {empresa.cnpj}</div>}
                 </div>
               </div>
             </div>

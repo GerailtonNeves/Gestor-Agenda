@@ -331,63 +331,130 @@ export default function App() {
       />
 
       <div className="app-layout">
-        {/* Sidebar Lateral Organizada em Seções */}
+        {/* Sidebar Lateral Executiva Reformulada e Organizada */}
         <aside className="sidebar">
-          {/* Seção 1: Visão Geral */}
+          {/* CARTÃO DE PERFIL DA EMPRESA E ATENDENTE NO TOPO DA SIDEBAR */}
+          <div 
+            onClick={() => setAbaAtiva('empresa')}
+            style={{ 
+              background: 'linear-gradient(135deg, #fff5f5 0%, #fee2e2 100%)', 
+              padding: '14px 16px', 
+              borderRadius: '14px', 
+              border: '2px solid var(--blue-border)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(220, 38, 38, 0.06)'
+            }}
+            title="Clique para configurar dados da Empresa e Atendente"
+          >
+            {empresa.logo ? (
+              <div style={{ width: '45px', height: '45px', borderRadius: '10px', overflow: 'hidden', background: '#fff', padding: '3px', border: '1.5px solid var(--blue-border)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img src={empresa.logo} alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+              </div>
+            ) : (
+              <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'var(--blue-gradient)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontWeight: 800 }}>
+                <Building size={22} />
+              </div>
+            )}
+            <div style={{ overflow: 'hidden', flex: 1 }}>
+              <div style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--blue-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {empresa.razaoSocial || empresa.nomeFantasia || 'Estúdio de Locução'}
+              </div>
+              <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '1px' }}>
+                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#16a34a', display: 'inline-block' }}></span>
+                <span>{empresa.nomeFuncionario ? `Atendente: ${empresa.nomeFuncionario.split(' ')[0]}` : 'Sistema Conectado'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* SEÇÃO 1: VISÃO GERAL */}
           <div className="nav-section">
             <div className="nav-section-title">📊 Visão Geral</div>
-            <button className={`nav-btn ${abaAtiva === 'dashboard' ? 'active-orange' : ''}`} onClick={() => setAbaAtiva('dashboard')}>
-              <LayoutDashboard size={20} /> Painel Principal
+            <button className={`nav-btn ${abaAtiva === 'dashboard' ? 'active' : ''}`} onClick={() => setAbaAtiva('dashboard')}>
+              <LayoutDashboard size={19} />
+              <span style={{ flex: 1 }}>Painel Principal</span>
             </button>
           </div>
 
-          {/* Seção 2: Operacional */}
+          {/* SEÇÃO 2: AGENDA & ATENDIMENTO */}
           <div className="nav-section">
-            <div className="nav-section-title">💼 Agenda & Tarefas</div>
-            <button className={`nav-btn ${abaAtiva === 'agenda' ? 'active-orange' : ''}`} onClick={() => setAbaAtiva('agenda')}>
-              <Calendar size={20} /> Agenda & Compromissos
+            <div className="nav-section-title">💼 Agenda & Atendimento</div>
+            <button className={`nav-btn ${abaAtiva === 'agenda' ? 'active' : ''}`} onClick={() => setAbaAtiva('agenda')}>
+              <Calendar size={19} />
+              <span style={{ flex: 1 }}>Agenda & Compromissos</span>
+              {compromissosPendentes.length > 0 && (
+                <span style={{ background: 'var(--orange-primary)', color: '#fff', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '12px' }}>
+                  {compromissosPendentes.length}
+                </span>
+              )}
             </button>
-            <button className={`nav-btn ${abaAtiva === 'tarefas' ? 'active-orange' : ''}`} onClick={() => setAbaAtiva('tarefas')}>
-              <CheckSquare size={20} /> Tarefas & Afazeres
+            <button className={`nav-btn ${abaAtiva === 'tarefas' ? 'active' : ''}`} onClick={() => setAbaAtiva('tarefas')}>
+              <CheckSquare size={19} />
+              <span style={{ flex: 1 }}>Tarefas & Afazeres</span>
+              {tarefasPendentes.length > 0 && (
+                <span style={{ background: '#0284c7', color: '#fff', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '12px' }}>
+                  {tarefasPendentes.length}
+                </span>
+              )}
             </button>
-            <button className={`nav-btn ${abaAtiva === 'clientes' ? 'active-blue' : ''}`} onClick={() => setAbaAtiva('clientes')}>
-              <Users size={20} /> Clientes
+            <button className={`nav-btn ${abaAtiva === 'clientes' ? 'active' : ''}`} onClick={() => setAbaAtiva('clientes')}>
+              <Users size={19} />
+              <span style={{ flex: 1 }}>Gestão de Clientes</span>
             </button>
           </div>
 
-          {/* Seção 3: Estoque & Registro */}
+          {/* SEÇÃO 3: PRODUTOS & VENDAS */}
           <div className="nav-section">
             <div className="nav-section-title">📦 Produtos & Vendas</div>
-            <button className={`nav-btn ${abaAtiva === 'produtos' ? 'active-blue' : ''}`} onClick={() => setAbaAtiva('produtos')}>
-              <Package size={20} /> Produtos & Estoque
+            <button className={`nav-btn ${abaAtiva === 'produtos' ? 'active' : ''}`} onClick={() => setAbaAtiva('produtos')}>
+              <Package size={19} />
+              <span style={{ flex: 1 }}>Produtos & Estoque</span>
+              {estoqueBaixo.length > 0 && (
+                <span style={{ background: '#ef4444', color: '#fff', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '12px' }}>
+                  {estoqueBaixo.length} alerta
+                </span>
+              )}
             </button>
-            <button className={`nav-btn ${abaAtiva === 'historico_vendas' ? 'active-orange' : ''}`} onClick={() => setAbaAtiva('historico_vendas')}>
-              <History size={20} /> Registro de Vendas
+            <button className={`nav-btn ${abaAtiva === 'historico_vendas' ? 'active' : ''}`} onClick={() => setAbaAtiva('historico_vendas')}>
+              <History size={19} />
+              <span style={{ flex: 1 }}>Registro de Vendas</span>
             </button>
           </div>
 
-          {/* Seção 4: Financeiro & Documentos */}
+          {/* SEÇÃO 4: FINANCEIRO & DOCUMENTOS */}
           <div className="nav-section">
             <div className="nav-section-title">💵 Financeiro & Documentos</div>
-            <button className={`nav-btn ${abaAtiva === 'financeiro' ? 'active-blue' : ''}`} onClick={() => setAbaAtiva('financeiro')}>
-              <DollarSign size={20} /> Financeiro (Pagar/Receber)
+            <button className={`nav-btn ${abaAtiva === 'financeiro' ? 'active' : ''}`} onClick={() => setAbaAtiva('financeiro')}>
+              <DollarSign size={19} />
+              <span style={{ flex: 1 }}>Financeiro (Caixa)</span>
+              {contasVencendo.length > 0 && (
+                <span style={{ background: '#f59e0b', color: '#fff', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '12px' }}>
+                  {contasVencendo.length}
+                </span>
+              )}
             </button>
-            <button className={`nav-btn ${abaAtiva === 'orcamentos' ? 'active-orange' : ''}`} onClick={() => setAbaAtiva('orcamentos')}>
-              <FileText size={20} /> Orçamentos
+            <button className={`nav-btn ${abaAtiva === 'orcamentos' ? 'active' : ''}`} onClick={() => setAbaAtiva('orcamentos')}>
+              <FileText size={19} />
+              <span style={{ flex: 1 }}>Orçamentos</span>
             </button>
-            <button className={`nav-btn ${abaAtiva === 'recibos' ? 'active-blue' : ''}`} onClick={() => setAbaAtiva('recibos')}>
-              <Receipt size={20} /> Recibos
+            <button className={`nav-btn ${abaAtiva === 'recibos' ? 'active' : ''}`} onClick={() => setAbaAtiva('recibos')}>
+              <Receipt size={19} />
+              <span style={{ flex: 1 }}>Emissor de Recibos</span>
             </button>
           </div>
 
-          {/* Seção 5: Configurações do Sistema */}
-          <div className="nav-section" style={{ marginTop: 'auto' }}>
+          {/* SEÇÃO 5: CONFIGURAÇÕES DO SISTEMA */}
+          <div className="nav-section" style={{ marginTop: 'auto', paddingTop: '10px' }}>
             <div className="nav-section-title">⚙️ Sistema</div>
-            <button className={`nav-btn ${abaAtiva === 'empresa' ? 'active-blue' : ''}`} onClick={() => setAbaAtiva('empresa')}>
-              <Building size={20} /> Minha Empresa (Logo / PIX)
+            <button className={`nav-btn ${abaAtiva === 'empresa' ? 'active' : ''}`} onClick={() => setAbaAtiva('empresa')}>
+              <Building size={19} />
+              <span style={{ flex: 1 }}>Minha Empresa & Logo</span>
             </button>
-            <button className="nav-btn" onClick={handleInstallPWA} style={{ color: '#10b981', fontWeight: 800, background: '#ecfdf5' }}>
-              <Smartphone size={20} /> Instalar Aplicativo
+            <button className="nav-btn" onClick={handleInstallPWA} style={{ color: '#16a34a', fontWeight: 800, background: '#f0fdf4', border: '1.5px solid #bbf7d0' }}>
+              <Smartphone size={19} />
+              <span style={{ flex: 1 }}>Instalar App no Celular</span>
             </button>
           </div>
         </aside>

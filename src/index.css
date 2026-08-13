@@ -1,42 +1,42 @@
 /* ==========================================================================
-   SISTEMA ESCRITÓRIO DE BOLSO - AZUL CLARO ELEGANTE & LARANJA SUNSET
-   DESIGN PREMIUM, CRISTALINO, MODERNO E EXTREMAMENTE ELEGANTE
+   SISTEMA ESCRITÓRIO DE BOLSO - TEMA VIBRANTE EXECUTIVO VERMELHO & AMARELO OURO
+   DESIGN PREMIUM, VIBRANTE, MODERNO E EXTREMAMENTE ELEGANTE
    ========================================================================== */
 
 :root {
-  /* Cores Principais - Azul Claro Elegante (Sky / Azure) & Laranja Sunset */
-  --blue-primary: #0284c7;        /* Sky 600 - Azul Claro Elegante Principal */
-  --blue-brand: #38bdf8;          /* Sky 400 - Azul Celeste Vibrante */
-  --blue-dark: #0369a1;           /* Sky 700 - Azul de Apoio Nítido */
-  --blue-light-bg: #e0f2fe;       /* Sky 100 - Fundo Azul Claro Suave */
-  --blue-ice-bg: #f0f9ff;         /* Sky 50 - Fundo Azul Gelo Iluminado */
-  --blue-border: #bae6fd;         /* Borda Azul Claro Fina Elegante */
-  --blue-gradient: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-  --blue-active-gradient: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+  /* Cores Principais - Vermelho Imperial Executivo & Amarelo Ouro Solar */
+  --blue-primary: #dc2626;        /* Red 600 - Vermelho Imperial Principal */
+  --blue-brand: #ef4444;          /* Red 500 - Vermelho Vibrante */
+  --blue-dark: #991b1b;           /* Red 800 - Vermelho Intenso Escuro */
+  --blue-light-bg: #fee2e2;       /* Red 100 - Fundo Vermelho Claro Suave */
+  --blue-ice-bg: #fff5f5;         /* Red 50 - Fundo Vermelho Gelo Iluminado */
+  --blue-border: #fca5a5;         /* Borda Vermelho Claro Fina Elegante */
+  --blue-gradient: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  --blue-active-gradient: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
 
-  --orange-primary: #f97316;      /* Orange 500 - Laranja Sunset Vibrante */
-  --orange-secondary: #ea580c;    /* Orange 600 - Laranja Intenso */
-  --orange-light-bg: #fff7ed;     /* Fundo Suave Laranja */
-  --orange-border: #fed7aa;       /* Borda Suave Laranja */
-  --orange-gradient: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  --orange-primary: #ca8a04;      /* Yellow 600 - Amarelo Ouro Solar Vibrante */
+  --orange-secondary: #a16207;    /* Yellow 700 - Amarelo Ouro Intenso */
+  --orange-light-bg: #fefce8;     /* Fundo Suave Amarelo */
+  --orange-border: #fde047;       /* Borda Suave Amarela */
+  --orange-gradient: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
 
   /* Fundo da Aplicação e Superfícies Cristalinas */
-  --bg-app: #f0f9ff;              /* Fundo Azul Gelo Limpo */
+  --bg-app: #fffdf5;              /* Fundo Quente Creme/Branco Limpo */
   --card-bg: #ffffff;             /* Superfície Branca Puríssima */
-  --text-main: #0f172a;           /* Texto Principal Nítido Escuro */
-  --text-muted: #475569;          /* Texto Secundário Legível */
-  --border-color: #cbd5e1;        /* Linhas Divisórias */
-  --success: #059669;             /* Verde Esmeralda Ricos */
-  --success-bg: #ecfdf5;          /* Fundo Verde Claro */
-  --warning: #f59e0b;             /* Amarelo Ouro */
-  --danger: #ef4444;              /* Vermelho Vivo */
+  --text-main: #1c1917;           /* Texto Principal Nítido Escuro */
+  --text-muted: #57534e;          /* Texto Secundário Legível */
+  --border-color: #e7e5e4;        /* Linhas Divisórias */
+  --success: #16a34a;             /* Verde Esmeralda Sucesso */
+  --success-bg: #f0fdf4;          /* Fundo Verde Claro */
+  --warning: #eab308;             /* Amarelo Ouro Alerta */
+  --danger: #dc2626;              /* Vermelho Perigo */
 
   /* Sombras Ricas & Raios */
-  --shadow-sm: 0 2px 5px rgba(2, 132, 199, 0.05);
-  --shadow-md: 0 6px 18px rgba(2, 132, 199, 0.1);
-  --shadow-lg: 0 12px 30px rgba(2, 132, 199, 0.15);
-  --shadow-orange-btn: 0 4px 14px rgba(249, 115, 22, 0.35);
-  --shadow-blue-btn: 0 4px 14px rgba(2, 132, 199, 0.35);
+  --shadow-sm: 0 2px 5px rgba(220, 38, 38, 0.05);
+  --shadow-md: 0 6px 18px rgba(220, 38, 38, 0.12);
+  --shadow-lg: 0 12px 30px rgba(220, 38, 38, 0.18);
+  --shadow-orange-btn: 0 4px 14px rgba(202, 138, 4, 0.4);
+  --shadow-blue-btn: 0 4px 14px rgba(220, 38, 38, 0.35);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -58,7 +58,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Scrollbar Bonita em Azul Claro */
+/* Scrollbar Bonita em Vermelho & Amarelo */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -103,7 +103,7 @@ body {
   }
 }
 
-/* TOPBAR HEADER */
+/* TOPBAR HEADER VERMELHO & AMARELO */
 .topbar {
   background: var(--blue-gradient);
   color: #ffffff;
@@ -114,8 +114,8 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 4px 18px rgba(2, 132, 199, 0.2);
-  border-bottom: 3px solid var(--orange-primary);
+  box-shadow: 0 4px 18px rgba(220, 38, 38, 0.25);
+  border-bottom: 3.5px solid var(--orange-primary);
 }
 
 .topbar-brand {
@@ -144,7 +144,7 @@ body {
 
 .topbar-subtitle {
   font-size: 0.75rem;
-  color: #ffedd5;
+  color: #fef08a;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -196,16 +196,16 @@ body {
   border: 2px solid #ffffff;
 }
 
-/* SIDEBAR LATERAL */
+/* SIDEBAR LATERAL VERMELHA & AMARELA */
 .sidebar {
-  width: 290px;
+  width: 295px;
   background: #ffffff;
   border-right: 2px solid var(--blue-border);
-  padding: 24px 16px;
+  padding: 20px 16px;
   display: none;
   flex-direction: column;
-  gap: 22px;
-  box-shadow: 4px 0 15px rgba(2, 132, 199, 0.04);
+  gap: 18px;
+  box-shadow: 4px 0 20px rgba(220, 38, 38, 0.04);
 }
 
 @media (min-width: 900px) {
@@ -217,73 +217,78 @@ body {
 .nav-section {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .nav-section-title {
-  font-size: 0.75rem;
+  font-size: 0.73rem;
   font-weight: 800;
-  color: var(--orange-primary);
+  color: var(--blue-primary);
   text-transform: uppercase;
   letter-spacing: 1.2px;
-  padding: 0 12px 6px 12px;
-  border-bottom: 2px solid var(--orange-border);
+  padding: 0 10px 4px 10px;
+  border-bottom: 1.5px dashed var(--blue-border);
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .nav-btn {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 10px;
+  padding: 11px 14px;
   border-radius: var(--radius-md);
   color: var(--text-main);
   font-weight: 700;
-  font-size: 0.94rem;
+  font-size: 0.92rem;
   cursor: pointer;
   transition: all 0.2s ease;
   border: 1.5px solid transparent;
-  background: var(--blue-ice-bg);
+  background: #ffffff;
   width: 100%;
   text-align: left;
 }
 
 .nav-btn:hover {
-  background: var(--blue-light-bg);
+  background: var(--blue-ice-bg);
   color: var(--blue-primary);
   border-color: var(--blue-border);
   transform: translateX(4px);
 }
 
-.nav-btn.active-blue {
+.nav-btn.active {
   background: var(--blue-gradient);
   color: #ffffff;
   font-weight: 800;
   border-color: var(--blue-primary);
   box-shadow: var(--shadow-blue-btn);
+  border-left: 5px solid var(--orange-primary);
 }
 
-.nav-btn.active-orange {
-  background: var(--orange-gradient);
+.nav-btn.active-blue, .nav-btn.active-orange {
+  background: var(--blue-gradient);
   color: #ffffff;
   font-weight: 800;
-  border-color: var(--orange-secondary);
-  box-shadow: var(--shadow-orange-btn);
+  border-color: var(--blue-primary);
+  box-shadow: var(--shadow-blue-btn);
+  border-left: 5px solid var(--orange-primary);
 }
 
-/* MENU INFERIOR CELULAR E TABLET */
+/* MENU INFERIOR CELULAR E TABLET VERMELHO & AMARELO */
 .mobile-nav, .mobile-bottom-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   background: #ffffff;
-  border-top: 3px solid var(--orange-primary);
+  border-top: 3.5px solid var(--orange-primary);
   display: flex;
   justify-content: space-around;
   padding: 8px 4px;
   z-index: 2000;
-  box-shadow: 0 -4px 20px rgba(2, 132, 199, 0.12);
+  box-shadow: 0 -4px 20px rgba(220, 38, 38, 0.15);
 }
 
 @media (min-width: 900px) {
@@ -310,8 +315,8 @@ body {
 
 .mobile-nav-btn.active {
   color: #ffffff;
-  background: var(--orange-gradient);
-  box-shadow: var(--shadow-orange-btn);
+  background: var(--blue-gradient);
+  box-shadow: var(--shadow-blue-btn);
 }
 
 /* CARTÕES & SUPERFÍCIES */
@@ -398,7 +403,7 @@ body {
   border: 1.5px solid var(--blue-border);
 }
 .btn-secondary:hover {
-  background: #bae6fd;
+  background: #fca5a5;
   border-color: var(--blue-primary);
 }
 
@@ -447,8 +452,8 @@ body {
 }
 
 .form-input:focus, .form-select:focus, .form-textarea:focus {
-  border-color: var(--orange-primary);
-  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.2);
+  border-color: var(--blue-primary);
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.18);
 }
 
 /* TABELAS E BADGES */
@@ -483,7 +488,7 @@ body {
 .custom-table td {
   padding: 14px 18px;
   font-size: 0.9rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e7e5e4;
 }
 
 .custom-table tbody tr:hover {
@@ -532,7 +537,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(2, 132, 199, 0.4);
+  background: rgba(153, 27, 27, 0.45);
   backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
@@ -549,9 +554,9 @@ body {
   max-width: 580px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 25px 50px rgba(2, 132, 199, 0.2);
+  box-shadow: 0 25px 50px rgba(220, 38, 38, 0.2);
   animation: modalScale 0.2s ease;
-  border: 2px solid var(--blue-border);
+  border: 2.5px solid var(--blue-border);
 }
 
 @keyframes modalScale {
