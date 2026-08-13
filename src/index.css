@@ -1,42 +1,42 @@
 /* ==========================================================================
-   SISTEMA ESCRITÓRIO DE BOLSO - TEMA VIBRANTE EXECUTIVO VERMELHO & AMARELO OURO
-   DESIGN PREMIUM, VIBRANTE, MODERNO E EXTREMAMENTE ELEGANTE
+   SISTEMA ESCRITÓRIO DE BOLSO - TEMA VIBRANTE AZUL ROYAL & AMARELO OURO
+   DESIGN PREMIUM, VIBRANTE, MODERNO E EXTREMAMENTE ELEGANTE E PROFISSIONAL
    ========================================================================== */
 
 :root {
-  /* Cores Principais - Vermelho Imperial Executivo & Amarelo Ouro Solar */
-  --blue-primary: #dc2626;        /* Red 600 - Vermelho Imperial Principal */
-  --blue-brand: #ef4444;          /* Red 500 - Vermelho Vibrante */
-  --blue-dark: #991b1b;           /* Red 800 - Vermelho Intenso Escuro */
-  --blue-light-bg: #fee2e2;       /* Red 100 - Fundo Vermelho Claro Suave */
-  --blue-ice-bg: #fff5f5;         /* Red 50 - Fundo Vermelho Gelo Iluminado */
-  --blue-border: #fca5a5;         /* Borda Vermelho Claro Fina Elegante */
-  --blue-gradient: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-  --blue-active-gradient: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  /* Cores Principais - Azul Royal Executivo & Amarelo Ouro Solar */
+  --blue-primary: #2563eb;        /* Blue 600 - Azul Royal Principal Vibrante */
+  --blue-brand: #3b82f6;          /* Blue 500 - Azul Celeste Iluminado */
+  --blue-dark: #1d4ed8;           /* Blue 700 - Azul Marinho Nobre */
+  --blue-light-bg: #dbeafe;       /* Blue 100 - Fundo Azul Claro Suave */
+  --blue-ice-bg: #eff6ff;         /* Blue 50 - Fundo Azul Gelo Iluminado */
+  --blue-border: #93c5fd;         /* Borda Azul Fina Elegante */
+  --blue-gradient: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  --blue-active-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
 
-  --orange-primary: #ca8a04;      /* Yellow 600 - Amarelo Ouro Solar Vibrante */
-  --orange-secondary: #a16207;    /* Yellow 700 - Amarelo Ouro Intenso */
-  --orange-light-bg: #fefce8;     /* Fundo Suave Amarelo */
-  --orange-border: #fde047;       /* Borda Suave Amarela */
+  --orange-primary: #eab308;      /* Yellow 500 - Amarelo Ouro Solar Vibrante */
+  --orange-secondary: #ca8a04;    /* Yellow 600 - Amarelo Ouro Intenso */
+  --orange-light-bg: #fefce8;     /* Fundo Suave Amarelo Sol */
+  --orange-border: #fde047;       /* Borda Amarela Dourada */
   --orange-gradient: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
 
   /* Fundo da Aplicação e Superfícies Cristalinas */
-  --bg-app: #fffdf5;              /* Fundo Quente Creme/Branco Limpo */
+  --bg-app: #f8fafc;              /* Fundo Cristalino Limpo */
   --card-bg: #ffffff;             /* Superfície Branca Puríssima */
-  --text-main: #1c1917;           /* Texto Principal Nítido Escuro */
-  --text-muted: #57534e;          /* Texto Secundário Legível */
-  --border-color: #e7e5e4;        /* Linhas Divisórias */
+  --text-main: #0f172a;           /* Texto Principal Nítido Escuro */
+  --text-muted: #475569;          /* Texto Secundário Legível */
+  --border-color: #cbd5e1;        /* Linhas Divisórias */
   --success: #16a34a;             /* Verde Esmeralda Sucesso */
   --success-bg: #f0fdf4;          /* Fundo Verde Claro */
   --warning: #eab308;             /* Amarelo Ouro Alerta */
   --danger: #dc2626;              /* Vermelho Perigo */
 
   /* Sombras Ricas & Raios */
-  --shadow-sm: 0 2px 5px rgba(220, 38, 38, 0.05);
-  --shadow-md: 0 6px 18px rgba(220, 38, 38, 0.12);
-  --shadow-lg: 0 12px 30px rgba(220, 38, 38, 0.18);
-  --shadow-orange-btn: 0 4px 14px rgba(202, 138, 4, 0.4);
-  --shadow-blue-btn: 0 4px 14px rgba(220, 38, 38, 0.35);
+  --shadow-sm: 0 2px 5px rgba(37, 99, 235, 0.05);
+  --shadow-md: 0 6px 18px rgba(37, 99, 235, 0.12);
+  --shadow-lg: 0 12px 30px rgba(37, 99, 235, 0.18);
+  --shadow-orange-btn: 0 4px 14px rgba(234, 179, 8, 0.45);
+  --shadow-blue-btn: 0 4px 14px rgba(37, 99, 235, 0.38);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -58,7 +58,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Scrollbar Bonita em Vermelho & Amarelo */
+/* Scrollbar Bonita em Azul & Amarelo */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -103,7 +103,7 @@ body {
   }
 }
 
-/* TOPBAR HEADER VERMELHO & AMARELO */
+/* TOPBAR HEADER AZUL ROYAL & AMARELO OURO */
 .topbar {
   background: var(--blue-gradient);
   color: #ffffff;
@@ -114,7 +114,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 4px 18px rgba(220, 38, 38, 0.25);
+  box-shadow: 0 4px 18px rgba(37, 99, 235, 0.25);
   border-bottom: 3.5px solid var(--orange-primary);
 }
 
@@ -144,7 +144,7 @@ body {
 
 .topbar-subtitle {
   font-size: 0.75rem;
-  color: #fef08a;
+  color: #fde047;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -184,9 +184,9 @@ body {
   top: -4px;
   right: -4px;
   background: var(--orange-primary);
-  color: #fff;
+  color: #1e293b;
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 900;
   width: 22px;
   height: 22px;
   border-radius: 50%;
@@ -196,7 +196,7 @@ body {
   border: 2px solid #ffffff;
 }
 
-/* SIDEBAR LATERAL VERMELHA & AMARELA */
+/* SIDEBAR LATERAL AZUL & AMARELA */
 .sidebar {
   width: 295px;
   background: #ffffff;
@@ -205,7 +205,7 @@ body {
   display: none;
   flex-direction: column;
   gap: 18px;
-  box-shadow: 4px 0 20px rgba(220, 38, 38, 0.04);
+  box-shadow: 4px 0 20px rgba(37, 99, 235, 0.05);
 }
 
 @media (min-width: 900px) {
@@ -276,7 +276,7 @@ body {
   border-left: 5px solid var(--orange-primary);
 }
 
-/* MENU INFERIOR CELULAR E TABLET VERMELHO & AMARELO */
+/* MENU INFERIOR CELULAR E TABLET AZUL & AMARELO */
 .mobile-nav, .mobile-bottom-bar {
   position: fixed;
   bottom: 0;
@@ -288,7 +288,7 @@ body {
   justify-content: space-around;
   padding: 8px 4px;
   z-index: 2000;
-  box-shadow: 0 -4px 20px rgba(220, 38, 38, 0.15);
+  box-shadow: 0 -4px 20px rgba(37, 99, 235, 0.15);
 }
 
 @media (min-width: 900px) {
@@ -389,7 +389,7 @@ body {
 
 .btn-orange {
   background: var(--orange-gradient);
-  color: #ffffff;
+  color: #1e293b;
   box-shadow: var(--shadow-orange-btn);
 }
 .btn-orange:hover {
@@ -403,7 +403,7 @@ body {
   border: 1.5px solid var(--blue-border);
 }
 .btn-secondary:hover {
-  background: #fca5a5;
+  background: #93c5fd;
   border-color: var(--blue-primary);
 }
 
@@ -453,7 +453,7 @@ body {
 
 .form-input:focus, .form-select:focus, .form-textarea:focus {
   border-color: var(--blue-primary);
-  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.18);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18);
 }
 
 /* TABELAS E BADGES */
@@ -488,7 +488,7 @@ body {
 .custom-table td {
   padding: 14px 18px;
   font-size: 0.9rem;
-  border-bottom: 1px solid #e7e5e4;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .custom-table tbody tr:hover {
@@ -514,7 +514,7 @@ body {
 
 .badge-orange {
   background: var(--orange-light-bg);
-  color: var(--orange-primary);
+  color: var(--orange-secondary);
   border: 1.5px solid var(--orange-border);
 }
 
@@ -537,7 +537,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(153, 27, 27, 0.45);
+  background: rgba(30, 64, 175, 0.45);
   backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
@@ -554,7 +554,7 @@ body {
   max-width: 580px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 25px 50px rgba(220, 38, 38, 0.2);
+  box-shadow: 0 25px 50px rgba(37, 99, 235, 0.2);
   animation: modalScale 0.2s ease;
   border: 2.5px solid var(--blue-border);
 }
