@@ -16,8 +16,10 @@ export default function Financeiro({
   esconderValores = false
 }) {
   const [modalOpen, setModalOpen] = useState(false);
-  const [editId, setEditId] = useState(null);
+  const anoAtualStr = String(new Date().getFullYear());
   const [filtroTipo, setFiltroTipo] = useState('todos'); // 'todos', 'receita', 'despesa', 'vencidos', 'mensais'
+  const [filtroMes, setFiltroMes] = useState('todos'); // 'todos', '01'..'12'
+  const [filtroAno, setFiltroAno] = useState(anoAtualStr); // 'todos', '2025', '2026', '2027'...
   
   // Modal de Recibo Gerado na Baixa
   const [docVisualizar, setDocVisualizar] = useState(null);
@@ -235,12 +237,40 @@ export default function Financeiro({
     return rec;
   };
 
-  // Filtragem
+  // Nomes dos Meses para Exibição
+  const NOMES_MESES = {
+    '01': 'Janeiro',
+    '02': 'Fevereiro',
+    '03': 'Março',
+    '04': 'Abril',
+    '05': 'Maio',
+    '06': 'Junho',
+    '07': 'Julho',
+    '08': 'Agosto',
+    '09': 'Setembro',
+    '10': 'Outubro',
+    '11': 'Novembro',
+    '12': 'Dezembro'
+  };
+
+  // Filtragem Por Mês, Ano e Tipo
   const listaFiltrada = financeiro.filter(item => {
-    if (filtroTipo === 'receita') return item.tipo === 'receita';
-    if (filtroTipo === 'despesa') return item.tipo === 'despesa';
-    if (filtroTipo === 'vencidos') return item.status === 'vencido';
-    if (filtroTipo === 'mensais') return Boolean(item.isMensal);
+    if (filtroTipo === 'receita' && item.tipo !== 'receita') return false;
+    if (filtroTipo === 'despesa' && item.tipo !== 'despesa') return false;
+    if (filtroTipo === 'vencidos' && item.status !== 'vencido') return false;
+    if (filtroTipo === 'mensais' && !item.isMensal) return false;
+
+    if (item.dataVencimento) {
+      const parts = String(item.dataVencimento).split('T')[0].split('-');
+      if (parts.length === 3) {
+        const anoItem = parts[0];
+        const mesItem = parts[1];
+
+        if (filtroMes !== 'todos' && mesItem !== filtroMes) return false;
+        if (filtroAno !== 'todos' && anoItem !== filtroAno) return false;
+      }
+    }
+
     return true;
   });
 
@@ -313,23 +343,83 @@ export default function Financeiro({
         </div>
       )}
 
-      {/* Filtros rápidos */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-        <button className={`btn btn-sm ${filtroTipo === 'todos' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setFiltroTipo('todos')}>
-          Todos ({financeiro.length})
-        </button>
-        <button className={`btn btn-sm ${filtroTipo === 'receita' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setFiltroTipo('receita')}>
-          Contas a Receber ({financeiro.filter(f => f.tipo === 'receita').length})
-        </button>
-        <button className={`btn btn-sm ${filtroTipo === 'despesa' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setFiltroTipo('despesa')}>
-          Contas a Pagar ({financeiro.filter(f => f.tipo === 'despesa').length})
-        </button>
-        <button className={`btn btn-sm ${filtroTipo === 'mensais' ? 'btn-orange' : 'btn-secondary'}`} onClick={() => setFiltroTipo('mensais')}>
-          🔁 Contas Mensais ({financeiro.filter(f => f.isMensal).length})
-        </button>
-        <button className={`btn btn-sm ${filtroTipo === 'vencidos' ? 'btn-orange' : 'btn-secondary'}`} onClick={() => setFiltroTipo('vencidos')}>
-          Vencidos 🔥 ({financeiro.filter(f => f.status === 'vencido').length})
-        </button>
+      {/* PAINEL DE SELEÇÃO DE MÊS E ANO + FILTROS DE CONTAS */}
+      <div style={{
+        background: '#ffffff',
+        padding: '16px 20px',
+        borderRadius: '16px',
+        border: '2px solid var(--blue-border)',
+        boxShadow: 'var(--shadow-sm)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '14px'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <span style={{ fontWeight: 800, color: 'var(--blue-primary)', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Calendar size={18} /> Filtrar Contas por Mês / Ano:
+            </span>
+
+            {/* SELETOR DE MÊS */}
+            <select
+              className="form-select"
+              value={filtroMes}
+              onChange={(e) => setFiltroMes(e.target.value)}
+              style={{ width: 'auto', padding: '6px 14px', fontWeight: 800, color: '#0f172a', borderColor: 'var(--orange-primary)' }}
+            >
+              <option value="todos">🗓️ Todos os Meses</option>
+              <option value="01">01 - Janeiro</option>
+              <option value="02">02 - Fevereiro</option>
+              <option value="03">03 - Março</option>
+              <option value="04">04 - Abril</option>
+              <option value="05">05 - Maio</option>
+              <option value="06">06 - Junho</option>
+              <option value="07">07 - Julho</option>
+              <option value="08">08 - Agosto</option>
+              <option value="09">09 - Setembro</option>
+              <option value="10">10 - Outubro</option>
+              <option value="11">11 - Novembro</option>
+              <option value="12">12 - Dezembro</option>
+            </select>
+
+            {/* SELETOR DE ANO */}
+            <select
+              className="form-select"
+              value={filtroAno}
+              onChange={(e) => setFiltroAno(e.target.value)}
+              style={{ width: 'auto', padding: '6px 14px', fontWeight: 800, color: '#0f172a' }}
+            >
+              <option value="todos">🌐 Todos os Anos</option>
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+              <option value="2027">2027</option>
+              <option value="2028">2028</option>
+            </select>
+          </div>
+
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 700 }}>
+            Lançamentos no Período: <span style={{ color: 'var(--blue-primary)', fontWeight: 900 }}>{listaFiltrada.length}</span>
+          </div>
+        </div>
+
+        {/* Botoes de tipo */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', borderTop: '1px dashed #e2e8f0', paddingTop: '10px' }}>
+          <button className={`btn btn-sm ${filtroTipo === 'todos' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setFiltroTipo('todos')}>
+            Todos os Lançamentos ({financeiro.length})
+          </button>
+          <button className={`btn btn-sm ${filtroTipo === 'receita' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setFiltroTipo('receita')}>
+            Contas a Receber ({financeiro.filter(f => f.tipo === 'receita').length})
+          </button>
+          <button className={`btn btn-sm ${filtroTipo === 'despesa' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setFiltroTipo('despesa')}>
+            Contas a Pagar ({financeiro.filter(f => f.tipo === 'despesa').length})
+          </button>
+          <button className={`btn btn-sm ${filtroTipo === 'mensais' ? 'btn-orange' : 'btn-secondary'}`} onClick={() => setFiltroTipo('mensais')}>
+            🔁 Contas Mensais ({financeiro.filter(f => f.isMensal).length})
+          </button>
+          <button className={`btn btn-sm ${filtroTipo === 'vencidos' ? 'btn-orange' : 'btn-secondary'}`} onClick={() => setFiltroTipo('vencidos')}>
+            Vencidos 🔥 ({financeiro.filter(f => f.status === 'vencido').length})
+          </button>
+        </div>
       </div>
 
       {/* Tabela de Lançamentos */}
