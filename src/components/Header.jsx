@@ -182,36 +182,6 @@ export default function Header({
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {/* 0. ALTERNAR PRIVACIDADE (ESCONDER / MOSTRAR VALORES R$) */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuRapidoOpen(false);
-                  if (onToggleEsconderValores) onToggleEsconderValores();
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justify: 'space-between',
-                  background: esconderValores ? '#fee2e2' : '#eff6ff',
-                  color: esconderValores ? '#dc2626' : '#2563eb',
-                  border: `1.5px solid ${esconderValores ? '#fca5a5' : '#93c5fd'}`,
-                  padding: '14px 16px',
-                  borderRadius: '12px',
-                  fontWeight: 800,
-                  fontSize: '0.95rem',
-                  cursor: 'pointer'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  {esconderValores ? <EyeOff size={22} /> : <Eye size={22} />}
-                  <span>{esconderValores ? '🙈 Mostrar Valores no Sistema (R$)' : '👁️ Esconder Valores R$ (Modo Discreto)'}</span>
-                </div>
-                <span className="badge" style={{ background: esconderValores ? '#dc2626' : '#2563eb', color: '#fff' }}>
-                  {esconderValores ? 'Oculto' : 'Visível'}
-                </span>
-              </button>
-
               {/* 1. INSTALAR APLICATIVO NATIVO PWA */}
               <button
                 type="button"
@@ -318,59 +288,6 @@ export default function Header({
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <Key size={20} style={{ color: 'var(--orange-primary)' }} />
                   <span>Chave de Licença: <strong>{lic.diasValidade >= 9000 ? 'Vitalícia ⭐' : `${diasRestantes} dias`}</strong></span>
-                </div>
-                <ChevronRight size={18} />
-              </button>
-
-              {/* 5. RELÓGIO DIGITAL & DATA */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  background: '#f8fafc',
-                  padding: '12px 16px',
-                  borderRadius: '12px',
-                  border: '1px solid #e2e8f0',
-                  color: 'var(--text-main)',
-                  fontSize: '0.9rem'
-                }}
-              >
-                <Clock size={20} style={{ color: 'var(--blue-primary)' }} />
-                <div>
-                  <div style={{ fontWeight: 800, fontFamily: 'monospace', fontSize: '1rem', color: 'var(--blue-primary)' }}>
-                    {formatHora(horaAtual)}
-                  </div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
-                    {formatData(horaAtual)}
-                  </div>
-                </div>
-              </div>
-
-              {/* 6. CALCULADORA COMERCIAL */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuRapidoOpen(false);
-                  onOpenCalc();
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justify: 'space-between',
-                  background: '#ffffff',
-                  color: 'var(--text-main)',
-                  border: '1.5px solid var(--border-color)',
-                  padding: '12px 16px',
-                  borderRadius: '12px',
-                  fontWeight: 700,
-                  fontSize: '0.9rem',
-                  cursor: 'pointer'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Calculator size={18} style={{ color: 'var(--blue-primary)' }} />
-                  <span>Calculadora Comercial</span>
                 </div>
                 <ChevronRight size={18} />
               </button>
