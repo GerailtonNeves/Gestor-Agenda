@@ -14,7 +14,7 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
   const dataEmissaoFormatada = safeFormatDate(documento.dataEmissao || new Date().toISOString().split('T')[0]);
 
   // EXTRAÇÃO COMPLETA E INTELIGENTE DO NOME DO CLIENTE COM FALLBACKS
-  const rawClienteNome = (
+  let rawClienteNome = (
     (typeof documento.clienteNome === 'string' && documento.clienteNome.trim()) ? documento.clienteNome :
     (typeof documento.cliente === 'string' && documento.cliente.trim()) ? documento.cliente :
     (documento.cliente && typeof documento.cliente === 'object' && documento.cliente.nome) ? documento.cliente.nome :
@@ -25,14 +25,24 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
   ).trim();
 
   // BUSCA INTELIGENTE DO CLIENTE NO CADASTRO PARA PUXAR NOME E EMPRESA/ESTABELECIMENTO
-  const clienteCadastrado = (clientes && clientes.length > 0 && rawClienteNome) ? clientes.find(c => 
+  let clienteCadastrado = (clientes && clientes.length > 0) ? clientes.find(c => 
     (documento.clienteId && String(c.id) === String(documento.clienteId)) ||
-    (c.nome && c.nome.toLowerCase() === rawClienteNome.toLowerCase()) ||
-    (c.estabelecimento && c.estabelecimento.toLowerCase() === rawClienteNome.toLowerCase()) ||
-    (c.empresa && c.empresa.toLowerCase() === rawClienteNome.toLowerCase())
+    (rawClienteNome && c.nome && c.nome.toLowerCase() === rawClienteNome.toLowerCase()) ||
+    (rawClienteNome && c.estabelecimento && c.estabelecimento.toLowerCase() === rawClienteNome.toLowerCase()) ||
+    (rawClienteNome && c.empresa && c.empresa.toLowerCase() === rawClienteNome.toLowerCase())
   ) : null;
 
-  const nomeExibirCliente = clienteCadastrado ? clienteCadastrado.nome : (rawClienteNome || 'Cliente Não Informado');
+  // Se não encontrou por nome ou se o nome gravado foi o valor genérico "Cliente", pega o primeiro cliente do cadastro
+  if (!clienteCadastrado && clientes && clientes.length > 0) {
+    if (!rawClienteNome || rawClienteNome.toLowerCase() === 'cliente' || rawClienteNome.toLowerCase() === 'cliente não informado') {
+      clienteCadastrado = clientes[0];
+    }
+  }
+
+  const nomeExibirCliente = clienteCadastrado 
+    ? clienteCadastrado.nome 
+    : ((rawClienteNome && rawClienteNome.toLowerCase() !== 'cliente') ? rawClienteNome : (clientes && clientes.length > 0 ? clientes[0].nome : 'Cliente Não Informado'));
+
   const empresaExibirCliente = documento.clienteEmpresa || documento.estabelecimento || documento.empresa || (clienteCadastrado ? (clienteCadastrado.estabelecimento || clienteCadastrado.empresa || clienteCadastrado.nomeEmpresa || clienteCadastrado.razaoSocial) : '');
 
   const triggerToast = (msg) => {

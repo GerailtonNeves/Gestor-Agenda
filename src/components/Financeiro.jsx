@@ -177,6 +177,7 @@ export default function Financeiro({
       let idCliente = '';
       let telCliente = '';
 
+      let nomeClienteRecibo = itemTarget.clienteNome;
       let nomeEmpresaCliente = '';
 
       if (clientes && clientes.length > 0) {
@@ -185,13 +186,18 @@ export default function Financeiro({
           (c.nome && c.nome.toLowerCase() === (itemTarget.clienteNome || '').toLowerCase()) ||
           (c.estabelecimento && c.estabelecimento.toLowerCase() === (itemTarget.clienteNome || '').toLowerCase()) ||
           (c.empresa && c.empresa.toLowerCase() === (itemTarget.clienteNome || '').toLowerCase())
-        );
+        ) || (clientes.length > 0 ? clientes[0] : null);
 
         if (cliFound) {
           idCliente = cliFound.id;
+          nomeClienteRecibo = cliFound.nome;
           telCliente = cliFound.whatsapp || cliFound.telefone || '';
           nomeEmpresaCliente = (cliFound.estabelecimento || cliFound.empresa || cliFound.nomeEmpresa || cliFound.razaoSocial || '').trim();
         }
+      }
+
+      if (!nomeClienteRecibo || nomeClienteRecibo === 'Cliente') {
+        nomeClienteRecibo = (clientes && clientes.length > 0) ? clientes[0].nome : 'Cliente Não Informado';
       }
 
       // Prepara o texto oficial de quitação referente ao serviço no formato exato solicitado
@@ -206,7 +212,7 @@ export default function Financeiro({
         numero: 'REC-2026-' + String(recibos.length + 1).padStart(3, '0'),
         dataEmissao: new Date().toISOString().split('T')[0],
         clienteId: idCliente,
-        clienteNome: itemTarget.clienteNome || 'Cliente',
+        clienteNome: nomeClienteRecibo,
         clienteTelefone: telCliente,
         valor: valorNum,
         valorExtenso: numeroParaExtenso(valorNum),
@@ -235,6 +241,7 @@ export default function Financeiro({
     let idCliente = itemFin.clienteId || '';
     let telCliente = '';
     let nomeEmpresaCliente = '';
+    let nomeClienteRecibo = itemFin.clienteNome;
 
     if (clientes && clientes.length > 0) {
       const cliFound = clientes.find(c => 
@@ -242,13 +249,18 @@ export default function Financeiro({
         (c.nome && c.nome.toLowerCase() === (itemFin.clienteNome || '').toLowerCase()) ||
         (c.estabelecimento && c.estabelecimento.toLowerCase() === (itemFin.clienteNome || '').toLowerCase()) ||
         (c.empresa && c.empresa.toLowerCase() === (itemFin.clienteNome || '').toLowerCase())
-      );
+      ) || (clientes.length > 0 ? clientes[0] : null);
 
       if (cliFound) {
         idCliente = cliFound.id;
+        nomeClienteRecibo = cliFound.nome;
         telCliente = cliFound.whatsapp || cliFound.telefone || '';
         nomeEmpresaCliente = (cliFound.estabelecimento || cliFound.empresa || cliFound.nomeEmpresa || cliFound.razaoSocial || '').trim();
       }
+    }
+
+    if (!nomeClienteRecibo || nomeClienteRecibo === 'Cliente') {
+      nomeClienteRecibo = (clientes && clientes.length > 0) ? clientes[0].nome : 'Cliente Não Informado';
     }
 
     const textoQuitacaoOficial = nomeEmpresaCliente 
@@ -261,7 +273,7 @@ export default function Financeiro({
         numero: 'REC-2026-FIN',
         dataEmissao: itemFin.dataVencimento || new Date().toISOString().split('T')[0],
         clienteId: idCliente,
-        clienteNome: itemFin.clienteNome || 'Cliente',
+        clienteNome: nomeClienteRecibo,
         clienteTelefone: telCliente,
         valor: itemFin.valor,
         valorExtenso: numeroParaExtenso(itemFin.valor),
@@ -273,6 +285,7 @@ export default function Financeiro({
       rec = {
         ...rec,
         clienteId: idCliente || rec.clienteId,
+        clienteNome: nomeClienteRecibo,
         referenteA: textoQuitacaoOficial
       };
     }
@@ -622,12 +635,38 @@ export default function Financeiro({
                 />
               </div>
 
+              {clientes && clientes.length > 0 && (
+                <div className="form-group">
+                  <label className="form-label">Selecionar Cliente Cadastrado (Opcional)</label>
+                  <select 
+                    className="form-input"
+                    value={clienteId || ''}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      setClienteId(id);
+                      const cli = clientes.find(c => String(c.id) === String(id));
+                      if (cli) {
+                        setClienteNome(cli.nome);
+                      }
+                    }}
+                    style={{ background: '#f8fafc', fontWeight: 700 }}
+                  >
+                    <option value="">-- Selecionar Cliente Cadastrado --</option>
+                    {clientes.map(c => (
+                      <option key={c.id} value={c.id}>
+                        👤 {c.nome} {c.estabelecimento ? `(🏢 ${c.estabelecimento})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="form-group">
                 <label className="form-label">Pessoa / Cliente / Fornecedor</label>
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Ex: João da Silva ou Imobiliária X"
+                  placeholder="Ex: Janael ou Imobiliária X"
                   value={clienteNome}
                   onChange={(e) => setClienteNome(e.target.value)}
                 />
