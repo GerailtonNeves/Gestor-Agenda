@@ -1,5 +1,7 @@
-// Camada de Armazenamento LocalStorage (storage.js)
+// Camada de Armazenamento LocalStorage (storage.js) + Nuvem Google Firebase
 // Sistema Escritório de Bolso - 100% Livre de Dados Fictícios de Terceiros
+
+import { firebaseApi } from './firebaseClient';
 
 export const STORAGE_KEYS = {
   EMPRESA: 'eb_empresa_config_v1',
@@ -10,7 +12,20 @@ export const STORAGE_KEYS = {
   ORCAMENTOS: 'eb_orcamentos_v1',
   RECIBOS: 'eb_recibos_v1',
   VENDAS: 'eb_vendas_v1',
-  TAREFAS: 'eb_tarefas_v1'
+  TARESTAS: 'eb_tarefas_v1'
+};
+
+// Mapeador dos nós Firebase para as chaves do LocalStorage
+const STORAGE_TO_FIREBASE_PATH = {
+  [STORAGE_KEYS.EMPRESA]: 'eb_empresa',
+  [STORAGE_KEYS.CLIENTES]: 'eb_clientes',
+  [STORAGE_KEYS.PRODUTOS]: 'eb_produtos',
+  [STORAGE_KEYS.AGENDA]: 'eb_agenda',
+  [STORAGE_KEYS.FINANCEIRO]: 'eb_financeiro',
+  [STORAGE_KEYS.ORCAMENTOS]: 'eb_orcamentos',
+  [STORAGE_KEYS.RECIBOS]: 'eb_recibos',
+  [STORAGE_KEYS.VENDAS]: 'eb_vendas',
+  [STORAGE_KEYS.TARESTAS]: 'eb_tarefas'
 };
 
 export const safeFormatDate = (dateStr) => {
@@ -65,10 +80,18 @@ const getStorageData = (key, defaultVal) => {
   }
 };
 
-// Função Utilitária Interna para salvar no LocalStorage
+// Função Utilitária Interna para salvar no LocalStorage e sincronizar com Firebase em background
 const setStorageData = (key, data) => {
   try {
     localStorage.setItem(key, JSON.stringify(data));
+    
+    // Disparar sincronização assíncrona com Firebase se configurado
+    const path = STORAGE_TO_FIREBASE_PATH[key];
+    if (path) {
+      firebaseApi.syncFullList(path, data).catch(err => {
+        console.warn(`[StorageSync] Erro assíncrono ao sincronizar ${path} com Firebase:`, err);
+      });
+    }
   } catch (e) {
     console.error(`Erro ao salvar chave ${key} no localStorage:`, e);
   }
@@ -116,9 +139,9 @@ export const storageApi = {
   setVendas: (lista) => setStorageData(STORAGE_KEYS.VENDAS, lista),
 
   // Tarefas & Compromissos
-  getTarefas: () => getStorageData(STORAGE_KEYS.TAREFAS, DEFAULT_TAREFAS),
-  saveTarefas: (lista) => setStorageData(STORAGE_KEYS.TAREFAS, lista),
-  setTarefas: (lista) => setStorageData(STORAGE_KEYS.TAREFAS, lista),
+  getTarefas: () => getStorageData(STORAGE_KEYS.TARESTAS, DEFAULT_TAREFAS),
+  saveTarefas: (lista) => setStorageData(STORAGE_KEYS.TARESTAS, lista),
+  setTarefas: (lista) => setStorageData(STORAGE_KEYS.TARESTAS, lista),
 
   // Limpar Todos os Dados
   clearAllData: () => {

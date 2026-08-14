@@ -16,6 +16,7 @@ import AgendamentoPublico from './components/AgendamentoPublico';
 import ModalLicenca from './components/ModalLicenca';
 import TelaBloqueioLicenca from './components/TelaBloqueioLicenca';
 import { storageApi, safeFormatDate } from './utils/storage';
+import { firebaseApi } from './utils/firebaseClient';
 import { licenseApi } from './utils/licenseUtils';
 import { playNotificationSound } from './utils/soundUtils';
 import {
@@ -199,6 +200,55 @@ export default function App() {
   useEffect(() => {
     storageApi.saveVendas(vendas);
   }, [vendas]);
+
+  // Sincronização Periódica com a Nuvem Google Firebase (Computador <-> Celular)
+  useEffect(() => {
+    const syncFromCloud = async () => {
+      const cfg = firebaseApi.getConfig();
+      if (!cfg.ativo) return;
+
+      try {
+        const remoteAgenda = await firebaseApi.fetchTable('eb_agenda');
+        if (remoteAgenda && Array.isArray(remoteAgenda) && remoteAgenda.length > 0) {
+          setAgenda(remoteAgenda);
+        }
+
+        const remoteClientes = await firebaseApi.fetchTable('eb_clientes');
+        if (remoteClientes && Array.isArray(remoteClientes) && remoteClientes.length > 0) {
+          setClientes(remoteClientes);
+        }
+
+        const remoteProdutos = await firebaseApi.fetchTable('eb_produtos');
+        if (remoteProdutos && Array.isArray(remoteProdutos) && remoteProdutos.length > 0) {
+          setProdutos(remoteProdutos);
+        }
+
+        const remoteTarefas = await firebaseApi.fetchTable('eb_tarefas');
+        if (remoteTarefas && Array.isArray(remoteTarefas) && remoteTarefas.length > 0) {
+          setTarefas(remoteTarefas);
+        }
+
+        const remoteFinanceiro = await firebaseApi.fetchTable('eb_financeiro');
+        if (remoteFinanceiro && Array.isArray(remoteFinanceiro) && remoteFinanceiro.length > 0) {
+          setFinanceiro(remoteFinanceiro);
+        }
+
+        const remoteEmpresa = await firebaseApi.fetchTable('eb_empresa');
+        if (remoteEmpresa && Array.isArray(remoteEmpresa) && remoteEmpresa.length > 0) {
+          const empObj = Array.isArray(remoteEmpresa) ? remoteEmpresa[0] : remoteEmpresa;
+          if (empObj && typeof empObj === 'object') {
+            setEmpresa(prev => ({ ...prev, ...empObj }));
+          }
+        }
+      } catch (err) {
+        console.warn('[CloudSync] Erro na sincronização com Firebase:', err);
+      }
+    };
+
+    syncFromCloud();
+    const interval = setInterval(syncFromCloud, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Handlers para Atualizar Dados
   const handleSaveEmpresa = (novosDados) => setEmpresa(novosDados);
