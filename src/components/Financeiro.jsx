@@ -31,9 +31,8 @@ export default function Financeiro({
   const [categoria, setCategoria] = useState('Geral');
   const [status, setStatus] = useState('pendente');
   
-  // Recursos Mensais Recorrentes
+  // Recorrência Mensal Simples (1 Única Opção)
   const [isMensal, setIsMensal] = useState(false);
-  const [qtdMeses, setQtdMeses] = useState(12);
 
   const abrirModalNovo = () => {
     setEditId(null);
@@ -45,7 +44,6 @@ export default function Financeiro({
     setCategoria('Geral');
     setStatus('pendente');
     setIsMensal(false);
-    setQtdMeses(12);
     setModalOpen(true);
   };
 
@@ -59,12 +57,11 @@ export default function Financeiro({
     setCategoria(item.categoria || 'Geral');
     setStatus(item.status || 'pendente');
     setIsMensal(Boolean(item.isMensal));
-    setQtdMeses(item.qtdMeses || 12);
     setModalOpen(true);
   };
 
-  // Função para calcular a data exata do mês futuro (mantendo o dia de vencimento)
-  const calculateFutureDate = (baseDateStr, monthOffset) => {
+  // Função para calcular a data exata do mês seguinte (mantendo o mesmo dia do mês)
+  const calculateFutureDate = (baseDateStr, monthOffset = 1) => {
     if (!baseDateStr) return new Date().toISOString().split('T')[0];
     try {
       const parts = baseDateStr.split('-');
@@ -73,7 +70,6 @@ export default function Financeiro({
       const d = parseInt(parts[2], 10);
 
       const targetDate = new Date(y, m + monthOffset, d);
-      // Se o dia estourou o mês (ex: 31 de fevereiro), ajusta para o último dia válido do mês
       if (targetDate.getDate() !== d) {
         targetDate.setDate(0);
       }
@@ -113,47 +109,19 @@ export default function Financeiro({
       });
       onSaveFinanceiro(atualizados);
     } else {
-      // Criação de novos lançamentos
-      if (isMensal) {
-        // Se marcado como MENSAL RECORRENTE: Gerar as contas repetidas para os meses subsequentes!
-        const totalMeses = Math.max(1, parseInt(qtdMeses, 10) || 12);
-        const novosLancamentos = [];
-
-        for (let i = 0; i < totalMeses; i++) {
-          const dataVenc = calculateFutureDate(dataVencimento, i);
-          const sufixoDesc = totalMeses > 1 ? ` (${i + 1}/${totalMeses})` : '';
-
-          novosLancamentos.push({
-            id: `fin_${Date.now()}_m${i + 1}`,
-            tipo,
-            descricao: `${descricao.trim()}${sufixoDesc}`,
-            clienteNome: clienteNome || 'Não informado',
-            valor: valorNum,
-            dataVencimento: dataVenc,
-            categoria,
-            status: i === 0 ? status : 'pendente', // O 1º mês usa o status escolhido, os meses futuros ficam como pendente
-            isMensal: true,
-            recorrenciaInfo: `${i + 1}/${totalMeses}`,
-            qtdMeses: totalMeses
-          });
-        }
-
-        onSaveFinanceiro([...novosLancamentos, ...financeiro]);
-      } else {
-        // Lançamento único simples
-        const novoLancamento = {
-          id: 'fin_' + Date.now(),
-          tipo,
-          descricao,
-          clienteNome: clienteNome || 'Não informado',
-          valor: valorNum,
-          dataVencimento,
-          categoria,
-          status,
-          isMensal: false
-        };
-        onSaveFinanceiro([novoLancamento, ...financeiro]);
-      }
+      // Criação de 1 ÚNICO lançamento simples (se for mensal, renova mês a mês ao dar baixa)
+      const novoLancamento = {
+        id: 'fin_' + Date.now(),
+        tipo,
+        descricao: descricao.trim(),
+        clienteNome: clienteNome || 'Não informado',
+        valor: valorNum,
+        dataVencimento,
+        categoria,
+        status,
+        isMensal
+      };
+      onSaveFinanceiro([novoLancamento, ...financeiro]);
     }
 
     setModalOpen(false);
@@ -163,12 +131,38 @@ export default function Financeiro({
   const toggleStatusPago = (itemTarget) => {
     const novoStatus = itemTarget.status === 'pago' ? 'pendente' : 'pago';
     
-    const atualizado = financeiro.map(item => {
+    let atualizado = financeiro.map(item => {
       if (item.id === itemTarget.id) {
         return { ...item, status: novoStatus };
       }
       return item;
     });
+
+    // Se a conta for MENSAL RECORRENTE (isMensal) e acabou de ser PAGA:
+    // Gera a conta do MÊS SEGUINTE automaticamente para aparecer no mês seguinte!
+    if (novoStatus === 'pago' && itemTarget.isMensal) {
+      const proximaData = calculateFutureDate(itemTarget.dataVencimento, 1);
+      
+      const jaExisteProximo = financeiro.some(f => 
+        f.descricao === itemTarget.descricao && 
+        f.dataVencimento === proximaData
+      );
+
+      if (!jaExisteProximo) {
+        const proximoLancamento = {
+          id: 'fin_rec_' + Date.now(),
+          tipo: itemTarget.tipo,
+          descricao: itemTarget.descricao,
+          clienteNome: itemTarget.clienteNome,
+          valor: itemTarget.valor,
+          dataVencimento: proximaData,
+          categoria: itemTarget.categoria,
+          status: 'pendente',
+          isMensal: true
+        };
+        atualizado = [proximoLancamento, ...atualizado];
+      }
+    }
 
     onSaveFinanceiro(atualizado);
 
@@ -258,7 +252,7 @@ export default function Financeiro({
             <DollarSign size={24} /> Financeiro - Contas a Pagar e Receber
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            Dê baixa nas suas contas para <strong>gerar recibos profissionais automaticamente</strong> ou programe <strong>contas mensais recorrentes</strong>!
+            Dê baixa nas suas contas para <strong>gerar recibos profissionais automaticamente</strong> ou marque contas como <strong>mensais</strong>!
           </p>
         </div>
 
@@ -330,7 +324,7 @@ export default function Financeiro({
           Contas a Pagar ({financeiro.filter(f => f.tipo === 'despesa').length})
         </button>
         <button className={`btn btn-sm ${filtroTipo === 'mensais' ? 'btn-orange' : 'btn-secondary'}`} onClick={() => setFiltroTipo('mensais')}>
-          🔁 Mensais / Recorrentes ({financeiro.filter(f => f.isMensal).length})
+          🔁 Contas Mensais ({financeiro.filter(f => f.isMensal).length})
         </button>
         <button className={`btn btn-sm ${filtroTipo === 'vencidos' ? 'btn-orange' : 'btn-secondary'}`} onClick={() => setFiltroTipo('vencidos')}>
           Vencidos 🔥 ({financeiro.filter(f => f.status === 'vencido').length})
@@ -380,7 +374,7 @@ export default function Financeiro({
                         <strong style={{ color: 'var(--text-main)' }}>{f.descricao}</strong>
                         {f.isMensal && (
                           <span className="badge badge-orange" style={{ padding: '2px 8px', fontSize: '0.7rem' }}>
-                            <Repeat size={12} style={{ marginRight: '3px' }} /> Mensal {f.recorrenciaInfo || ''}
+                            <Repeat size={12} style={{ marginRight: '3px' }} /> Mensal
                           </span>
                         )}
                       </div>
@@ -402,7 +396,7 @@ export default function Financeiro({
                         <button
                           className={`btn btn-sm ${f.status === 'pago' ? 'btn-secondary' : 'btn-orange'}`}
                           onClick={() => toggleStatusPago(f)}
-                          title={f.status === 'pago' ? "Desfazer baixa" : "Dar Baixa (Gera Recibo Oficial)"}
+                          title={f.status === 'pago' ? "Desfazer baixa" : "Dar Baixa (Gera Recibo e Renova no Próximo Mês)"}
                         >
                           <CheckCircle size={14} /> {f.status === 'pago' ? 'Pago ✅' : 'Dar Baixa'}
                         </button>
@@ -454,7 +448,7 @@ export default function Financeiro({
         </table>
       </div>
 
-      {/* MODAL NOVO / EDITAR LANÇAMENTO COM OPÇÃO DE CONTA MENSAL RECORRENTE */}
+      {/* MODAL NOVO / EDITAR LANÇAMENTO COM OPÇÃO DE CONTA MENSAL SIMPLES */}
       {modalOpen && (
         <div className="modal-overlay" onClick={() => setModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '540px' }}>
@@ -488,7 +482,7 @@ export default function Financeiro({
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Ex: Aluguel do Estúdio, Internet ou Assinatura"
+                  placeholder="Ex: Aluguel do Estúdio, Internet ou Conta de Luz"
                   value={descricao}
                   onChange={(e) => setDescricao(e.target.value)}
                   required
@@ -556,43 +550,22 @@ export default function Financeiro({
                 </div>
               </div>
 
-              {/* OPÇÃO DE CONTA MENSAL RECORRENTE (REPETIR TODOS OS MESES) */}
+              {/* OPÇÃO DE CONTA MENSAL SIMPLES (ÚNICO CHECKBOX SEM POLUIÇÃO DE 12 PARCELAS) */}
               <div style={{ background: '#fefce8', padding: '14px 16px', borderRadius: '12px', border: '2px solid var(--orange-border)' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 800, color: '#ca8a04', fontSize: '0.94rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 800, color: '#ca8a04', fontSize: '0.95rem' }}>
                   <input
                     type="checkbox"
                     checked={isMensal}
                     onChange={(e) => setIsMensal(e.target.checked)}
-                    style={{ width: '18px', height: '18px', accentColor: 'var(--orange-primary)', cursor: 'pointer' }}
+                    style={{ width: '20px', height: '20px', accentColor: 'var(--orange-primary)', cursor: 'pointer' }}
                   />
                   <Repeat size={18} />
-                  <span>🔁 Marcar como Conta Mensal Recorrente (Repetir Todos os Meses)</span>
+                  <span>🔁 Esta conta é mensal recorrente (Repetir todo mês)</span>
                 </label>
 
-                {isMensal && !editId && (
-                  <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed #fde047', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <label style={{ fontSize: '0.84rem', fontWeight: 700, color: '#a16207', whiteSpace: 'nowrap' }}>
-                        Repetir por quantos meses?
-                      </label>
-                      <select
-                        className="form-select"
-                        value={qtdMeses}
-                        onChange={(e) => setQtdMeses(parseInt(e.target.value, 10))}
-                        style={{ padding: '6px 12px', minHeight: '36px', fontSize: '0.88rem', fontWeight: 800 }}
-                      >
-                        <option value={2}>2 meses</option>
-                        <option value={3}>3 meses</option>
-                        <option value={6}>6 meses</option>
-                        <option value={12}>12 meses (1 ano completo)</option>
-                        <option value={18}>18 meses</option>
-                        <option value={24}>24 meses (2 anos)</option>
-                      </select>
-                    </div>
-
-                    <div style={{ fontSize: '0.78rem', color: '#854d0e', lineHeight: '1.4', fontStyle: 'italic' }}>
-                      💡 Ao salvar, o sistema criará automaticamente as parcelas dos próximos {qtdMeses} meses no mesmo dia do vencimento!
-                    </div>
+                {isMensal && (
+                  <div style={{ fontSize: '0.78rem', color: '#854d0e', lineHeight: '1.4', marginTop: '8px', fontStyle: 'italic' }}>
+                    💡 Ao dar baixa no pagamento deste mês, o sistema gerará a conta do mês seguinte automaticamente!
                   </div>
                 )}
               </div>
@@ -600,7 +573,7 @@ export default function Financeiro({
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '10px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setModalOpen(false)}>Cancelar</button>
                 <button type="submit" className="btn btn-orange">
-                  {editId ? 'Salvar Alterações' : isMensal ? `Salvar Lançamento Mensal (${qtdMeses} Meses)` : 'Salvar Lançamento'}
+                  {editId ? 'Salvar Alterações' : 'Salvar Lançamento'}
                 </button>
               </div>
             </form>
