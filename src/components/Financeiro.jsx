@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DollarSign, Plus, ArrowUpCircle, ArrowDownCircle, CheckCircle, Trash2, Edit, Receipt, Send, Eye, Sparkles } from 'lucide-react';
+import { DollarSign, Plus, ArrowUpCircle, ArrowDownCircle, CheckCircle, Trash2, Edit, Receipt, Send, Eye, Sparkles, Repeat, Calendar, ShieldCheck } from 'lucide-react';
 import { safeFormatDate } from '../utils/storage';
 import { numeroParaExtenso } from './Recibos';
 import ModalDocumento from './ModalDocumento';
@@ -16,7 +16,7 @@ export default function Financeiro({
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [filtroTipo, setFiltroTipo] = useState('todos'); // 'todos', 'receita', 'despesa', 'vencidos'
+  const [filtroTipo, setFiltroTipo] = useState('todos'); // 'todos', 'receita', 'despesa', 'vencidos', 'mensais'
   
   // Modal de Recibo Gerado na Baixa
   const [docVisualizar, setDocVisualizar] = useState(null);
@@ -30,6 +30,10 @@ export default function Financeiro({
   const [dataVencimento, setDataVencimento] = useState(new Date().toISOString().split('T')[0]);
   const [categoria, setCategoria] = useState('Geral');
   const [status, setStatus] = useState('pendente');
+  
+  // Recursos Mensais Recorrentes
+  const [isMensal, setIsMensal] = useState(false);
+  const [qtdMeses, setQtdMeses] = useState(12);
 
   const abrirModalNovo = () => {
     setEditId(null);
@@ -40,6 +44,8 @@ export default function Financeiro({
     setDataVencimento(new Date().toISOString().split('T')[0]);
     setCategoria('Geral');
     setStatus('pendente');
+    setIsMensal(false);
+    setQtdMeses(12);
     setModalOpen(true);
   };
 
@@ -52,32 +58,102 @@ export default function Financeiro({
     setDataVencimento(item.dataVencimento || new Date().toISOString().split('T')[0]);
     setCategoria(item.categoria || 'Geral');
     setStatus(item.status || 'pendente');
+    setIsMensal(Boolean(item.isMensal));
+    setQtdMeses(item.qtdMeses || 12);
     setModalOpen(true);
+  };
+
+  // Função para calcular a data exata do mês futuro (mantendo o dia de vencimento)
+  const calculateFutureDate = (baseDateStr, monthOffset) => {
+    if (!baseDateStr) return new Date().toISOString().split('T')[0];
+    try {
+      const parts = baseDateStr.split('-');
+      const y = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10) - 1; // 0-indexado
+      const d = parseInt(parts[2], 10);
+
+      const targetDate = new Date(y, m + monthOffset, d);
+      // Se o dia estourou o mês (ex: 31 de fevereiro), ajusta para o último dia válido do mês
+      if (targetDate.getDate() !== d) {
+        targetDate.setDate(0);
+      }
+
+      const yyyy = targetDate.getFullYear();
+      const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
+      const dd = String(targetDate.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    } catch (e) {
+      return baseDateStr;
+    }
   };
 
   const handleSalvar = (e) => {
     e.preventDefault();
     if (!descricao.trim() || !valor) return;
 
-    const lancamentoData = {
-      tipo,
-      descricao,
-      clienteNome: clienteNome || 'Não informado',
-      valor: parseFloat(valor),
-      dataVencimento,
-      categoria,
-      status
-    };
+    const valorNum = parseFloat(valor);
 
     if (editId) {
-      const atualizados = financeiro.map(f => f.id === editId ? { ...f, ...lancamentoData } : f);
+      // Edição de um lançamento existente
+      const atualizados = financeiro.map(f => {
+        if (f.id === editId) {
+          return {
+            ...f,
+            tipo,
+            descricao,
+            clienteNome: clienteNome || 'Não informado',
+            valor: valorNum,
+            dataVencimento,
+            categoria,
+            status,
+            isMensal
+          };
+        }
+        return f;
+      });
       onSaveFinanceiro(atualizados);
     } else {
-      const novoLancamento = {
-        id: 'fin_' + Date.now(),
-        ...lancamentoData
-      };
-      onSaveFinanceiro([...financeiro, novoLancamento]);
+      // Criação de novos lançamentos
+      if (isMensal) {
+        // Se marcado como MENSAL RECORRENTE: Gerar as contas repetidas para os meses subsequentes!
+        const totalMeses = Math.max(1, parseInt(qtdMeses, 10) || 12);
+        const novosLancamentos = [];
+
+        for (let i = 0; i < totalMeses; i++) {
+          const dataVenc = calculateFutureDate(dataVencimento, i);
+          const sufixoDesc = totalMeses > 1 ? ` (${i + 1}/${totalMeses})` : '';
+
+          novosLancamentos.push({
+            id: `fin_${Date.now()}_m${i + 1}`,
+            tipo,
+            descricao: `${descricao.trim()}${sufixoDesc}`,
+            clienteNome: clienteNome || 'Não informado',
+            valor: valorNum,
+            dataVencimento: dataVenc,
+            categoria,
+            status: i === 0 ? status : 'pendente', // O 1º mês usa o status escolhido, os meses futuros ficam como pendente
+            isMensal: true,
+            recorrenciaInfo: `${i + 1}/${totalMeses}`,
+            qtdMeses: totalMeses
+          });
+        }
+
+        onSaveFinanceiro([...novosLancamentos, ...financeiro]);
+      } else {
+        // Lançamento único simples
+        const novoLancamento = {
+          id: 'fin_' + Date.now(),
+          tipo,
+          descricao,
+          clienteNome: clienteNome || 'Não informado',
+          valor: valorNum,
+          dataVencimento,
+          categoria,
+          status,
+          isMensal: false
+        };
+        onSaveFinanceiro([novoLancamento, ...financeiro]);
+      }
     }
 
     setModalOpen(false);
@@ -98,13 +174,17 @@ export default function Financeiro({
 
     // Se a ação for "DAR BAIXA" (Marcar como Pago/Recebido):
     if (novoStatus === 'pago') {
-      const valorNum = parseFloat(itemTarget.valor) || 0;
-      
-      // Tenta encontrar dados de contato do cliente cadastrado
-      let telCliente = '';
+      const valorNum = parseFloat(itemTarget.valor || 0);
+
       let idCliente = '';
-      if (itemTarget.clienteNome) {
-        const cliFound = clientes.find(c => c.nome.toLowerCase() === itemTarget.clienteNome.toLowerCase());
+      let telCliente = '';
+
+      if (clientes && clientes.length > 0) {
+        const cliFound = clientes.find(c => 
+          (c.nome && c.nome.toLowerCase() === (itemTarget.clienteNome || '').toLowerCase()) ||
+          (c.empresa && c.empresa.toLowerCase() === (itemTarget.clienteNome || '').toLowerCase())
+        );
+
         if (cliFound) {
           idCliente = cliFound.id;
           telCliente = cliFound.whatsapp || cliFound.telefone || '';
@@ -124,7 +204,7 @@ export default function Financeiro({
         valorExtenso: numeroParaExtenso(valorNum),
         referenteA: `Pagamento / Quitação de: ${itemTarget.descricao}`,
         formaPagamento: 'PIX',
-        cidadeUf: 'São Paulo - SP',
+        cidadeUf: empresa.cidadeUf || empresa.cidade || 'São Paulo - SP',
         observacoes: 'Recibo emitido automaticamente via Baixa no Módulo Financeiro.'
       };
 
@@ -154,7 +234,7 @@ export default function Financeiro({
         valorExtenso: numeroParaExtenso(itemFin.valor),
         referenteA: `Quitação: ${itemFin.descricao}`,
         formaPagamento: 'PIX',
-        cidadeUf: 'São Paulo - SP'
+        cidadeUf: empresa.cidadeUf || empresa.cidade || 'São Paulo - SP'
       };
     }
     return rec;
@@ -165,6 +245,7 @@ export default function Financeiro({
     if (filtroTipo === 'receita') return item.tipo === 'receita';
     if (filtroTipo === 'despesa') return item.tipo === 'despesa';
     if (filtroTipo === 'vencidos') return item.status === 'vencido';
+    if (filtroTipo === 'mensais') return Boolean(item.isMensal);
     return true;
   });
 
@@ -177,7 +258,7 @@ export default function Financeiro({
             <DollarSign size={24} /> Financeiro - Contas a Pagar e Receber
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            Dê baixa nas suas contas para <strong>gerar recibos profissionais automaticamente</strong> e enviar ao cliente no WhatsApp!
+            Dê baixa nas suas contas para <strong>gerar recibos profissionais automaticamente</strong> ou programe <strong>contas mensais recorrentes</strong>!
           </p>
         </div>
 
@@ -248,6 +329,9 @@ export default function Financeiro({
         <button className={`btn btn-sm ${filtroTipo === 'despesa' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setFiltroTipo('despesa')}>
           Contas a Pagar ({financeiro.filter(f => f.tipo === 'despesa').length})
         </button>
+        <button className={`btn btn-sm ${filtroTipo === 'mensais' ? 'btn-orange' : 'btn-secondary'}`} onClick={() => setFiltroTipo('mensais')}>
+          🔁 Mensais / Recorrentes ({financeiro.filter(f => f.isMensal).length})
+        </button>
         <button className={`btn btn-sm ${filtroTipo === 'vencidos' ? 'btn-orange' : 'btn-secondary'}`} onClick={() => setFiltroTipo('vencidos')}>
           Vencidos 🔥 ({financeiro.filter(f => f.status === 'vencido').length})
         </button>
@@ -292,7 +376,14 @@ export default function Financeiro({
                       )}
                     </td>
                     <td>
-                      <strong style={{ color: 'var(--text-main)' }}>{f.descricao}</strong>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                        <strong style={{ color: 'var(--text-main)' }}>{f.descricao}</strong>
+                        {f.isMensal && (
+                          <span className="badge badge-orange" style={{ padding: '2px 8px', fontSize: '0.7rem' }}>
+                            <Repeat size={12} style={{ marginRight: '3px' }} /> Mensal {f.recorrenciaInfo || ''}
+                          </span>
+                        )}
+                      </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{f.clienteNome}</div>
                     </td>
                     <td>{f.categoria}</td>
@@ -348,9 +439,10 @@ export default function Financeiro({
                         <button
                           className="btn btn-sm btn-secondary"
                           onClick={() => onDeleteFinanceiro(f.id)}
-                          title="Excluir lançamento"
+                          title="Excluir Lançamento"
+                          style={{ color: '#ef4444' }}
                         >
-                          <Trash2 size={14} style={{ color: '#ef4444' }} />
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </td>
@@ -362,17 +454,19 @@ export default function Financeiro({
         </table>
       </div>
 
-      {/* Modal de Criar / Editar Lançamento */}
+      {/* MODAL NOVO / EDITAR LANÇAMENTO COM OPÇÃO DE CONTA MENSAL RECORRENTE */}
       {modalOpen && (
         <div className="modal-overlay" onClick={() => setModalOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '540px' }}>
             <div className="modal-header">
-              <h3 className="modal-title">{editId ? 'Editar Conta Financeira' : 'Novo Lançamento Financeiro'}</h3>
+              <h3 className="modal-title">
+                {editId ? 'Editar Conta / Lançamento' : 'Novo Lançamento Financeiro'}
+              </h3>
               <button className="action-btn-circle" onClick={() => setModalOpen(false)}>✕</button>
             </div>
 
-            <form onSubmit={handleSalvar}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+            <form onSubmit={handleSalvar} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <button
                   type="button"
                   className={`btn ${tipo === 'receita' ? 'btn-primary' : 'btn-secondary'}`}
@@ -394,7 +488,7 @@ export default function Financeiro({
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Ex: Pagamento de Fornecedor ou Aluguel"
+                  placeholder="Ex: Aluguel do Estúdio, Internet ou Assinatura"
                   value={descricao}
                   onChange={(e) => setDescricao(e.target.value)}
                   required
@@ -406,7 +500,7 @@ export default function Financeiro({
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Ex: João da Silva ou Distribuidora X"
+                  placeholder="Ex: João da Silva ou Imobiliária X"
                   value={clienteNome}
                   onChange={(e) => setClienteNome(e.target.value)}
                 />
@@ -462,9 +556,52 @@ export default function Financeiro({
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '16px' }}>
+              {/* OPÇÃO DE CONTA MENSAL RECORRENTE (REPETIR TODOS OS MESES) */}
+              <div style={{ background: '#fefce8', padding: '14px 16px', borderRadius: '12px', border: '2px solid var(--orange-border)' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 800, color: '#ca8a04', fontSize: '0.94rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={isMensal}
+                    onChange={(e) => setIsMensal(e.target.checked)}
+                    style={{ width: '18px', height: '18px', accentColor: 'var(--orange-primary)', cursor: 'pointer' }}
+                  />
+                  <Repeat size={18} />
+                  <span>🔁 Marcar como Conta Mensal Recorrente (Repetir Todos os Meses)</span>
+                </label>
+
+                {isMensal && !editId && (
+                  <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed #fde047', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <label style={{ fontSize: '0.84rem', fontWeight: 700, color: '#a16207', whiteSpace: 'nowrap' }}>
+                        Repetir por quantos meses?
+                      </label>
+                      <select
+                        className="form-select"
+                        value={qtdMeses}
+                        onChange={(e) => setQtdMeses(parseInt(e.target.value, 10))}
+                        style={{ padding: '6px 12px', minHeight: '36px', fontSize: '0.88rem', fontWeight: 800 }}
+                      >
+                        <option value={2}>2 meses</option>
+                        <option value={3}>3 meses</option>
+                        <option value={6}>6 meses</option>
+                        <option value={12}>12 meses (1 ano completo)</option>
+                        <option value={18}>18 meses</option>
+                        <option value={24}>24 meses (2 anos)</option>
+                      </select>
+                    </div>
+
+                    <div style={{ fontSize: '0.78rem', color: '#854d0e', lineHeight: '1.4', fontStyle: 'italic' }}>
+                      💡 Ao salvar, o sistema criará automaticamente as parcelas dos próximos {qtdMeses} meses no mesmo dia do vencimento!
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '10px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setModalOpen(false)}>Cancelar</button>
-                <button type="submit" className="btn btn-orange">{editId ? 'Salvar Alterações' : 'Salvar Lançamento'}</button>
+                <button type="submit" className="btn btn-orange">
+                  {editId ? 'Salvar Alterações' : isMensal ? `Salvar Lançamento Mensal (${qtdMeses} Meses)` : 'Salvar Lançamento'}
+                </button>
               </div>
             </form>
           </div>
