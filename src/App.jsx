@@ -246,9 +246,31 @@ export default function App() {
     };
 
     syncFromCloud();
-    const interval = setInterval(syncFromCloud, 10000);
+    const interval = setInterval(syncFromCloud, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleForceCloudSync = async () => {
+    const cfg = firebaseApi.getConfig();
+    if (!cfg.ativo) {
+      alert('⚠️ O Firebase não está ativo. Por favor, configure a URL do Firebase na aba "Minha Empresa".');
+      return;
+    }
+
+    // 1. Enviar dados locais para a nuvem
+    await firebaseApi.syncFullList('eb_agenda', agenda);
+    await firebaseApi.syncFullList('eb_clientes', clientes);
+    await firebaseApi.syncFullList('eb_produtos', produtos);
+    await firebaseApi.syncFullList('eb_tarefas', tarefas);
+    await firebaseApi.syncFullList('eb_financeiro', financeiro);
+    await firebaseApi.syncFullList('eb_empresa', [empresa]);
+
+    // 2. Baixar dados da nuvem
+    const remoteAgenda = await firebaseApi.fetchTable('eb_agenda');
+    if (remoteAgenda && Array.isArray(remoteAgenda) && remoteAgenda.length > 0) {
+      setAgenda(remoteAgenda);
+    }
+  };
 
   // Handlers para Atualizar Dados
   const handleSaveEmpresa = (novosDados) => setEmpresa(novosDados);

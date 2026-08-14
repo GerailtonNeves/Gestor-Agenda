@@ -151,7 +151,16 @@ export default function EmpresaConfig({ empresa = {}, onSaveEmpresa }) {
   const handleSalvarFirebase = () => {
     const saved = firebaseApi.saveConfig(firebaseData);
     if (saved) {
-      triggerToast('🔥 Configurações do Google Firebase salvas!');
+      const novosDadosEmpresa = {
+        ...formData,
+        firebaseUrl: firebaseData.databaseUrl,
+        firebaseAuth: firebaseData.authSecret
+      };
+      setFormData(novosDadosEmpresa);
+      storageApi.saveEmpresa(novosDadosEmpresa);
+      if (onSaveEmpresa) onSaveEmpresa(novosDadosEmpresa);
+
+      triggerToast('🔥 Configurações do Google Firebase salvas no sistema!');
       handleTestarFirebase();
     }
   };

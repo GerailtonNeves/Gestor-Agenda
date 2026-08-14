@@ -7,11 +7,28 @@
 const STORAGE_KEY_FIREBASE = 'EB_FIREBASE_CONFIG_V1';
 
 export const firebaseApi = {
-  // Retorna configurações do Firebase salvas no LocalStorage ou Padrão
+  // Retorna configurações do Firebase salvas no LocalStorage ou Empresa
   getConfig() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_FIREBASE);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.databaseUrl) return parsed;
+      }
+
+      // Fallback: verificar se a URL está salva nos dados da Empresa
+      const empresaStr = localStorage.getItem('eb_empresa_config_v1');
+      if (empresaStr) {
+        const emp = JSON.parse(empresaStr);
+        if (emp && emp.firebaseUrl) {
+          return {
+            databaseUrl: emp.firebaseUrl,
+            authSecret: emp.firebaseAuth || '',
+            ativo: true,
+            ultimaSincronizacao: new Date().toISOString()
+          };
+        }
+      }
     } catch (e) {
       console.error('Erro ao ler config do Firebase:', e);
     }
