@@ -138,10 +138,6 @@ export default function Header({
           <button className="action-btn-circle desktop-only-search" onClick={onOpenSearch} title="Busca Global no Sistema (Ctrl + K)">
             <Search size={18} />
           </button>
-          
-          <button className="action-btn-circle desktop-only-clock" onClick={onOpenCalc} title="Calculadora Comercial">
-            <Calculator size={18} />
-          </button>
 
           <button className="action-btn-circle" onClick={onOpenNotifications} title="Central de Alertas e Notificações">
             <Bell size={18} />

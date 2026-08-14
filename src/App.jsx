@@ -34,7 +34,8 @@ import {
   AlertCircle,
   X,
   Volume2,
-  Smartphone
+  Smartphone,
+  Calculator as CalcIcon
 } from 'lucide-react';
 
 export default function App() {
@@ -442,6 +443,10 @@ export default function App() {
             <button className={`nav-btn ${abaAtiva === 'recibos' ? 'active' : ''}`} onClick={() => setAbaAtiva('recibos')}>
               <Receipt size={19} />
               <span style={{ flex: 1 }}>Emissor de Recibos</span>
+            </button>
+            <button className="nav-btn" onClick={() => setCalcOpen(true)} style={{ color: '#ca8a04', background: '#fefce8', border: '1.5px solid #fde047', fontWeight: 800 }}>
+              <CalcIcon size={19} />
+              <span style={{ flex: 1 }}>🧮 Calculadora Rápida</span>
             </button>
           </div>
 
