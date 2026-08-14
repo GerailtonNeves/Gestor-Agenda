@@ -13,15 +13,26 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
   const isOrcamento = tipo === 'orcamento';
   const dataEmissaoFormatada = safeFormatDate(documento.dataEmissao || new Date().toISOString().split('T')[0]);
 
+  // EXTRAÇÃO COMPLETA E INTELIGENTE DO NOME DO CLIENTE COM FALLBACKS
+  const rawClienteNome = (
+    (typeof documento.clienteNome === 'string' && documento.clienteNome.trim()) ? documento.clienteNome :
+    (typeof documento.cliente === 'string' && documento.cliente.trim()) ? documento.cliente :
+    (documento.cliente && typeof documento.cliente === 'object' && documento.cliente.nome) ? documento.cliente.nome :
+    (typeof documento.nomeCliente === 'string' && documento.nomeCliente.trim()) ? documento.nomeCliente :
+    (typeof documento.cliente_nome === 'string' && documento.cliente_nome.trim()) ? documento.cliente_nome :
+    (typeof documento.pagador === 'string' && documento.pagador.trim()) ? documento.pagador :
+    ''
+  ).trim();
+
   // BUSCA INTELIGENTE DO CLIENTE NO CADASTRO PARA PUXAR NOME E EMPRESA/ESTABELECIMENTO
-  const clienteCadastrado = (clientes && clientes.length > 0) ? clientes.find(c => 
+  const clienteCadastrado = (clientes && clientes.length > 0 && rawClienteNome) ? clientes.find(c => 
     (documento.clienteId && String(c.id) === String(documento.clienteId)) ||
-    (c.nome && c.nome.toLowerCase() === (documento.clienteNome || '').toLowerCase()) ||
-    (c.estabelecimento && c.estabelecimento.toLowerCase() === (documento.clienteNome || '').toLowerCase()) ||
-    (c.empresa && c.empresa.toLowerCase() === (documento.clienteNome || '').toLowerCase())
+    (c.nome && c.nome.toLowerCase() === rawClienteNome.toLowerCase()) ||
+    (c.estabelecimento && c.estabelecimento.toLowerCase() === rawClienteNome.toLowerCase()) ||
+    (c.empresa && c.empresa.toLowerCase() === rawClienteNome.toLowerCase())
   ) : null;
 
-  const nomeExibirCliente = clienteCadastrado ? clienteCadastrado.nome : (documento.clienteNome || 'Cliente Não Informado');
+  const nomeExibirCliente = clienteCadastrado ? clienteCadastrado.nome : (rawClienteNome || 'Cliente Não Informado');
   const empresaExibirCliente = documento.clienteEmpresa || documento.estabelecimento || documento.empresa || (clienteCadastrado ? (clienteCadastrado.estabelecimento || clienteCadastrado.empresa || clienteCadastrado.nomeEmpresa || clienteCadastrado.razaoSocial) : '');
 
   const triggerToast = (msg) => {
@@ -370,32 +381,32 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
                   </div>
                 </div>
 
-                {/* CARTÃO EM 2 COLUNAS DE DETALHES DE PAGAMENTO E PIX */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                  {/* COLUNA ESQUERDA: DETALHES DO CLIENTE E WHATSAPP */}
-                  <div style={{ background: '#ffffff', padding: '14px 18px', borderRadius: '12px', border: '1.5px solid #93c5fd', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '6px' }}>
+                {/* CARTÃO DE DETALHES DO CLIENTE E PAGAMENTO (RESPONSIVO PARA CELULAR E COMPUTADOR) */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', marginBottom: '16px' }}>
+                  {/* COLUNA ESQUERDA: DETALHES DO CLIENTE E TELEFONE */}
+                  <div style={{ flex: '1 1 240px', minWidth: '220px', background: '#ffffff', padding: '14px 18px', borderRadius: '12px', border: '1.5px solid #93c5fd', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '6px' }}>
                     <div>
-                      <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#2563eb', textTransform: 'uppercase' }}>
+                      <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#2563eb', textTransform: 'uppercase', marginBottom: '3px' }}>
                         NOME DO CLIENTE / PAGADOR:
                       </div>
-                      <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>
+                      <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0f172a', wordBreak: 'break-word', wordWrap: 'break-word' }}>
                         <strong>CLIENTE:</strong> {nomeExibirCliente}
                       </div>
                       {empresaExibirCliente && (
-                        <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#ca8a04', marginTop: '4px' }}>
+                        <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#ca8a04', marginTop: '4px', wordBreak: 'break-word' }}>
                           <strong>Nome do Estabelecimento / Empresa:</strong> {empresaExibirCliente}
                         </div>
                       )}
                     </div>
                     {(documento.clienteTelefone || (clienteCadastrado && (clienteCadastrado.whatsapp || clienteCadastrado.telefone))) && (
-                      <div style={{ fontSize: '0.82rem', color: '#16a34a', fontWeight: 700 }}>
+                      <div style={{ fontSize: '0.84rem', color: '#16a34a', fontWeight: 700, marginTop: '4px', borderTop: '1px dashed #e2e8f0', paddingTop: '4px' }}>
                         📱 WhatsApp: {documento.clienteTelefone || (clienteCadastrado && (clienteCadastrado.whatsapp || clienteCadastrado.telefone))}
                       </div>
                     )}
                   </div>
 
-                  {/* COLUNA DIREIRA: VALOR RECEBIDO E STATUS PAGO */}
-                  <div style={{ background: '#eff6ff', padding: '14px 18px', borderRadius: '12px', border: '2px solid #2563eb', textAlign: 'center' }}>
+                  {/* COLUNA DIREITA: VALOR RECEBIDO E STATUS PAGO */}
+                  <div style={{ flex: '1 1 180px', minWidth: '160px', background: '#eff6ff', padding: '14px 18px', borderRadius: '12px', border: '2px solid #2563eb', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                     <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#2563eb', textTransform: 'uppercase' }}>
                       VALOR RECEBIDO • PAGO ✅
                     </div>
