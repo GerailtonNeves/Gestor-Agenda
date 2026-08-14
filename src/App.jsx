@@ -36,7 +36,8 @@ import {
   X,
   Volume2,
   Smartphone,
-  Calculator as CalcIcon
+  Calculator as CalcIcon,
+  LogOut
 } from 'lucide-react';
 
 export default function App() {
@@ -464,6 +465,7 @@ export default function App() {
         notificationCount={notificationCount}
         esconderValores={esconderValores}
         onToggleEsconderValores={handleToggleEsconderValores}
+        onLogout={handleLogout}
       />
 
       <div className="app-layout">
@@ -595,6 +597,10 @@ export default function App() {
             <button className="nav-btn" onClick={handleInstallPWA} style={{ color: '#16a34a', fontWeight: 800, background: '#f0fdf4', border: '1.5px solid #bbf7d0' }}>
               <Smartphone size={19} />
               <span style={{ flex: 1 }}>Instalar App no Celular</span>
+            </button>
+            <button className="nav-btn" onClick={handleLogout} style={{ color: '#dc2626', fontWeight: 800, background: '#fef2f2', border: '1.5px solid #fca5a5', marginTop: '6px' }}>
+              <LogOut size={19} />
+              <span style={{ flex: 1 }}>🚪 Sair da Conta (Logout)</span>
             </button>
           </div>
         </aside>

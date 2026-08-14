@@ -609,6 +609,31 @@ body {
   .mobile-only-btn {
     display: flex !important;
   }
+  .main-content {
+    padding: 12px 10px 95px 10px !important;
+  }
+  .card {
+    padding: 14px 16px !important;
+    border-radius: 14px !important;
+  }
+  .form-input, .form-select {
+    font-size: 16px !important; /* Previne auto-zoom no Safari/Chrome iOS */
+    height: 46px !important;
+  }
+  .modal-content {
+    padding: 18px 16px !important;
+    border-radius: 18px !important;
+    max-width: 95% !important;
+  }
+  .table-responsive {
+    border-radius: 12px !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .mobile-nav-btn {
+    padding: 6px 4px !important;
+    font-size: 0.68rem !important;
+  }
 }
 
 @media (min-width: 769px) {
