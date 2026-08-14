@@ -16,6 +16,7 @@ export default function Financeiro({
   esconderValores = false
 }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [editId, setEditId] = useState(null);
   const anoAtualStr = String(new Date().getFullYear());
   const [filtroTipo, setFiltroTipo] = useState('todos'); // 'todos', 'receita', 'despesa', 'vencidos', 'mensais'
   const [filtroMes, setFiltroMes] = useState('todos'); // 'todos', '01'..'12'
