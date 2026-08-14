@@ -114,9 +114,6 @@ export default function Header({
             <h1 className="topbar-title" style={{ fontSize: '1.05rem', margin: 0, lineHeight: '1.1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {empresa.razaoSocial || empresa.nomeFantasia || 'Escritório de Bolso'}
             </h1>
-            <span className="topbar-subtitle" style={{ fontSize: '0.68rem', opacity: 0.9 }}>
-              {empresa.ramoAtividade || 'Gestão Inteligente ERP'}
-            </span>
           </div>
         </div>
 
