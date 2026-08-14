@@ -14,7 +14,10 @@ import {
   X,
   Sparkles,
   ChevronRight,
-  ExternalLink
+  ExternalLink,
+  Eye,
+  EyeOff,
+  LogOut
 } from 'lucide-react';
 import { licenseApi } from '../utils/licenseUtils';
 
@@ -26,7 +29,10 @@ export default function Header({
   onOpenEmpresa, 
   onOpenLicense,
   onInstallPWA,
-  notificationCount = 0 
+  notificationCount = 0,
+  esconderValores = false,
+  onToggleEsconderValores,
+  onLogout
 }) {
   const [horaAtual, setHoraAtual] = useState(new Date());
   const [copiado, setCopiado] = useState(false);
@@ -135,6 +141,20 @@ export default function Header({
             <ExternalLink size={18} />
           </button>
 
+          {/* BOTÃO MASCARAR/ESCONDER VALORES R$ */}
+          <button 
+            className="action-btn-circle" 
+            onClick={onToggleEsconderValores} 
+            title={esconderValores ? "Valores Ocultos (Clique para Mostrar R$)" : "Valores Visíveis (Clique para Ocultar R$)"}
+            style={{ 
+              background: esconderValores ? '#fee2e2' : 'var(--blue-ice-bg)',
+              borderColor: esconderValores ? '#ef4444' : 'var(--blue-border)',
+              color: esconderValores ? '#ef4444' : 'var(--blue-primary)'
+            }}
+          >
+            {esconderValores ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+
           <button className="action-btn-circle desktop-only-search" onClick={onOpenSearch} title="Busca Global no Sistema (Ctrl + K)">
             <Search size={18} />
           </button>
@@ -170,6 +190,36 @@ export default function Header({
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {/* 0. ALTERNAR PRIVACIDADE (ESCONDER / MOSTRAR VALORES R$) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuRapidoOpen(false);
+                  if (onToggleEsconderValores) onToggleEsconderValores();
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justify: 'space-between',
+                  background: esconderValores ? '#fee2e2' : '#eff6ff',
+                  color: esconderValores ? '#dc2626' : '#2563eb',
+                  border: `1.5px solid ${esconderValores ? '#fca5a5' : '#93c5fd'}`,
+                  padding: '14px 16px',
+                  borderRadius: '12px',
+                  fontWeight: 800,
+                  fontSize: '0.95rem',
+                  cursor: 'pointer'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  {esconderValores ? <EyeOff size={22} /> : <Eye size={22} />}
+                  <span>{esconderValores ? '🙈 Mostrar Valores no Sistema (R$)' : '👁️ Esconder Valores R$ (Modo Discreto)'}</span>
+                </div>
+                <span className="badge" style={{ background: esconderValores ? '#dc2626' : '#2563eb', color: '#fff' }}>
+                  {esconderValores ? 'Oculto' : 'Visível'}
+                </span>
+              </button>
+
               {/* 1. INSTALAR APLICATIVO NATIVO PWA */}
               <button
                 type="button"
@@ -357,6 +407,35 @@ export default function Header({
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <Building size={18} style={{ color: 'var(--orange-primary)' }} />
                   <span>Minha Empresa (Logo / Dados)</span>
+                </div>
+                <ChevronRight size={18} />
+              </button>
+
+              {/* 8. SAIR DA CONTA (LOGOUT) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuRapidoOpen(false);
+                  if (onLogout) onLogout();
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justify: 'space-between',
+                  background: '#fef2f2',
+                  color: '#dc2626',
+                  border: '1.5px solid #fca5a5',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  fontWeight: 800,
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  marginTop: '6px'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <LogOut size={18} style={{ color: '#dc2626' }} />
+                  <span>🚪 Sair da Conta (Encerrar Sessão)</span>
                 </div>
                 <ChevronRight size={18} />
               </button>

@@ -14,7 +14,7 @@ import Calculator from './components/Calculator';
 import GlobalSearch from './components/GlobalSearch';
 import AgendamentoPublico from './components/AgendamentoPublico';
 import ModalLicenca from './components/ModalLicenca';
-import TelaBloqueioLicenca from './components/TelaBloqueioLicenca';
+import TelaLogin, { authApi } from './components/TelaLogin';
 import { storageApi, safeFormatDate } from './utils/storage';
 import { firebaseApi } from './utils/firebaseClient';
 import { licenseApi } from './utils/licenseUtils';
@@ -48,6 +48,7 @@ export default function App() {
   };
 
   const [isPublicRoute, setIsPublicRoute] = useState(checkIsPublicRoute);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => authApi.isAuthenticated());
   const [abaAtiva, setAbaAtiva] = useState('dashboard');
   
   const [calcOpen, setCalcOpen] = useState(false);
@@ -74,6 +75,25 @@ export default function App() {
   const [orcamentos, setOrcamentos] = useState(() => storageApi.getOrcamentos());
   const [recibos, setRecibos] = useState(() => storageApi.getRecibos());
   const [vendas, setVendas] = useState(() => storageApi.getVendas());
+
+  // ESTADO DO MODO DISCRETO (ESCONDER / MOSTRAR VALORES R$)
+  const [esconderValores, setEsconderValores] = useState(() => {
+    try {
+      return localStorage.getItem('eb_privacidade_valores_v1') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const handleToggleEsconderValores = () => {
+    setEsconderValores(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('eb_privacidade_valores_v1', String(next));
+      } catch (e) {}
+      return next;
+    });
+  };
 
   // OUVINTE DO EVENTO DE INSTALAÇÃO DO APLICATIVO NATIVO PWA
   useEffect(() => {
@@ -322,16 +342,52 @@ export default function App() {
 
   const handleDeleteVenda = (id) => setVendas(vendas.filter(v => v.id !== id));
 
-  // Alertas da Central
+  // Lógica de Datas para Central de Alertas & Notificações
+  const todayStr = new Date().toISOString().split('T')[0];
+  const in3DaysDate = new Date();
+  in3DaysDate.setDate(in3DaysDate.getDate() + 3);
+  const in3DaysStr = in3DaysDate.toISOString().split('T')[0];
+
+  // 1. Contas Vencidas / Atrasadas (Financeiro)
+  const contasVencidas = financeiro.filter(f => 
+    f.status !== 'pago' && (f.status === 'vencido' || (f.dataVencimento && f.dataVencimento < todayStr))
+  );
+
+  // 2. Contas a Vencer nos Próximos 3 Dias (Financeiro)
+  const contasProximas3Dias = financeiro.filter(f => 
+    f.status !== 'pago' && f.dataVencimento && f.dataVencimento >= todayStr && f.dataVencimento <= in3DaysStr
+  );
+
+  // 3. Agendamentos de Hoje ou Atrasados (Agenda)
+  const agendamentosHojeAtrasados = agenda.filter(a => 
+    !a.concluido && a.data && a.data <= todayStr
+  );
+
+  // 4. Agendamentos nos Próximos 3 Dias (Agenda)
+  const agendamentosProximos3Dias = agenda.filter(a => 
+    !a.concluido && a.data && a.data > todayStr && a.data <= in3DaysStr
+  );
+
+  // 5. Tarefas e Estoque
   const estoqueBaixo = produtos.filter(p => p.estoque <= (p.estoqueMinimo || 5));
-  const contasVencendo = financeiro.filter(f => f.status === 'Pendente');
-  const compromissosPendentes = agenda.filter(a => !a.concluido);
   const tarefasPendentes = tarefas.filter(t => !t.concluida);
-  const notificationCount = estoqueBaixo.length + contasVencendo.length + compromissosPendentes.length + tarefasPendentes.length;
+
+  const notificationCount = 
+    contasVencidas.length + 
+    contasProximas3Dias.length + 
+    agendamentosHojeAtrasados.length + 
+    agendamentosProximos3Dias.length + 
+    tarefasPendentes.length + 
+    estoqueBaixo.length;
 
   // ROTA 1: PÁGINA PÚBLICA DE AGENDAMENTO ONLINE (#/agendar ou ?agendar ou /agendar)
   if (isPublicRoute) {
     return <AgendamentoPublico />;
+  }
+
+  // ROTA DE SEGURANÇA: EXIGIR LOGIN E SENHA PARA ACESSAR O SISTEMA
+  if (!isAuthenticated) {
+    return <TelaLogin onLoginSuccess={() => setIsAuthenticated(true)} />;
   }
 
   // BLOQUEIO TOTAL E INSTANTÂNEO SE LICENÇA ESTIVER BLOQUEADA OU EXPIRADA
@@ -342,6 +398,11 @@ export default function App() {
       />
     );
   }
+
+  const handleLogout = () => {
+    authApi.logout();
+    setIsAuthenticated(false);
+  };
 
   // ROTA 2: APLICAÇÃO PRINCIPAL DE GESTÃO DO PROPRIETÁRIO
   return (
@@ -401,6 +462,8 @@ export default function App() {
         onOpenLicense={() => setLicenseOpen(true)}
         onInstallPWA={handleInstallPWA}
         notificationCount={notificationCount}
+        esconderValores={esconderValores}
+        onToggleEsconderValores={handleToggleEsconderValores}
       />
 
       <div className="app-layout">
@@ -457,9 +520,9 @@ export default function App() {
             <button className={`nav-btn ${abaAtiva === 'agenda' ? 'active' : ''}`} onClick={() => setAbaAtiva('agenda')}>
               <Calendar size={19} />
               <span style={{ flex: 1 }}>Agenda & Compromissos</span>
-              {compromissosPendentes.length > 0 && (
+              {agendamentosHojeAtrasados.length > 0 && (
                 <span style={{ background: 'var(--orange-primary)', color: '#fff', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '12px' }}>
-                  {compromissosPendentes.length}
+                  {agendamentosHojeAtrasados.length}
                 </span>
               )}
             </button>
@@ -502,9 +565,9 @@ export default function App() {
             <button className={`nav-btn ${abaAtiva === 'financeiro' ? 'active' : ''}`} onClick={() => setAbaAtiva('financeiro')}>
               <DollarSign size={19} />
               <span style={{ flex: 1 }}>Financeiro (Caixa)</span>
-              {contasVencendo.length > 0 && (
+              {contasVencidas.length > 0 && (
                 <span style={{ background: '#f59e0b', color: '#fff', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '12px' }}>
-                  {contasVencendo.length}
+                  {contasVencidas.length}
                 </span>
               )}
             </button>
@@ -547,6 +610,7 @@ export default function App() {
               empresa={empresa}
               setAbaAtiva={setAbaAtiva}
               onNavigate={setAbaAtiva}
+              esconderValores={esconderValores}
             />
           )}
 
@@ -559,6 +623,7 @@ export default function App() {
               onSaveAgenda={handleSaveAgenda}
               onDeleteAgenda={handleDeleteAgenda}
               onToggleConcluidoAgenda={handleToggleConcluidoAgenda}
+              esconderValores={esconderValores}
             />
           )}
 
@@ -604,6 +669,7 @@ export default function App() {
               onSaveFinanceiro={handleSaveFinanceiro}
               onSaveRecibos={handleSaveRecibos}
               onDeleteFinanceiro={handleDeleteFinanceiro}
+              esconderValores={esconderValores}
             />
           )}
 
@@ -704,16 +770,175 @@ export default function App() {
       {/* MODAL DE NOTIFICAÇÕES E ALERTAS */}
       {notifOpen && (
         <div className="modal-overlay" onClick={() => setNotifOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '620px', borderRadius: '20px' }}>
             <div className="modal-header">
-              <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--orange-primary)' }}>
-                <Bell size={20} /> Central de Alertas e Notificações ({notificationCount})
+              <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--blue-primary)' }}>
+                <Bell size={22} /> Central de Alertas & Notificações ({notificationCount})
               </h3>
               <button className="action-btn-circle" onClick={() => setNotifOpen(false)}>✕</button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '70vh', overflowY: 'auto' }}>
-              {/* Tarefas Pendentes */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '72vh', overflowY: 'auto', paddingRight: '4px' }}>
+              
+              {/* 1. CONTAS VENCIDAS / ATRASADAS (FINANCEIRO) */}
+              {contasVencidas.length > 0 && (
+                <div style={{ background: '#fff5f5', border: '2px solid #fca5a5', padding: '14px 16px', borderRadius: '14px' }}>
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#dc2626', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    🚨 CONTAS ATRASADAS / VENCIDAS ({contasVencidas.length})
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {contasVencidas.map(f => (
+                      <div key={f.id} style={{ background: '#ffffff', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #fca5a5', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <strong style={{ color: '#dc2626', fontSize: '0.92rem' }}>{f.descricao}</strong>
+                            <span className="badge badge-danger" style={{ fontSize: '0.68rem', padding: '2px 6px' }}>
+                              {f.tipo === 'receita' ? 'Receita Atrasada' : 'Conta Vencida'}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '0.8rem', color: '#57534e', marginTop: '2px' }}>
+                            Pessoa: <strong>{f.clienteNome}</strong> • Vencimento: <strong style={{ color: '#dc2626' }}>{safeFormatDate(f.dataVencimento)}</strong>
+                          </div>
+                          <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#dc2626', marginTop: '2px' }}>
+                            R$ {Number(f.valor).toFixed(2)}
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button
+                            className="btn btn-sm btn-orange"
+                            style={{ padding: '6px 12px', fontSize: '0.78rem', fontWeight: 800 }}
+                            onClick={() => {
+                              setAbaAtiva('financeiro');
+                              setNotifOpen(false);
+                            }}
+                          >
+                            <CheckCircle size={14} /> Dar Baixa
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 2. CONTAS A VENCER NOS PRÓXIMOS 3 DIAS (FINANCEIRO) */}
+              {contasProximas3Dias.length > 0 && (
+                <div style={{ background: '#fefce8', border: '2px solid #fde047', padding: '14px 16px', borderRadius: '14px' }}>
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#ca8a04', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    ⚠️ CONTAS A VENCER EM ATÉ 3 DIAS ({contasProximas3Dias.length})
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {contasProximas3Dias.map(f => (
+                      <div key={f.id} style={{ background: '#ffffff', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #fde047', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <strong style={{ color: '#0f172a', fontSize: '0.92rem' }}>{f.descricao}</strong>
+                            <span className="badge badge-orange" style={{ fontSize: '0.68rem', padding: '2px 6px' }}>
+                              Vence em Breve
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '0.8rem', color: '#57534e', marginTop: '2px' }}>
+                            Pessoa: <strong>{f.clienteNome}</strong> • Vencimento: <strong style={{ color: '#ca8a04' }}>{safeFormatDate(f.dataVencimento)}</strong>
+                          </div>
+                          <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0284c7', marginTop: '2px' }}>
+                            R$ {Number(f.valor).toFixed(2)}
+                          </div>
+                        </div>
+
+                        <button
+                          className="btn btn-sm btn-orange"
+                          style={{ padding: '6px 12px', fontSize: '0.78rem', fontWeight: 800 }}
+                          onClick={() => {
+                            setAbaAtiva('financeiro');
+                            setNotifOpen(false);
+                          }}
+                        >
+                          <CheckCircle size={14} /> Dar Baixa
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 3. AGENDAMENTOS DE HOJE OU PENDENTES (AGENDA) */}
+              {agendamentosHojeAtrasados.length > 0 && (
+                <div style={{ background: '#fff7ed', border: '2px solid #fed7aa', padding: '14px 16px', borderRadius: '14px' }}>
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#ea580c', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    🔴 AGENDAMENTOS DE HOJE OU PENDENTES ({agendamentosHojeAtrasados.length})
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {agendamentosHojeAtrasados.map(ag => (
+                      <div key={ag.id} style={{ background: '#ffffff', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #fed7aa', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                        <div>
+                          <strong style={{ color: '#0f172a', fontSize: '0.92rem' }}>{ag.titulo}</strong>
+                          <div style={{ fontSize: '0.8rem', color: '#57534e', marginTop: '2px' }}>
+                            Cliente: <strong>{ag.clienteNome || 'Cliente'}</strong> • Data: <strong>{safeFormatDate(ag.data)} às {ag.horario}</strong>
+                          </div>
+                          {ag.valor > 0 && (
+                            <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#16a34a', marginTop: '2px' }}>
+                              💰 R$ {Number(ag.valor).toFixed(2)}
+                            </div>
+                          )}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button
+                            className="btn btn-sm btn-orange"
+                            style={{ padding: '6px 12px', fontSize: '0.78rem', fontWeight: 800 }}
+                            onClick={() => {
+                              handleToggleConcluidoAgenda(ag.id, true);
+                              setNotifOpen(false);
+                            }}
+                          >
+                            <CheckCircle size={14} /> Concluir
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 4. AGENDAMENTOS NOS PRÓXIMOS 3 DIAS (AGENDA) */}
+              {agendamentosProximos3Dias.length > 0 && (
+                <div style={{ background: '#eff6ff', border: '2px solid #93c5fd', padding: '14px 16px', borderRadius: '14px' }}>
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#2563eb', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    📅 AGENDAMENTOS NOS PRÓXIMOS 3 DIAS ({agendamentosProximos3Dias.length})
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {agendamentosProximos3Dias.map(ag => (
+                      <div key={ag.id} style={{ background: '#ffffff', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #93c5fd', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                        <div>
+                          <strong style={{ color: '#0f172a', fontSize: '0.92rem' }}>{ag.titulo}</strong>
+                          <div style={{ fontSize: '0.8rem', color: '#57534e', marginTop: '2px' }}>
+                            Cliente: <strong>{ag.clienteNome || 'Cliente'}</strong> • Data: <strong style={{ color: '#2563eb' }}>{safeFormatDate(ag.data)} às {ag.horario}</strong>
+                          </div>
+                          {ag.valor > 0 && (
+                            <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#16a34a', marginTop: '2px' }}>
+                              💰 R$ {Number(ag.valor).toFixed(2)}
+                            </div>
+                          )}
+                        </div>
+
+                        <button
+                          className="btn btn-sm btn-primary"
+                          style={{ padding: '6px 12px', fontSize: '0.78rem', fontWeight: 800 }}
+                          onClick={() => {
+                            setAbaAtiva('agenda');
+                            setNotifOpen(false);
+                          }}
+                        >
+                          <Calendar size={14} /> Ver Agenda
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 5. TAREFAS PENDENTES */}
               {tarefasPendentes.length > 0 && (
                 <div>
                   <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--orange-primary)', marginBottom: '8px' }}>
@@ -746,38 +971,7 @@ export default function App() {
                 </div>
               )}
 
-              {/* Compromissos Pendentes da Agenda */}
-              {compromissosPendentes.length > 0 && (
-                <div>
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--blue-primary)', marginBottom: '8px' }}>
-                    🗓️ Compromissos Pendentes na Agenda ({compromissosPendentes.length})
-                  </h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {compromissosPendentes.map(ag => (
-                      <div key={ag.id} style={{ background: '#fff7ed', padding: '10px 14px', borderRadius: '8px', border: '1px solid #fed7aa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                          <strong>{ag.titulo}</strong> ({ag.clienteNome})
-                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                            📅 {ag.data} às ⏰ {ag.horario} {ag.valor > 0 ? `• R$ ${Number(ag.valor).toFixed(2)}` : ''}
-                          </div>
-                        </div>
-                        <button
-                          className="btn btn-sm btn-orange"
-                          style={{ padding: '4px 8px', fontSize: '0.75rem' }}
-                          onClick={() => {
-                            handleToggleConcluidoAgenda(ag.id, true);
-                            setNotifOpen(false);
-                          }}
-                        >
-                          <CheckCircle size={14} /> Concluir
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Estoque Baixo */}
+              {/* 6. ESTOQUE BAIXO */}
               {estoqueBaixo.length > 0 && (
                 <div>
                   <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: '#dc2626', marginBottom: '8px' }}>
@@ -793,25 +987,9 @@ export default function App() {
                 </div>
               )}
 
-              {/* Contas a Pagar / Receber Pendentes */}
-              {contasVencendo.length > 0 && (
-                <div>
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--orange-primary)', marginBottom: '8px' }}>
-                    💵 Contas a Pagar/Receber Pendentes ({contasVencendo.length})
-                  </h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {contasVencendo.map(f => (
-                      <div key={f.id} style={{ background: '#fff7ed', padding: '8px 12px', borderRadius: '8px', border: '1px solid #fed7aa', fontSize: '0.85rem' }}>
-                        <strong>{f.descricao}</strong> - R$ {Number(f.valor).toFixed(2)} (Vencimento: {f.dataVencimento})
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {notificationCount === 0 && (
                 <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px' }}>
-                  Nenhuma notificação no momento! Seu sistema está 100% em dia.
+                  ✨ Nenhuma notificação no momento! Seu sistema está 100% em dia.
                 </p>
               )}
             </div>

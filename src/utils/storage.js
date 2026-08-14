@@ -41,6 +41,12 @@ export const safeFormatDate = (dateStr) => {
   }
 };
 
+export const formatMoney = (valor, esconder = false) => {
+  if (esconder) return 'R$ ***,**';
+  const val = parseFloat(valor || 0);
+  return `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
 // Dados Padrão NULOS / VAZIOS (NENHUM Dado Fictício ou de Terceiros)
 const DEFAULT_EMPRESA = {
   nomeFantasia: '',

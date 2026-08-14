@@ -26,7 +26,7 @@ import {
   User
 } from 'lucide-react';
 import { abrirWhatsapp, msgWhatsapp } from '../utils/whatsapp';
-import { safeFormatDate } from '../utils/storage';
+import { safeFormatDate, formatMoney } from '../utils/storage';
 import { playNotificationSound } from '../utils/soundUtils';
 
 const parseVal = (val) => {
@@ -42,7 +42,7 @@ const parseVal = (val) => {
   return isNaN(parsed) ? 0 : parsed;
 };
 
-export default function Agenda({ agenda = [], clientes = [], produtos = [], empresa = {}, onSaveAgenda, onDeleteAgenda, onToggleConcluidoAgenda }) {
+export default function Agenda({ agenda = [], clientes = [], produtos = [], empresa = {}, onSaveAgenda, onDeleteAgenda, onToggleConcluidoAgenda, esconderValores = false }) {
   const [modoVisao, setModoVisao] = useState('calendario'); // 'calendario' ou 'lista'
   const [dataMesAtual, setDataMesAtual] = useState(new Date());
 

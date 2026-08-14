@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { DollarSign, Plus, ArrowUpCircle, ArrowDownCircle, CheckCircle, Trash2, Edit, Receipt, Send, Eye, Sparkles, Repeat, Calendar, ShieldCheck } from 'lucide-react';
-import { safeFormatDate } from '../utils/storage';
+import { safeFormatDate, formatMoney } from '../utils/storage';
 import { numeroParaExtenso } from './Recibos';
 import ModalDocumento from './ModalDocumento';
 import { abrirWhatsapp, msgWhatsapp } from '../utils/whatsapp';
@@ -12,7 +12,8 @@ export default function Financeiro({
   empresa = {}, 
   onSaveFinanceiro, 
   onSaveRecibos, 
-  onDeleteFinanceiro 
+  onDeleteFinanceiro,
+  esconderValores = false
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -383,7 +384,7 @@ export default function Financeiro({
                     <td>{f.categoria}</td>
                     <td>{safeFormatDate(f.dataVencimento)}</td>
                     <td style={{ fontWeight: 800, color: f.tipo === 'receita' ? '#047857' : '#b91c1c' }}>
-                      R$ {Number(f.valor).toFixed(2)}
+                      {formatMoney(f.valor, esconderValores)}
                     </td>
                     <td>
                       {f.status === 'pago' && <span className="badge badge-success">Pago</span>}

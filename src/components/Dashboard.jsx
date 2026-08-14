@@ -15,9 +15,9 @@ import {
   History,
   CheckCircle
 } from 'lucide-react';
-import { safeFormatDate } from '../utils/storage';
+import { safeFormatDate, formatMoney } from '../utils/storage';
 
-export default function Dashboard({ agenda = [], financeiro = [], produtos = [], clientes = [], empresa = {}, setAbaAtiva, onNavigate }) {
+export default function Dashboard({ agenda = [], financeiro = [], produtos = [], clientes = [], empresa = {}, setAbaAtiva, onNavigate, esconderValores = false }) {
   const handleNav = (aba) => {
     if (onNavigate) onNavigate(aba);
     else if (setAbaAtiva) setAbaAtiva(aba);
@@ -74,9 +74,9 @@ export default function Dashboard({ agenda = [], financeiro = [], produtos = [],
             </div>
           </div>
           <div style={{ fontSize: '1.8rem', fontWeight: 800, color: saldoAtual >= 0 ? 'var(--blue-primary)' : 'var(--danger)' }}>
-            R$ {saldoAtual.toFixed(2)}
+            {formatMoney(saldoAtual, esconderValores)}
           </div>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Receitas pagas minus despesas</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Receitas pagas menos despesas</span>
         </div>
 
         {/* Card Receitas Total */}
@@ -88,7 +88,7 @@ export default function Dashboard({ agenda = [], financeiro = [], produtos = [],
             </div>
           </div>
           <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#047857' }}>
-            R$ {totalReceitas.toFixed(2)}
+            {formatMoney(totalReceitas, esconderValores)}
           </div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Entradas e vendas efetuadas</span>
         </div>
@@ -102,7 +102,7 @@ export default function Dashboard({ agenda = [], financeiro = [], produtos = [],
             </div>
           </div>
           <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--orange-secondary)' }}>
-            R$ {totalDespesas.toFixed(2)}
+            {formatMoney(totalDespesas, esconderValores)}
           </div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Saídas e despesas registradas</span>
         </div>
