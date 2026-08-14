@@ -596,18 +596,33 @@ body {
 }
 
 @media (max-width: 768px) {
+  .topbar {
+    padding: 8px 10px !important;
+  }
+  .topbar-brand {
+    max-width: 130px !important;
+    overflow: hidden !important;
+  }
+  .topbar-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    white-space: nowrap !important;
+    padding-bottom: 2px !important;
+    scrollbar-width: none !important;
+    max-width: calc(100vw - 145px) !important;
+  }
+  .topbar-actions::-webkit-scrollbar {
+    display: none !important;
+  }
   .calendar-day-cell {
     min-height: 95px !important;
     padding: 6px !important;
   }
   .desktop-only-clock {
     display: none !important;
-  }
-  .desktop-only-search {
-    display: none !important;
-  }
-  .mobile-only-btn {
-    display: flex !important;
   }
   .main-content {
     padding: 12px 10px 95px 10px !important;

@@ -120,25 +120,16 @@ export default function Header({
           </div>
         </div>
 
-        {/* Ações Rápidas no Topo */}
-        <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {/* BOTÃO COMPACTO OPÇÕES ⚙️ (ABRE O MENU DROPDOWN ELEGANTE) */}
+        {/* Ações Rápidas no Topo com Arraste Lateral no Celular */}
+        <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          {/* BOTÃO DOS 3 TRACINHOS ☰ (OPÇÕES DO SISTEMA) */}
           <button 
-            className="btn btn-sm btn-orange mobile-only-btn" 
+            className="action-btn-circle" 
             onClick={() => setMenuRapidoOpen(true)}
-            style={{ fontWeight: 800, padding: '6px 12px', borderRadius: '10px', fontSize: '0.85rem' }}
+            title="Opções do Sistema (3 Tracinhos ☰)"
+            style={{ background: 'var(--orange-gradient)', border: '1.5px solid #ffffff' }}
           >
-            Opções ⚙️
-          </button>
-
-          {/* BOTÃO LINK PÚBLICO RAPIDO (DESKTOP) */}
-          <button 
-            className="action-btn-circle desktop-only-search" 
-            onClick={handleAbrirPaginaPublica} 
-            title="Abrir Página Pública de Agendamentos em Nova Aba"
-            style={{ background: 'var(--orange-gradient)' }}
-          >
-            <ExternalLink size={18} />
+            <MenuIcon size={22} style={{ color: '#ffffff' }} />
           </button>
 
           {/* BOTÃO MASCARAR/ESCONDER VALORES R$ */}
@@ -147,29 +138,33 @@ export default function Header({
             onClick={onToggleEsconderValores} 
             title={esconderValores ? "Valores Ocultos (Clique para Mostrar R$)" : "Valores Visíveis (Clique para Ocultar R$)"}
             style={{ 
-              background: esconderValores ? '#fee2e2' : 'var(--blue-ice-bg)',
-              borderColor: esconderValores ? '#ef4444' : 'var(--blue-border)',
-              color: esconderValores ? '#ef4444' : 'var(--blue-primary)'
+              background: esconderValores ? '#fee2e2' : 'rgba(255, 255, 255, 0.2)',
+              borderColor: esconderValores ? '#ef4444' : 'rgba(255, 255, 255, 0.4)',
+              color: esconderValores ? '#ef4444' : '#ffffff'
             }}
           >
             {esconderValores ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
 
-          <button className="action-btn-circle desktop-only-search" onClick={onOpenSearch} title="Busca Global no Sistema (Ctrl + K)">
+          {/* BOTÃO BUSCA GLOBAL */}
+          <button className="action-btn-circle" onClick={onOpenSearch} title="Busca Global no Sistema">
             <Search size={18} />
           </button>
 
+          {/* BOTÃO CENTRAL DE ALERTAS */}
           <button className="action-btn-circle" onClick={onOpenNotifications} title="Central de Alertas e Notificações">
             <Bell size={18} />
             {notificationCount > 0 && <span className="badge-count">{notificationCount}</span>}
           </button>
 
+          {/* BOTÃO LINK PÚBLICO RAPIDO */}
           <button 
-            className="action-btn-circle desktop-only-search" 
-            onClick={() => setMenuRapidoOpen(true)} 
-            title="Abrir Todas as Opções do Sistema ⚙️"
+            className="action-btn-circle" 
+            onClick={handleAbrirPaginaPublica} 
+            title="Abrir Página Pública de Agendamentos em Nova Aba"
+            style={{ background: 'rgba(255, 255, 255, 0.25)' }}
           >
-            <MenuIcon size={20} />
+            <ExternalLink size={18} />
           </button>
         </div>
       </header>
