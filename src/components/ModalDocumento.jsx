@@ -359,11 +359,14 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
             ) : (
               /* LAYOUT DE RECIBO EXECUTIVO COM TEXTO DE DECLARAÇÃO OFICIAL */
               <div>
-                {/* CARTÃO DE QUITAÇÃO DECLARAÇÃO OFICIAL */}
-                <div style={{ background: '#f8fafc', padding: '16px 20px', borderRadius: '12px', border: '1.5px solid #93c5fd', marginBottom: '16px', fontSize: '0.98rem', lineHeight: '1.7', color: '#0f172a' }}>
-                  Declaro(amos) para os devidos fins de direito que recebemos de <strong>CLIENTE: {nomeExibirCliente}</strong>, por intermédio da empresa <strong>{nomeRazaoEmpresa}</strong>, a quantia de <strong style={{ color: '#2563eb', background: '#dbeafe', padding: '2px 8px', borderRadius: '6px' }}>R$ {Number(documento.valor).toFixed(2)}</strong> <em>({documento.valorExtenso || 'valor numérico acima'})</em>, referente à prestação de serviços de <strong style={{ color: '#ca8a04' }}>"{documento.referenteA}"</strong>.
-                  <div style={{ marginTop: '8px', fontSize: '0.84rem', color: '#475569', fontStyle: 'italic' }}>
-                    Por ser verdade e para dar a devida e geral quitação do valor recebido, firmamos o presente recibo comercial para que surta todos os seus efeitos legais.
+                {/* CARTÃO DE QUITAÇÃO DECLARAÇÃO OFICIAL REFEITA */}
+                <div style={{ background: '#f8fafc', padding: '18px 22px', borderRadius: '14px', border: '1.5px solid #93c5fd', marginBottom: '16px', fontSize: '1rem', lineHeight: '1.75', color: '#0f172a' }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#2563eb', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.5px' }}>
+                    📜 DECLARAÇÃO OFICIAL DE PRESTAÇÃO DE SERVIÇO E QUITAÇÃO:
+                  </div>
+                  Declaro(amos) para os devidos fins de direito que a empresa <strong style={{ color: '#0f172a', fontWeight: 900 }}>"{nomeRazaoEmpresa}"</strong> recebeu com plena quitação a quantia de <strong style={{ color: '#2563eb', background: '#dbeafe', padding: '2px 8px', borderRadius: '6px', fontWeight: 800 }}>R$ {Number(documento.valor).toFixed(2)}</strong> <em>({documento.valorExtenso || 'valor numérico acima'})</em>, pago por <strong style={{ color: '#0f172a', fontWeight: 800 }}>{nomeExibirCliente}</strong>, referente à prestação do serviço de <strong style={{ color: '#ca8a04', fontWeight: 800 }}>"{documento.referenteA}"</strong>{empresaExibirCliente ? <> para a empresa <strong style={{ color: '#0f172a', fontWeight: 900 }}>"{empresaExibirCliente.toUpperCase()}"</strong></> : ''}.
+                  <div style={{ marginTop: '10px', fontSize: '0.84rem', color: '#475569', fontStyle: 'italic', borderTop: '1px dashed #cbd5e1', paddingTop: '8px' }}>
+                    Por ser verdade e para dar a devida e geral quitação pelo serviço concluído, firmamos o presente recibo comercial para que surta todos os seus efeitos legais.
                   </div>
                 </div>
 

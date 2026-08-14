@@ -138,15 +138,23 @@ export const msgWhatsapp = {
     const bloco = getBlocoFuncionarioEmpresa(empresa);
     const dataFmt = rec.dataEmissao ? safeFormatDate(rec.dataEmissao) : '';
     const extensoStr = rec.valorExtenso ? ` (${rec.valorExtenso})` : '';
+    const nomeMinhaEmpresa = empresa.razaoSocial || empresa.nomeFantasia || 'Gerailton Neves Locutor';
+    const nomeEmpresaCli = rec.clienteEmpresa || rec.estabelecimento || rec.empresa || '';
+
+    const textoEmpresaCli = nomeEmpresaCli ? ` para a empresa *${nomeEmpresaCli.toUpperCase()}*` : '';
 
     return `🧾 *RECIBO OFICIAL DE PAGAMENTO - Nº ${rec.numero}*\n\n` +
       bloco + `\n` +
-      `Declaro(amos) que recebemos de *${rec.clienteNome}*, a quantia de *R$ ${Number(rec.valor).toFixed(2)}*${extensoStr}.\n\n` +
+      `📜 *DECLARAÇÃO DE QUITAÇÃO:*\n` +
+      `Declaro(amos) para os devidos fins de direito que a empresa *${nomeMinhaEmpresa}* recebeu com plena quitação a quantia de *R$ ${Number(rec.valor).toFixed(2)}*${extensoStr}, pago por *${rec.clienteNome}*, referente à prestação do serviço de *${rec.referenteA}*${textoEmpresaCli}.\n\n` +
       `📌 *DETALHES DA QUITAÇÃO:*\n` +
-      `• *Serviço Prestado:* ${rec.referenteA}\n` +
-      `• *Forma de Pagamento:* ${rec.formaPagamento}\n` +
+      `• *Prestador:* ${nomeMinhaEmpresa}\n` +
+      `• *Cliente:* ${rec.clienteNome}\n` +
+      (nomeEmpresaCli ? `• *Empresa do Cliente:* ${nomeEmpresaCli}\n` : '') +
+      `• *Serviço:* ${rec.referenteA}\n` +
+      `• *Forma de Pagamento:* ${rec.formaPagamento || 'PIX'}\n` +
       `• *Data de Emissão:* ${dataFmt}\n\n` +
-      `Damos a devida e plena quitação do valor recebido. Obrigado pela preferência e parceria!\n\n` +
+      `Por ser verdade e para dar a devida e geral quitação pelo serviço concluído, firmamos o presente recibo comercial.\n\n` +
       `*Equipe: Gerailton Neves*`;
   }
 };
