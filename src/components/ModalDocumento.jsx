@@ -365,7 +365,7 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
                         NOME DO CLIENTE / PAGADOR:
                       </div>
                       <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>
-                        {documento.clienteNome || 'Cliente Não Informado'}
+                        CLIENTE: {documento.clienteNome || 'Cliente Não Informado'}
                       </div>
                     </div>
                     {documento.clienteTelefone && (

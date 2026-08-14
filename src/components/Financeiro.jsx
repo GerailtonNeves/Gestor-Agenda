@@ -177,17 +177,26 @@ export default function Financeiro({
       let idCliente = '';
       let telCliente = '';
 
+      let nomeEmpresaCliente = (itemTarget.clienteNome || 'Cliente').trim();
+
       if (clientes && clientes.length > 0) {
         const cliFound = clientes.find(c => 
           (c.nome && c.nome.toLowerCase() === (itemTarget.clienteNome || '').toLowerCase()) ||
-          (c.empresa && c.empresa.toLowerCase() === (itemTarget.clienteNome || '').toLowerCase())
+          (c.empresa && c.empresa.toLowerCase() === (itemTarget.clienteNome || '').toLowerCase()) ||
+          (c.id && String(c.id) === String(itemTarget.clienteId))
         );
 
         if (cliFound) {
           idCliente = cliFound.id;
           telCliente = cliFound.whatsapp || cliFound.telefone || '';
+          nomeEmpresaCliente = (cliFound.empresa || cliFound.nomeEmpresa || cliFound.razaoSocial || cliFound.nome || itemTarget.clienteNome || 'Cliente').trim();
         }
       }
+
+      // Prepara o texto oficial de quitação referente ao serviço
+      const referenteATexto = itemTarget.descricao && itemTarget.descricao.toLowerCase().includes('locução')
+        ? itemTarget.descricao
+        : `Serviço Concluído Locução Comercial para a ${nomeEmpresaCliente}`;
 
       // Cria o Recibo Oficial no Banco de Recibos
       const novoRecibo = {
@@ -200,7 +209,7 @@ export default function Financeiro({
         clienteTelefone: telCliente,
         valor: valorNum,
         valorExtenso: numeroParaExtenso(valorNum),
-        referenteA: `Pagamento / Quitação de: ${itemTarget.descricao}`,
+        referenteA: referenteATexto,
         formaPagamento: 'PIX',
         cidadeUf: empresa.cidadeUf || empresa.cidade || 'São Paulo - SP',
         observacoes: 'Recibo emitido automaticamente via Baixa no Módulo Financeiro.'

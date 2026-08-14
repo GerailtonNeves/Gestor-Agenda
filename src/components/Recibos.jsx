@@ -152,6 +152,10 @@ export default function Recibos({ recibos = [], clientes = [], produtos = [], em
     if (cli) {
       setClienteNome(cli.nome);
       setClienteTelefone(cli.whatsapp || cli.telefone || '');
+
+      // Puxar a Empresa do cliente no cadastro (ou o próprio nome se não houver empresa cadastrada)
+      const nomeEmpresaCli = (cli.empresa || cli.nomeEmpresa || cli.razaoSocial || cli.nome || '').trim();
+      setReferenteA(`Serviço Concluído Locução Comercial para a ${nomeEmpresaCli}`);
     }
   };
 
