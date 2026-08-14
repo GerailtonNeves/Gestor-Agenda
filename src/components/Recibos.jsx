@@ -153,9 +153,13 @@ export default function Recibos({ recibos = [], clientes = [], produtos = [], em
       setClienteNome(cli.nome);
       setClienteTelefone(cli.whatsapp || cli.telefone || '');
 
-      // Puxar a Empresa do cliente no cadastro (ou o próprio nome se não houver empresa cadastrada)
-      const nomeEmpresaCli = (cli.empresa || cli.nomeEmpresa || cli.razaoSocial || cli.nome || '').trim();
-      setReferenteA(`Serviço Concluído Locução Comercial para a ${nomeEmpresaCli}`);
+      // Puxar o Estabelecimento/Empresa do cliente no cadastro
+      const nomeEmpresaCli = (cli.estabelecimento || cli.empresa || cli.nomeEmpresa || cli.razaoSocial || '').trim();
+      if (nomeEmpresaCli) {
+        setReferenteA(`Quitação: Serviço Concluído: Locução Comercial PARA EMPRESA ${nomeEmpresaCli.toUpperCase()}`);
+      } else {
+        setReferenteA(`Quitação: Serviço Concluído: Locução Comercial`);
+      }
     }
   };
 
@@ -576,6 +580,7 @@ export default function Recibos({ recibos = [], clientes = [], produtos = [], em
           documento={docVisualizar}
           tipo="recibo"
           empresa={empresa}
+          clientes={clientes}
         />
       )}
     </div>

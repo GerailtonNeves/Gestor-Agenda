@@ -4,7 +4,7 @@ import { toPng } from 'html-to-image';
 import { abrirWhatsapp, msgWhatsapp } from '../utils/whatsapp';
 import { safeFormatDate } from '../utils/storage';
 
-export default function ModalDocumento({ isOpen, onClose, documento, tipo, empresa }) {
+export default function ModalDocumento({ isOpen, onClose, documento, tipo, empresa, clientes = [] }) {
   const [gerandoImagem, setGerandoImagem] = useState(false);
   const [toastMsg, setToastMsg] = useState(null);
 
@@ -12,6 +12,17 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
 
   const isOrcamento = tipo === 'orcamento';
   const dataEmissaoFormatada = safeFormatDate(documento.dataEmissao || new Date().toISOString().split('T')[0]);
+
+  // BUSCA INTELIGENTE DO CLIENTE NO CADASTRO PARA PUXAR NOME E EMPRESA/ESTABELECIMENTO
+  const clienteCadastrado = (clientes && clientes.length > 0) ? clientes.find(c => 
+    (documento.clienteId && String(c.id) === String(documento.clienteId)) ||
+    (c.nome && c.nome.toLowerCase() === (documento.clienteNome || '').toLowerCase()) ||
+    (c.estabelecimento && c.estabelecimento.toLowerCase() === (documento.clienteNome || '').toLowerCase()) ||
+    (c.empresa && c.empresa.toLowerCase() === (documento.clienteNome || '').toLowerCase())
+  ) : null;
+
+  const nomeExibirCliente = clienteCadastrado ? clienteCadastrado.nome : (documento.clienteNome || 'Cliente Não Informado');
+  const empresaExibirCliente = documento.clienteEmpresa || documento.estabelecimento || documento.empresa || (clienteCadastrado ? (clienteCadastrado.estabelecimento || clienteCadastrado.empresa || clienteCadastrado.nomeEmpresa || clienteCadastrado.razaoSocial) : '');
 
   const triggerToast = (msg) => {
     setToastMsg(msg);
@@ -350,7 +361,7 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
               <div>
                 {/* CARTÃO DE QUITAÇÃO DECLARAÇÃO OFICIAL */}
                 <div style={{ background: '#f8fafc', padding: '16px 20px', borderRadius: '12px', border: '1.5px solid #93c5fd', marginBottom: '16px', fontSize: '0.98rem', lineHeight: '1.7', color: '#0f172a' }}>
-                  Declaro(amos) para os devidos fins de direito que recebemos de <strong>{documento.clienteNome || 'Cliente'}</strong>, por intermédio da empresa <strong>{nomeRazaoEmpresa}</strong>, a quantia de <strong style={{ color: '#2563eb', background: '#dbeafe', padding: '2px 8px', borderRadius: '6px' }}>R$ {Number(documento.valor).toFixed(2)}</strong> <em>({documento.valorExtenso || 'valor numérico acima'})</em>, referente à prestação de serviços de <strong style={{ color: '#ca8a04' }}>"{documento.referenteA}"</strong>.
+                  Declaro(amos) para os devidos fins de direito que recebemos de <strong>CLIENTE: {nomeExibirCliente}</strong>, por intermédio da empresa <strong>{nomeRazaoEmpresa}</strong>, a quantia de <strong style={{ color: '#2563eb', background: '#dbeafe', padding: '2px 8px', borderRadius: '6px' }}>R$ {Number(documento.valor).toFixed(2)}</strong> <em>({documento.valorExtenso || 'valor numérico acima'})</em>, referente à prestação de serviços de <strong style={{ color: '#ca8a04' }}>"{documento.referenteA}"</strong>.
                   <div style={{ marginTop: '8px', fontSize: '0.84rem', color: '#475569', fontStyle: 'italic' }}>
                     Por ser verdade e para dar a devida e geral quitação do valor recebido, firmamos o presente recibo comercial para que surta todos os seus efeitos legais.
                   </div>
@@ -364,13 +375,18 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
                       <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#2563eb', textTransform: 'uppercase' }}>
                         NOME DO CLIENTE / PAGADOR:
                       </div>
-                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>
-                        CLIENTE: {documento.clienteNome || 'Cliente Não Informado'}
+                      <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>
+                        <strong>CLIENTE:</strong> {nomeExibirCliente}
                       </div>
+                      {empresaExibirCliente && (
+                        <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#ca8a04', marginTop: '4px' }}>
+                          <strong>Nome do Estabelecimento / Empresa:</strong> {empresaExibirCliente}
+                        </div>
+                      )}
                     </div>
-                    {documento.clienteTelefone && (
+                    {(documento.clienteTelefone || (clienteCadastrado && (clienteCadastrado.whatsapp || clienteCadastrado.telefone))) && (
                       <div style={{ fontSize: '0.82rem', color: '#16a34a', fontWeight: 700 }}>
-                        📱 WhatsApp: {documento.clienteTelefone}
+                        📱 WhatsApp: {documento.clienteTelefone || (clienteCadastrado && (clienteCadastrado.whatsapp || clienteCadastrado.telefone))}
                       </div>
                     )}
                   </div>
@@ -392,13 +408,6 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
                 {documento.observacoes && (
                   <div style={{ fontSize: '0.82rem', color: '#475569', background: '#fefce8', borderLeft: '4px solid #ca8a04', padding: '8px 12px', borderRadius: '6px', marginBottom: '14px' }}>
                     <strong>Observações:</strong> {documento.observacoes}
-                  </div>
-                )}
-
-                {/* DADOS PIX SE HOUVER */}
-                {empresa.chavePix && (
-                  <div style={{ fontSize: '0.82rem', color: '#ca8a04', background: '#fefce8', padding: '8px 14px', borderRadius: '8px', border: '1px solid #fde047', marginBottom: '14px' }}>
-                    🔑 <strong>Chave PIX da Empresa:</strong> {empresa.chavePix}
                   </div>
                 )}
               </div>

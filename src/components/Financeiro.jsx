@@ -177,26 +177,27 @@ export default function Financeiro({
       let idCliente = '';
       let telCliente = '';
 
-      let nomeEmpresaCliente = (itemTarget.clienteNome || 'Cliente').trim();
+      let nomeEmpresaCliente = '';
 
       if (clientes && clientes.length > 0) {
         const cliFound = clientes.find(c => 
+          (itemTarget.clienteId && String(c.id) === String(itemTarget.clienteId)) ||
           (c.nome && c.nome.toLowerCase() === (itemTarget.clienteNome || '').toLowerCase()) ||
-          (c.empresa && c.empresa.toLowerCase() === (itemTarget.clienteNome || '').toLowerCase()) ||
-          (c.id && String(c.id) === String(itemTarget.clienteId))
+          (c.estabelecimento && c.estabelecimento.toLowerCase() === (itemTarget.clienteNome || '').toLowerCase()) ||
+          (c.empresa && c.empresa.toLowerCase() === (itemTarget.clienteNome || '').toLowerCase())
         );
 
         if (cliFound) {
           idCliente = cliFound.id;
           telCliente = cliFound.whatsapp || cliFound.telefone || '';
-          nomeEmpresaCliente = (cliFound.empresa || cliFound.nomeEmpresa || cliFound.razaoSocial || cliFound.nome || itemTarget.clienteNome || 'Cliente').trim();
+          nomeEmpresaCliente = (cliFound.estabelecimento || cliFound.empresa || cliFound.nomeEmpresa || cliFound.razaoSocial || '').trim();
         }
       }
 
-      // Prepara o texto oficial de quitação referente ao serviço
-      const referenteATexto = itemTarget.descricao && itemTarget.descricao.toLowerCase().includes('locução')
-        ? itemTarget.descricao
-        : `Serviço Concluído Locução Comercial para a ${nomeEmpresaCliente}`;
+      // Prepara o texto oficial de quitação referente ao serviço no formato exato solicitado
+      const referenteATexto = nomeEmpresaCliente 
+        ? `Quitação: Serviço Concluído: Locução Comercial PARA EMPRESA ${nomeEmpresaCliente.toUpperCase()}`
+        : `Quitação: Serviço Concluído: Locução Comercial`;
 
       // Cria o Recibo Oficial no Banco de Recibos
       const novoRecibo = {
@@ -229,19 +230,50 @@ export default function Financeiro({
 
   // Encontrar ou gerar recibo correspondente a uma conta paga
   const getReciboDaConta = (itemFin) => {
-    let rec = recibos.find(r => r.financeiroRefId === itemFin.id || (r.referenteA && r.referenteA.includes(itemFin.descricao)));
+    let rec = recibos.find(r => r.financeiroRefId === itemFin.id);
+
+    let idCliente = itemFin.clienteId || '';
+    let telCliente = '';
+    let nomeEmpresaCliente = '';
+
+    if (clientes && clientes.length > 0) {
+      const cliFound = clientes.find(c => 
+        (itemFin.clienteId && String(c.id) === String(itemFin.clienteId)) ||
+        (c.nome && c.nome.toLowerCase() === (itemFin.clienteNome || '').toLowerCase()) ||
+        (c.estabelecimento && c.estabelecimento.toLowerCase() === (itemFin.clienteNome || '').toLowerCase()) ||
+        (c.empresa && c.empresa.toLowerCase() === (itemFin.clienteNome || '').toLowerCase())
+      );
+
+      if (cliFound) {
+        idCliente = cliFound.id;
+        telCliente = cliFound.whatsapp || cliFound.telefone || '';
+        nomeEmpresaCliente = (cliFound.estabelecimento || cliFound.empresa || cliFound.nomeEmpresa || cliFound.razaoSocial || '').trim();
+      }
+    }
+
+    const textoQuitacaoOficial = nomeEmpresaCliente 
+      ? `Quitação: Serviço Concluído: Locução Comercial PARA EMPRESA ${nomeEmpresaCliente.toUpperCase()}`
+      : `Quitação: Serviço Concluído: Locução Comercial`;
+
     if (!rec) {
       rec = {
         id: 'rec_fin_view_' + itemFin.id,
         numero: 'REC-2026-FIN',
         dataEmissao: itemFin.dataVencimento || new Date().toISOString().split('T')[0],
+        clienteId: idCliente,
         clienteNome: itemFin.clienteNome || 'Cliente',
-        clienteTelefone: '',
+        clienteTelefone: telCliente,
         valor: itemFin.valor,
         valorExtenso: numeroParaExtenso(itemFin.valor),
-        referenteA: `Quitação: ${itemFin.descricao}`,
+        referenteA: textoQuitacaoOficial,
         formaPagamento: 'PIX',
         cidadeUf: empresa.cidadeUf || empresa.cidade || 'São Paulo - SP'
+      };
+    } else {
+      rec = {
+        ...rec,
+        clienteId: idCliente || rec.clienteId,
+        referenteA: textoQuitacaoOficial
       };
     }
     return rec;
@@ -689,6 +721,7 @@ export default function Financeiro({
         documento={docVisualizar}
         tipo="recibo"
         empresa={empresa}
+        clientes={clientes}
       />
     </div>
   );
