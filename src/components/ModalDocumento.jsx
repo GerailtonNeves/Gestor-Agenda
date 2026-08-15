@@ -43,7 +43,19 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
     ? clienteCadastrado.nome 
     : ((rawClienteNome && rawClienteNome.toLowerCase() !== 'cliente') ? rawClienteNome : (clientes && clientes.length > 0 ? clientes[0].nome : 'Cliente Não Informado'));
 
-  const empresaExibirCliente = documento.clienteEmpresa || documento.estabelecimento || documento.empresa || (clienteCadastrado ? (clienteCadastrado.estabelecimento || clienteCadastrado.empresa || clienteCadastrado.nomeEmpresa || clienteCadastrado.razaoSocial) : '');
+  const empresaExibirCliente = (clienteCadastrado ? (clienteCadastrado.estabelecimento || clienteCadastrado.empresa || clienteCadastrado.nomeEmpresa || clienteCadastrado.razaoSocial) : '') || documento.clienteEmpresa || documento.estabelecimento || documento.empresa || '';
+  const telefoneExibirCliente = (clienteCadastrado ? (clienteCadastrado.whatsapp || clienteCadastrado.telefone) : '') || documento.clienteTelefone || '';
+  const cidadeExibirCliente = (clienteCadastrado ? clienteCadastrado.cidadeUf : '') || documento.cidadeUf || '';
+  const enderecoExibirCliente = (clienteCadastrado ? clienteCadastrado.endereco : '') || documento.clienteEndereco || '';
+
+  // LIMPEZA AUTOMÁTICA DO TEXTO DO SERVIÇO PARA EVITAR DUPLICAÇÕES
+  const servicoLimpo = (documento.referenteA || 'Locução Comercial')
+    .replace(/^Quitação:\s*/i, '')
+    .replace(/^Serviço Concluído:\s*/i, '')
+    .replace(/^Pagamento \/ Quitação de:\s*/i, '')
+    .replace(/\s*PARA EMPRESA.*$/i, '')
+    .replace(/\s*para a empresa.*$/i, '')
+    .trim() || 'Locução Comercial';
 
   const triggerToast = (msg) => {
     setToastMsg(msg);
@@ -380,52 +392,43 @@ export default function ModalDocumento({ isOpen, onClose, documento, tipo, empre
             ) : (
               /* LAYOUT DE RECIBO EXECUTIVO COM TEXTO DE DECLARAÇÃO OFICIAL */
               <div>
+                {/* CARTÃO COMPLETO E PROMINENTE DA EMPRESA DESTINATÁRIA DO RECIBO */}
+                <div style={{ background: '#ffffff', padding: '16px 20px', borderRadius: '14px', border: '2px solid #2563eb', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.05)' }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    🏢 RECIBO EMITIDO PARA (DADOS DA EMPRESA DO CLIENTE):
+                  </div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', wordBreak: 'break-word' }}>
+                    {empresaExibirCliente ? empresaExibirCliente.toUpperCase() : nomeExibirCliente}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px', fontSize: '0.88rem', color: '#334155', borderTop: '1px dashed #cbd5e1', paddingTop: '8px', marginTop: '2px' }}>
+                    <div><strong>👤 Responsável / Cliente:</strong> {nomeExibirCliente}</div>
+                    {telefoneExibirCliente && <div><strong>📱 WhatsApp / Tel:</strong> {telefoneExibirCliente}</div>}
+                    {cidadeExibirCliente && <div><strong>📍 Cidade / UF:</strong> {cidadeExibirCliente}</div>}
+                    {enderecoExibirCliente && <div><strong>🏠 Endereço:</strong> {enderecoExibirCliente}</div>}
+                  </div>
+                </div>
+
                 {/* CARTÃO DE QUITAÇÃO DECLARAÇÃO OFICIAL REFEITA */}
                 <div style={{ background: '#f8fafc', padding: '18px 22px', borderRadius: '14px', border: '1.5px solid #93c5fd', marginBottom: '16px', fontSize: '1rem', lineHeight: '1.75', color: '#0f172a' }}>
                   <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#2563eb', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.5px' }}>
                     📜 DECLARAÇÃO OFICIAL DE PRESTAÇÃO DE SERVIÇO E QUITAÇÃO:
                   </div>
-                  Declaro(amos) para os devidos fins de direito que a empresa <strong style={{ color: '#0f172a', fontWeight: 900 }}>"{nomeRazaoEmpresa}"</strong> recebeu com plena quitação a quantia de <strong style={{ color: '#2563eb', background: '#dbeafe', padding: '2px 8px', borderRadius: '6px', fontWeight: 800 }}>R$ {Number(documento.valor).toFixed(2)}</strong> <em>({documento.valorExtenso || 'valor numérico acima'})</em>, pago por <strong style={{ color: '#0f172a', fontWeight: 800 }}>{nomeExibirCliente}</strong>, referente à prestação do serviço de <strong style={{ color: '#ca8a04', fontWeight: 800 }}>"{documento.referenteA}"</strong>{empresaExibirCliente ? <> para a empresa <strong style={{ color: '#0f172a', fontWeight: 900 }}>"{empresaExibirCliente.toUpperCase()}"</strong></> : ''}.
+                  Declaro(amos) para os devidos fins de direito que a empresa <strong style={{ color: '#0f172a', fontWeight: 900 }}>"{nomeRazaoEmpresa}"</strong> recebeu com plena quitação a quantia de <strong style={{ color: '#2563eb', background: '#dbeafe', padding: '2px 8px', borderRadius: '6px', fontWeight: 800 }}>R$ {Number(documento.valor).toFixed(2)}</strong> <em>({documento.valorExtenso || 'valor numérico acima'})</em>, referente à prestação do serviço de <strong style={{ color: '#ca8a04', fontWeight: 800 }}>"{servicoLimpo}"</strong> emitido para a empresa <strong style={{ color: '#0f172a', fontWeight: 900 }}>"{empresaExibirCliente ? empresaExibirCliente.toUpperCase() : nomeExibirCliente}"</strong> (A/C: {nomeExibirCliente}).
                   <div style={{ marginTop: '10px', fontSize: '0.84rem', color: '#475569', fontStyle: 'italic', borderTop: '1px dashed #cbd5e1', paddingTop: '8px' }}>
                     Por ser verdade e para dar a devida e geral quitação pelo serviço concluído, firmamos o presente recibo comercial para que surta todos os seus efeitos legais.
                   </div>
                 </div>
 
-                {/* CARTÃO DE DETALHES DO CLIENTE E PAGAMENTO (RESPONSIVO PARA CELULAR E COMPUTADOR) */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', marginBottom: '16px' }}>
-                  {/* COLUNA ESQUERDA: DETALHES DO CLIENTE E TELEFONE */}
-                  <div style={{ flex: '1 1 240px', minWidth: '220px', background: '#ffffff', padding: '14px 18px', borderRadius: '12px', border: '1.5px solid #93c5fd', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '6px' }}>
-                    <div>
-                      <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#2563eb', textTransform: 'uppercase', marginBottom: '3px' }}>
-                        NOME DO CLIENTE / PAGADOR:
-                      </div>
-                      <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0f172a', wordBreak: 'break-word', wordWrap: 'break-word' }}>
-                        <strong>CLIENTE:</strong> {nomeExibirCliente}
-                      </div>
-                      {empresaExibirCliente && (
-                        <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#ca8a04', marginTop: '4px', wordBreak: 'break-word' }}>
-                          <strong>Nome do Estabelecimento / Empresa:</strong> {empresaExibirCliente}
-                        </div>
-                      )}
-                    </div>
-                    {(documento.clienteTelefone || (clienteCadastrado && (clienteCadastrado.whatsapp || clienteCadastrado.telefone))) && (
-                      <div style={{ fontSize: '0.84rem', color: '#16a34a', fontWeight: 700, marginTop: '4px', borderTop: '1px dashed #e2e8f0', paddingTop: '4px' }}>
-                        📱 WhatsApp: {documento.clienteTelefone || (clienteCadastrado && (clienteCadastrado.whatsapp || clienteCadastrado.telefone))}
-                      </div>
-                    )}
+                {/* RESUMO DO VALOR E FORMA DE PAGAMENTO */}
+                <div style={{ background: '#eff6ff', padding: '14px 18px', borderRadius: '12px', border: '2px solid #2563eb', textAlign: 'center', marginBottom: '16px' }}>
+                  <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#2563eb', textTransform: 'uppercase' }}>
+                    VALOR RECEBIDO • PAGO ✅
                   </div>
-
-                  {/* COLUNA DIREITA: VALOR RECEBIDO E STATUS PAGO */}
-                  <div style={{ flex: '1 1 180px', minWidth: '160px', background: '#eff6ff', padding: '14px 18px', borderRadius: '12px', border: '2px solid #2563eb', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#2563eb', textTransform: 'uppercase' }}>
-                      VALOR RECEBIDO • PAGO ✅
-                    </div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0f172a', margin: '2px 0' }}>
-                      R$ {Number(documento.valor).toFixed(2)}
-                    </div>
-                    <div style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 700 }}>
-                      Forma: <strong>{documento.formaPagamento || 'PIX'}</strong>
-                    </div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0f172a', margin: '2px 0' }}>
+                    R$ {Number(documento.valor).toFixed(2)}
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 700 }}>
+                    Forma: <strong>{documento.formaPagamento || 'PIX'}</strong>
                   </div>
                 </div>
 

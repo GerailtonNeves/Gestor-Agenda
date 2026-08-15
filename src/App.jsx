@@ -66,6 +66,9 @@ export default function App() {
   // Evento de Instalação Nativa PWA do Aplicativo
   const [deferredPrompt, setDeferredPrompt] = useState(null);
 
+  // Recibo Auto-Gerado ao Dar Baixa em Contas ou Agendamentos
+  const [reciboAutoGerado, setReciboAutoGerado] = useState(null);
+
   // Estados Globais de Dados
   const [empresa, setEmpresa] = useState(() => storageApi.getEmpresa());
   const [clientes, setClientes] = useState(() => storageApi.getClientes());
@@ -314,21 +317,80 @@ export default function App() {
     const novaAgenda = agenda.map(a => a.id === id ? { ...a, concluido: concluidoStatus } : a);
     setAgenda(novaAgenda);
 
-    if (concluidoStatus && agFound.valor > 0) {
-      const lancamentoExistente = financeiro.find(f => f.agendaRefId === id);
-      if (!lancamentoExistente) {
-        const novaReceita = {
-          id: 'fin_ag_' + Date.now(),
-          agendaRefId: id,
-          tipo: 'receita',
-          descricao: `Serviço Concluído: ${agFound.titulo} (${agFound.clienteNome || 'Cliente'})`,
-          valor: parseFloat(agFound.valor),
-          dataVencimento: agFound.data || new Date().toISOString().split('T')[0],
-          status: 'Pago',
-          categoria: 'Serviços / Agenda'
-        };
-        setFinanceiro([novaReceita, ...financeiro]);
+    if (concluidoStatus) {
+      const valorNum = parseFloat(agFound.valor || 0);
+
+      // 1. Lança nas receitas financeiras se tiver valor
+      if (valorNum > 0) {
+        const lancamentoExistente = financeiro.find(f => f.agendaRefId === id);
+        if (!lancamentoExistente) {
+          const novaReceita = {
+            id: 'fin_ag_' + Date.now(),
+            agendaRefId: id,
+            tipo: 'receita',
+            descricao: `Serviço Concluído: ${agFound.titulo}`,
+            clienteNome: agFound.clienteNome,
+            clienteId: agFound.clienteId,
+            valor: valorNum,
+            dataVencimento: agFound.data || new Date().toISOString().split('T')[0],
+            status: 'pago',
+            categoria: 'Serviços / Agenda'
+          };
+          setFinanceiro([novaReceita, ...financeiro]);
+        }
       }
+
+      // 2. BUSCA CLIENTE CADASTRADO PARA PUXAR NOME E EMPRESA COMPLETA
+      let idCliente = agFound.clienteId || '';
+      let telCliente = agFound.clienteTelefone || '';
+      let nomeClienteFinal = agFound.clienteNome || '';
+      let nomeEmpresaCliente = '';
+
+      if (clientes && clientes.length > 0) {
+        const cliFound = clientes.find(c => 
+          (agFound.clienteId && String(c.id) === String(agFound.clienteId)) ||
+          (c.nome && c.nome.toLowerCase() === (agFound.clienteNome || '').toLowerCase()) ||
+          (c.estabelecimento && c.estabelecimento.toLowerCase() === (agFound.clienteNome || '').toLowerCase()) ||
+          (c.empresa && c.empresa.toLowerCase() === (agFound.clienteNome || '').toLowerCase())
+        ) || (clientes.length > 0 ? clientes[0] : null);
+
+        if (cliFound) {
+          idCliente = cliFound.id;
+          nomeClienteFinal = cliFound.nome;
+          telCliente = cliFound.whatsapp || cliFound.telefone || telCliente;
+          nomeEmpresaCliente = (cliFound.estabelecimento || cliFound.empresa || cliFound.nomeEmpresa || cliFound.razaoSocial || '').trim();
+        }
+      }
+
+      if (!nomeClienteFinal || nomeClienteFinal === 'Cliente') {
+        nomeClienteFinal = (clientes && clientes.length > 0) ? clientes[0].nome : 'Cliente Não Informado';
+      }
+
+      // 3. GERA O RECIBO OFICIAL AUTOMÁTICO NA BAIXA DO AGENDAMENTO DA AGENDA
+      const referenteATexto = nomeEmpresaCliente 
+        ? `Quitação: Serviço Concluído: Locução Comercial (${agFound.titulo}) PARA EMPRESA ${nomeEmpresaCliente.toUpperCase()}`
+        : `Quitação: Serviço Concluído: Locução Comercial (${agFound.titulo})`;
+
+      const novoRecibo = {
+        id: 'rec_ag_' + Date.now(),
+        agendaRefId: agFound.id,
+        numero: 'REC-2026-' + String(recibos.length + 1).padStart(3, '0'),
+        dataEmissao: new Date().toISOString().split('T')[0],
+        clienteId: idCliente,
+        clienteNome: nomeClienteFinal,
+        clienteEmpresa: nomeEmpresaCliente,
+        estabelecimento: nomeEmpresaCliente,
+        clienteTelefone: telCliente,
+        valor: valorNum,
+        valorExtenso: numeroParaExtenso(valorNum),
+        referenteA: referenteATexto,
+        formaPagamento: 'PIX',
+        cidadeUf: empresa.cidadeUf || empresa.cidade || 'São Paulo - SP',
+        observacoes: `Recibo emitido automaticamente via Baixa (Conclusão) de Agendamento.`
+      };
+
+      setRecibos([novoRecibo, ...recibos]);
+      setReciboAutoGerado(novoRecibo);
     }
   };
 
@@ -1001,6 +1063,17 @@ export default function App() {
             </div>
           </div>
         </div>
+      )}
+      {/* MODAL GLOBAL DE RECIBO AUTO-GERADO AO DAR BAIXA EM CONTA OU AGENDAMENTO */}
+      {reciboAutoGerado && (
+        <ModalDocumento
+          isOpen={!!reciboAutoGerado}
+          onClose={() => setReciboAutoGerado(null)}
+          documento={reciboAutoGerado}
+          tipo="recibo"
+          empresa={empresa}
+          clientes={clientes}
+        />
       )}
     </div>
   );

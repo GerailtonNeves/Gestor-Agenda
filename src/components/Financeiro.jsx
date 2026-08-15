@@ -30,6 +30,7 @@ export default function Financeiro({
   const [tipo, setTipo] = useState('despesa'); // 'receita' ou 'despesa'
   const [descricao, setDescricao] = useState('');
   const [clienteNome, setClienteNome] = useState('');
+  const [clienteId, setClienteId] = useState('');
   const [valor, setValor] = useState('');
   const [dataVencimento, setDataVencimento] = useState(new Date().toISOString().split('T')[0]);
   const [categoria, setCategoria] = useState('Geral');
@@ -43,6 +44,7 @@ export default function Financeiro({
     setTipo('despesa');
     setDescricao('');
     setClienteNome('');
+    setClienteId('');
     setValor('');
     setDataVencimento(new Date().toISOString().split('T')[0]);
     setCategoria('Geral');
@@ -56,6 +58,7 @@ export default function Financeiro({
     setTipo(item.tipo || 'despesa');
     setDescricao(item.descricao || '');
     setClienteNome(item.clienteNome || '');
+    setClienteId(item.clienteId || '');
     setValor(String(item.valor || ''));
     setDataVencimento(item.dataVencimento || new Date().toISOString().split('T')[0]);
     setCategoria(item.categoria || 'Geral');
@@ -101,6 +104,7 @@ export default function Financeiro({
             ...f,
             tipo,
             descricao,
+            clienteId: clienteId || '',
             clienteNome: clienteNome || 'Não informado',
             valor: valorNum,
             dataVencimento,
@@ -118,6 +122,7 @@ export default function Financeiro({
         id: 'fin_' + Date.now(),
         tipo,
         descricao: descricao.trim(),
+        clienteId: clienteId || '',
         clienteNome: clienteNome || 'Não informado',
         valor: valorNum,
         dataVencimento,

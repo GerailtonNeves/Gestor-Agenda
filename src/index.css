@@ -199,13 +199,13 @@ body {
 /* SIDEBAR LATERAL AZUL & AMARELA */
 .sidebar {
   width: 295px;
-  background: #ffffff;
-  border-right: 2px solid var(--blue-border);
+  background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+  border-right: 2.5px solid var(--blue-border);
   padding: 20px 16px;
   display: none;
   flex-direction: column;
   gap: 18px;
-  box-shadow: 4px 0 20px rgba(37, 99, 235, 0.05);
+  box-shadow: 4px 0 20px rgba(37, 99, 235, 0.08);
 }
 
 @media (min-width: 900px) {
