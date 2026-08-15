@@ -405,20 +405,20 @@ export default function App() {
 
   const handleDeleteVenda = (id) => setVendas(vendas.filter(v => v.id !== id));
 
-  // Lógica de Datas para Central de Alertas & Notificações
+  // Lógica de Datas para Central de Alertas & Notificações (FALTANDO ATÉ 4 DIAS PARA O VENCIMENTO)
   const todayStr = new Date().toISOString().split('T')[0];
-  const in3DaysDate = new Date();
-  in3DaysDate.setDate(in3DaysDate.getDate() + 3);
-  const in3DaysStr = in3DaysDate.toISOString().split('T')[0];
+  const in4DaysDate = new Date();
+  in4DaysDate.setDate(in4DaysDate.getDate() + 4);
+  const in4DaysStr = in4DaysDate.toISOString().split('T')[0];
 
   // 1. Contas Vencidas / Atrasadas (Financeiro)
   const contasVencidas = financeiro.filter(f => 
     f.status !== 'pago' && (f.status === 'vencido' || (f.dataVencimento && f.dataVencimento < todayStr))
   );
 
-  // 2. Contas a Vencer nos Próximos 3 Dias (Financeiro)
-  const contasProximas3Dias = financeiro.filter(f => 
-    f.status !== 'pago' && f.dataVencimento && f.dataVencimento >= todayStr && f.dataVencimento <= in3DaysStr
+  // 2. Contas a Vencer Faltando até 4 Dias para o Vencimento (Financeiro)
+  const contasProximas4Dias = financeiro.filter(f => 
+    f.status !== 'pago' && f.dataVencimento && f.dataVencimento >= todayStr && f.dataVencimento <= in4DaysStr
   );
 
   // 3. Agendamentos de Hoje ou Atrasados (Agenda)
@@ -426,22 +426,28 @@ export default function App() {
     !a.concluido && a.data && a.data <= todayStr
   );
 
-  // 4. Agendamentos nos Próximos 3 Dias (Agenda)
-  const agendamentosProximos3Dias = agenda.filter(a => 
-    !a.concluido && a.data && a.data > todayStr && a.data <= in3DaysStr
+  // 4. Agendamentos nos Próximos 4 Dias (Agenda)
+  const agendamentosProximos4Dias = agenda.filter(a => 
+    !a.concluido && a.data && a.data > todayStr && a.data <= in4DaysStr
   );
 
-  // 5. Tarefas e Estoque
-  const estoqueBaixo = produtos.filter(p => p.estoque <= (p.estoqueMinimo || 5));
+  // 5. Tarefas e Lembretes (Faltando até 4 Dias para o Vencimento ou Vencidas)
+  const tarefasAlertas = tarefas.filter(t => {
+    if (t.concluida) return false;
+    const dt = t.dataVencimento || t.data || t.dataLimite;
+    if (!dt) return false;
+    return dt <= in4DaysStr;
+  });
+
   const tarefasPendentes = tarefas.filter(t => !t.concluida);
+  const estoqueBaixo = produtos.filter(p => p.estoque <= (p.estoqueMinimo || 5));
 
   const notificationCount = 
     contasVencidas.length + 
-    contasProximas3Dias.length + 
+    contasProximas4Dias.length + 
     agendamentosHojeAtrasados.length + 
-    agendamentosProximos3Dias.length + 
-    tarefasPendentes.length + 
-    estoqueBaixo.length;
+    agendamentosProximos4Dias.length + 
+    tarefasAlertas.length;
 
   // ROTA 1: PÁGINA PÚBLICA DE AGENDAMENTO ONLINE (#/agendar ou ?agendar ou /agendar)
   if (isPublicRoute) {
@@ -890,14 +896,14 @@ export default function App() {
                 </div>
               )}
 
-              {/* 2. CONTAS A VENCER NOS PRÓXIMOS 3 DIAS (FINANCEIRO) */}
-              {contasProximas3Dias.length > 0 && (
+              {/* 2. CONTAS A VENCER EM ATÉ 4 DIAS (FINANCEIRO) */}
+              {contasProximas4Dias.length > 0 && (
                 <div style={{ background: '#fefce8', border: '2px solid #fde047', padding: '14px 16px', borderRadius: '14px' }}>
                   <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#ca8a04', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    ⚠️ CONTAS A VENCER EM ATÉ 3 DIAS ({contasProximas3Dias.length})
+                    ⚠️ CONTAS A VENCER EM ATÉ 4 DIAS ({contasProximas4Dias.length})
                   </h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {contasProximas3Dias.map(f => (
+                    {contasProximas4Dias.map(f => (
                       <div key={f.id} style={{ background: '#ffffff', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #fde047', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -969,14 +975,14 @@ export default function App() {
                 </div>
               )}
 
-              {/* 4. AGENDAMENTOS NOS PRÓXIMOS 3 DIAS (AGENDA) */}
-              {agendamentosProximos3Dias.length > 0 && (
+              {/* 4. AGENDAMENTOS NOS PRÓXIMOS 4 DIAS (AGENDA) */}
+              {agendamentosProximos4Dias.length > 0 && (
                 <div style={{ background: '#eff6ff', border: '2px solid #93c5fd', padding: '14px 16px', borderRadius: '14px' }}>
                   <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#2563eb', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    📅 AGENDAMENTOS NOS PRÓXIMOS 3 DIAS ({agendamentosProximos3Dias.length})
+                    📅 AGENDAMENTOS NOS PRÓXIMOS 4 DIAS ({agendamentosProximos4Dias.length})
                   </h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {agendamentosProximos3Dias.map(ag => (
+                    {agendamentosProximos4Dias.map(ag => (
                       <div key={ag.id} style={{ background: '#ffffff', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #93c5fd', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                         <div>
                           <strong style={{ color: '#0f172a', fontSize: '0.92rem' }}>{ag.titulo}</strong>
@@ -1006,19 +1012,19 @@ export default function App() {
                 </div>
               )}
 
-              {/* 5. TAREFAS PENDENTES */}
-              {tarefasPendentes.length > 0 && (
+              {/* 5. TAREFAS E LEMBRETES VENCIDOS OU FALTANDO ATÉ 4 DIAS */}
+              {tarefasAlertas.length > 0 && (
                 <div>
                   <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--orange-primary)', marginBottom: '8px' }}>
-                    ☑️ Tarefas Pendentes ({tarefasPendentes.length})
+                    ☑️ Tarefas e Lembretes Vencidos ou Faltando até 4 Dias ({tarefasAlertas.length})
                   </h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {tarefasPendentes.map(t => (
+                    {tarefasAlertas.map(t => (
                       <div key={t.id} style={{ background: '#fff7ed', padding: '10px 14px', borderRadius: '8px', border: '1px solid #fed7aa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                          <strong>{t.titulo}</strong> ({t.categoria})
+                          <strong>{t.titulo}</strong> ({t.categoria || 'Geral'})
                           <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                            📅 Data Limite: {safeFormatDate(t.dataLimite)} às {t.horario}
+                            📅 Vencimento: {safeFormatDate(t.dataVencimento || t.data || t.dataLimite)} {t.horario ? `às ${t.horario}` : ''}
                           </div>
                         </div>
                         <button
@@ -1027,28 +1033,11 @@ export default function App() {
                           onClick={() => {
                             const at = tarefas.map(item => item.id === t.id ? { ...item, concluida: true } : item);
                             setTarefas(at);
-                            playNotificationSound();
                             setNotifOpen(false);
                           }}
                         >
                           <CheckCircle size={14} /> Dar Baixa
                         </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 6. ESTOQUE BAIXO */}
-              {estoqueBaixo.length > 0 && (
-                <div>
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: '#dc2626', marginBottom: '8px' }}>
-                    📦 Alerta de Estoque Mínimo ({estoqueBaixo.length})
-                  </h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {estoqueBaixo.map(p => (
-                      <div key={p.id} style={{ background: '#fee2e2', padding: '8px 12px', borderRadius: '8px', border: '1px solid #fca5a5', fontSize: '0.85rem' }}>
-                        <strong>{p.nome}</strong> - Restam apenas <span style={{ color: '#dc2626', fontWeight: 800 }}>{p.estoque} un</span> (Mínimo: {p.estoqueMinimo || 5})
                       </div>
                     ))}
                   </div>
