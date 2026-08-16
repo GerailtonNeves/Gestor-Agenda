@@ -90,6 +90,24 @@ export default function EmpresaConfig({ empresa = {}, onSaveEmpresa }) {
     reader.readAsDataURL(file);
   };
 
+  // Upload da Foto/Imagem da Assinatura
+  const handleAssinaturaUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 3 * 1024 * 1024) {
+      alert('⚠️ A imagem da assinatura deve ter no máximo 3MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData(prev => ({ ...prev, assinatura: reader.result }));
+      triggerToast('✅ Imagem da Assinatura carregada com sucesso!');
+    };
+    reader.readAsDataURL(file);
+  };
+
   // --- LÓGICA DA ASSINATURA NO CANVAS ---
   const startDrawing = (e) => {
     const canvas = canvasRef.current;
@@ -387,35 +405,74 @@ export default function EmpresaConfig({ empresa = {}, onSaveEmpresa }) {
           </div>
         </div>
 
-        {/* CAMPO DE ASSINATURA DIGITAL (DESENHE SUA ASSINATURA) */}
-        <div className="form-group" style={{ background: '#fefce8', padding: '20px', borderRadius: '12px', border: '2px solid var(--orange-border)' }}>
-          <label className="form-label" style={{ fontSize: '1.05rem', color: 'var(--orange-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <PenTool size={20} /> Desenhe ou envie a sua Assinatura Digital
+        {/* CAMPO DE ASSINATURA DIGITAL (UPLOAD DE FOTO OU DESENHO) */}
+        <div className="form-group" style={{ background: '#fefce8', padding: '20px', borderRadius: '14px', border: '2px solid var(--orange-border)', boxShadow: '0 4px 15px rgba(234, 179, 8, 0.1)' }}>
+          <label className="form-label" style={{ fontSize: '1.05rem', color: 'var(--orange-secondary)', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800 }}>
+            <PenTool size={20} /> Assinatura Digital / Carimbo do Emissor
           </label>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '14px' }}>
-            Escreva/desenhe a sua assinatura abaixo com o <strong>dedo na tela do celular</strong> ou com o mouse no computador!
+          <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', marginBottom: '14px' }}>
+            Faça o <strong>upload de uma foto/imagem da sua assinatura (PNG ou JPG)</strong> ou desenhe diretamente com o dedo/mouse!
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-            <div style={{ background: '#ffffff', border: '2px dashed var(--orange-border)', borderRadius: '10px', padding: '6px', position: 'relative' }}>
-              <canvas
-                ref={canvasRef}
-                width={400}
-                height={130}
-                style={{ touchAction: 'none', cursor: 'crosshair', display: 'block', background: '#ffffff' }}
-                onMouseDown={startDrawing}
-                onMouseMove={draw}
-                onMouseUp={stopDrawing}
-                onMouseLeave={stopDrawing}
-                onTouchStart={startDrawing}
-                onTouchMove={draw}
-                onTouchEnd={stopDrawing}
-              />
+          {/* PRÉ-VISUALIZAÇÃO DA ASSINATURA REGISTRADA */}
+          {formData.assinatura && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', marginBottom: '16px', background: '#ffffff', padding: '14px', borderRadius: '12px', border: '1.5px solid #ca8a04' }}>
+              <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#ca8a04', textTransform: 'uppercase' }}>
+                Assinatura Atual Registrada no Sistema:
+              </div>
+              <div style={{ maxHeight: '90px', maxWidth: '320px', padding: '6px', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img src={formData.assinatura} alt="Assinatura" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
+              </div>
+              <button 
+                type="button" 
+                className="btn btn-sm btn-secondary" 
+                style={{ color: '#dc2626', fontSize: '0.78rem', fontWeight: 700 }}
+                onClick={() => {
+                  setFormData(prev => ({ ...prev, assinatura: '' }));
+                  handleLimparCanvas();
+                }}
+              >
+                <Trash2 size={14} /> Remover Assinatura
+              </button>
+            </div>
+          )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', alignItems: 'start' }}>
+            {/* OPÇÃO 1: UPLOAD DE FOTO/ARQUIVO DA ASSINATURA */}
+            <div style={{ background: '#ffffff', padding: '16px', borderRadius: '12px', border: '1.5px dashed var(--orange-secondary)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+              <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>
+                📁 1. Fazer Upload da Foto/Imagem da Assinatura
+              </div>
+              <label className="btn btn-primary" style={{ cursor: 'pointer', padding: '10px 18px', fontSize: '0.88rem', fontWeight: 800, background: 'var(--orange-gradient)', border: 'none' }}>
+                <Upload size={16} /> Selecionar Imagem da Assinatura
+                <input type="file" accept="image/*" onChange={handleAssinaturaUpload} style={{ display: 'none' }} />
+              </label>
             </div>
 
-            <button type="button" className="btn btn-sm btn-secondary" onClick={handleLimparCanvas} style={{ color: '#ef4444' }}>
-              <Eraser size={14} /> Limpar Desenho da Assinatura
-            </button>
+            {/* OPÇÃO 2: DESENHAR NO CANVAS */}
+            <div style={{ background: '#ffffff', padding: '16px', borderRadius: '12px', border: '1.5px dashed var(--orange-secondary)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+              <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>
+                ✍️ 2. Desenhar Assinatura na Tela
+              </div>
+              <div style={{ background: '#ffffff', border: '1.5px solid #cbd5e1', borderRadius: '8px', padding: '4px' }}>
+                <canvas
+                  ref={canvasRef}
+                  width={340}
+                  height={110}
+                  style={{ touchAction: 'none', cursor: 'crosshair', display: 'block', background: '#ffffff' }}
+                  onMouseDown={startDrawing}
+                  onMouseMove={draw}
+                  onMouseUp={stopDrawing}
+                  onMouseLeave={stopDrawing}
+                  onTouchStart={startDrawing}
+                  onTouchMove={draw}
+                  onTouchEnd={stopDrawing}
+                />
+              </div>
+              <button type="button" className="btn btn-sm btn-secondary" onClick={handleLimparCanvas} style={{ color: '#ef4444', fontSize: '0.76rem' }}>
+                <Eraser size={14} /> Limpar Desenho
+              </button>
+            </div>
           </div>
         </div>
 
