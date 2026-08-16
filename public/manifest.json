@@ -1,24 +1,30 @@
 {
-  "name": "Escritório de Bolso - Gestão Empresarial",
-  "short_name": "Escritório de Bolso",
-  "description": "Sistema Completo de Agendamentos, Financeiro, Clientes, Orçamentos, Recibos e Estoque",
-  "start_url": "/",
-  "display": "standalone",
-  "orientation": "portrait-primary",
-  "background_color": "#0f172a",
-  "theme_color": "#2563eb",
+  "short_name": "Escritório",
+  "name": "Escritório de Bolso - Gestão de Locução & Finanças",
+  "description": "Sistema completo de gestão comercial, recibos, agenda de trabalhos e controle financeiro.",
   "icons": [
     {
-      "src": "/app-icon-192.jpg",
+      "src": "/icon-192.png",
+      "type": "image/png",
       "sizes": "192x192",
-      "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {
-      "src": "/app-icon-512.jpg",
+      "src": "/icon-512.png",
+      "type": "image/png",
       "sizes": "512x512",
-      "type": "image/jpeg",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-icon.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
     }
-  ]
+  ],
+  "start_url": "/",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "display": "standalone",
+  "orientation": "portrait"
 }

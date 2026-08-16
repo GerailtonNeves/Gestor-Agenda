@@ -65,6 +65,14 @@ export default function App() {
 
   // Evento de Instalação Nativa PWA do Aplicativo
   const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallModal, setShowInstallModal] = useState(() => {
+    try {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      return !isStandalone;
+    } catch (e) {
+      return true;
+    }
+  });
 
   // Recibo Auto-Gerado ao Dar Baixa em Contas ou Agendamentos
   const [reciboAutoGerado, setReciboAutoGerado] = useState(null);
@@ -104,6 +112,7 @@ export default function App() {
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
+      setShowInstallModal(true);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -111,6 +120,7 @@ export default function App() {
   }, []);
 
   const handleInstallPWA = () => {
+    setShowInstallModal(false);
     if (deferredPrompt) {
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then((choiceResult) => {
@@ -1063,6 +1073,49 @@ export default function App() {
           empresa={empresa}
           clientes={clientes}
         />
+      )}
+
+      {/* MODAL / BANNER AUTOMÁTICO DE INSTALAÇÃO DO APP NATIVO PWA */}
+      {showInstallModal && (
+        <div className="modal-overlay" style={{ zIndex: 4000, background: 'rgba(15, 23, 42, 0.78)', backdropFilter: 'blur(6px)' }}>
+          <div className="modal-content" style={{ maxWidth: '460px', borderRadius: '24px', padding: '24px', textAlign: 'center', border: '3px solid #3b82f6', boxShadow: '0 20px 50px rgba(37, 99, 235, 0.35)' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
+              <div style={{ width: '88px', height: '88px', borderRadius: '20px', overflow: 'hidden', border: '3px solid #3b82f6', boxShadow: '0 8px 20px rgba(37, 99, 235, 0.25)', background: '#ffffff', padding: '4px' }}>
+                <img src="/icon-512.png" alt="Ícone do App" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '16px' }} />
+              </div>
+            </div>
+
+            <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0f172a', marginBottom: '6px' }}>
+              Instalar Escritório de Bolso 📱✨
+            </h3>
+            
+            <p style={{ fontSize: '0.92rem', color: '#475569', lineHeight: '1.5', marginBottom: '18px' }}>
+              Deseja instalar o aplicativo no seu <strong>Celular ou Computador</strong> para ter o <strong>ícone exclusivo na sua tela inicial</strong> e acessar com 1 toque?
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                className="btn btn-primary"
+                style={{ padding: '14px 20px', fontSize: '1rem', fontWeight: 900, borderRadius: '14px', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', boxShadow: '0 4px 18px rgba(37, 99, 235, 0.4)' }}
+                onClick={handleInstallPWA}
+              >
+                📲 Instalar Aplicativo Agora
+              </button>
+
+              <button
+                className="btn btn-secondary"
+                style={{ padding: '10px', fontSize: '0.86rem', color: '#64748b', borderRadius: '12px' }}
+                onClick={() => setShowInstallModal(false)}
+              >
+                Continuar no Navegador
+              </button>
+            </div>
+
+            <div style={{ marginTop: '14px', fontSize: '0.76rem', color: '#94a3b8', borderTop: '1px dashed #e2e8f0', paddingTop: '10px' }}>
+              ⚡ Rápido, seguro e ocupa menos de 2 MB no aparelho.
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
